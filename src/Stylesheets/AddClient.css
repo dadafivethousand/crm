@@ -24,7 +24,7 @@
 
 .form-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 15px;
 }
 
@@ -48,11 +48,21 @@
     margin-top: 20px;
 }
 
-button {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
+.plus {
+ 
+    height:60px;
+    width:60px;
+    border-radius: 50%;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: block;
+    margin: 0 auto;
+    background-color: #4caf50;
+    color: white;
+    font-size: 50px;
+    border: none
 }
 
 button[type="submit"] {

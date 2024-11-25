@@ -1,0 +1,43 @@
+.client-table-container {
+  margin: 20px;
+  overflow-x: auto;
+}
+
+.client-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  table-layout: fixed; /* Ensures all columns have the same width */
+  text-align: center;
+}
+
+.client-table th,
+.client-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+ 
+  word-wrap: break-word; /* Prevents overflow issues */
+
+}
+
+.client-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.client-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.client-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Equal column widths */
+.client-table th,
+.client-table td {
+  width: 1px /* Divides table equally among all columns */
+  
+}
+
+ 
