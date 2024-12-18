@@ -26,6 +26,23 @@ export default function AddClient({setClients}) {
         };
     });
 
+
+    const closeForm=()=>{
+        setShowForm(false)
+        setFormData({
+                firstName: "",
+                lastName: "",
+                email: "",
+                phone: "",
+                dob: "",
+                startDate: "",
+                membershipDuration: "1-month",
+                endDate: "",
+                expiringSoon: false,
+                timestamp: "", // Add this fiel
+            })
+    }
+
     
 
     // Save state to localStorage whenever it changes
@@ -64,8 +81,8 @@ export default function AddClient({setClients}) {
             case "1-month":
                 date.setMonth(date.getMonth() + 1);
                 break;
-            case "3-month":
-                date.setMonth(date.getMonth() + 3);
+            case "6-month":
+                date.setMonth(date.getMonth() + 6);
                 break;
             case "annual":
                 date.setFullYear(date.getFullYear() + 1);
@@ -163,13 +180,13 @@ export default function AddClient({setClients}) {
                         <label>Membership Duration:</label>
                         <select name="membershipDuration" value={formData.membershipDuration} onChange={handleInputChange}>
                             <option value="1-month">1-Month</option>
-                            <option value="3-month">3-Month</option>
+                            <option value="6-month">6-Month</option>
                             <option value="annual">Annual</option>
                         </select>
                         <label>Membership End Date:</label>
                         <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange}/>
                         <button type="submit">Save</button>
-                        <button type="button" onClick={() => setShowForm(false)}>Cancel</button>
+                        <button type="button" onClick={() => closeForm()}>Cancel</button>
                     </form>
                 </div>
             )}

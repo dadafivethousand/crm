@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ClientTable from './ClientTable';
 import AddClient from './AddClient';
 import './Stylesheets/App.css';
+import logo from './Images/logos.jpg'
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -29,7 +30,8 @@ function App() {
 
   return (
     <div>
-      <h1>Gym CRM</h1>
+      <img src={logo}/>
+
       {loading ? <p>Loading...</p> : <ClientTable clients={clients} setClients={setClients} />}
       <AddClient setClients={setClients}/>
     </div>

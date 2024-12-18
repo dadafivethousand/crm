@@ -42,7 +42,7 @@ function ClientTable({ clients, setClients }) {
       console.error('Error saving changes:', error);
     }
   };
-  
+ 
   const handleDelete = async (key) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
       try {
@@ -64,14 +64,39 @@ function ClientTable({ clients, setClients }) {
       }
     }
   };
+
+  const sweep = async () => {
+    try {
+      const response = await fetch(`https://my-cloudflare-worker.maxli5004.workers.dev/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+         
+      });
+  
+      if (response.ok) {
+        console.log('sweep completed')
+      } else {
+        console.error('Error sweeping');
+      }
+    } catch (error) {
+      console.error('Error saving changes:', error);
+    }
+  };
   
 
   return (
     <div className="client-table-container">
+
+<button
+                    className="edit-btn"
+                    onClick={() => sweep()}
+                  >
+                   sweep
+                  </button>
       <table className="client-table">
         <thead>
           <tr>
-            <th className='small'></th>
+            <th className='small'> </th>
             <th><p>First Name </p></th>
             <th>Last Name</th>
             <th>Email</th>
@@ -79,7 +104,8 @@ function ClientTable({ clients, setClients }) {
             <th>Start Date</th>
             <th>End Date</th>
             <th>Membership Duration</th>
-            <th>Expiring Soon</th>
+            <th>1 Week Expiration Notification Sent</th>
+            <th>Kids</th>
             <th className='small'></th>
           </tr>
         </thead>
@@ -88,7 +114,7 @@ function ClientTable({ clients, setClients }) {
            .filter((client) => client && client.data)  //Filter out null or undefined clients
           .map((client, index) => (
             <tr key={index}>
-              <td>
+              <td className='small'>
                 {editingRow === index ? (
                   <>
                     <button
@@ -164,6 +190,7 @@ function ClientTable({ clients, setClients }) {
                       <option value="annual">Annual</option>
                     </select>
                   </td>
+                  <td>{client.data.expiringSoon ? "yes": 'no'}</td>
                 </>
               ) : (
                 <>
@@ -174,11 +201,22 @@ function ClientTable({ clients, setClients }) {
                   <td>{client.data.startDate}</td>
                   <td>{client.data.endDate}</td>
                   <td>{client.data.membershipDuration}</td>
-                  <td>{client.data.expiringSoon ? "yes": 'no'
-                    }</td>
+                  <td>{client.data.expiringSoon ? "yes": 'no'}</td>
+                  <td>
+  {client.data.kids && client.data.kids.length > 0 ? (
+    client.data.kids.map((kid, i) => (
+      <div key={i}>
+        {kid.firstName} {kid.lastName} ({kid.dob})
+      </div>
+    ))
+  ) : (
+    "No kids"
+  )}
+</td>
+         
                 </>
               )}
-              <td>
+              <td className='small'>
                 <button
                   className="delete-btn"
                   onClick={() => handleDelete(client.key)}

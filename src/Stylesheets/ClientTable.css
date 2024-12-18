@@ -3,12 +3,20 @@
   overflow-x: auto;
 }
 
+img{
+  height:150px;
+  margin: 0 auto;
+  display: block;
+
+}
+
+ 
+
 .client-table {
   width: 100%;
   border-collapse: collapse;
   font-family: Arial, sans-serif;
-  table-layout: fixed; /* Ensures all columns have the same width */
-  text-align: center;
+   text-align: center;
 }
 
 .client-table th,
@@ -33,11 +41,11 @@
   background-color: #f1f1f1;
 }
 
-/* Equal column widths */
-.client-table th,
-.client-table td {
-  width: 1px /* Divides table equally among all columns */
-  
+ 
+
+.client-table .small {
+  width: 10px; /* Adjust to the desired width */
+ 
 }
 
  
