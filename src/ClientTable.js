@@ -64,35 +64,13 @@ function ClientTable({ clients, setClients }) {
       }
     }
   };
-
-  const sweep = async () => {
-    try {
-      const response = await fetch(`https://my-cloudflare-worker.maxli5004.workers.dev/scan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-         
-      });
-  
-      if (response.ok) {
-        console.log('sweep completed')
-      } else {
-        console.error('Error sweeping');
-      }
-    } catch (error) {
-      console.error('Error saving changes:', error);
-    }
-  };
+ 
   
 
   return (
     <div className="client-table-container">
 
-<button
-                    className="edit-btn"
-                    onClick={() => sweep()}
-                  >
-                   sweep
-                  </button>
+ 
       <table className="client-table">
         <thead>
           <tr>
