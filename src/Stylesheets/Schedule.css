@@ -33,7 +33,8 @@ font-weight: 400;
     .weekday {
         margin-bottom: 15px;
         position: relative;
-        margin-top: 15px;
+    
+        
         position: relative;
         display: inline-block; /* Prevents it from stretching to full width */
  
