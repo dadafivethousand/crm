@@ -10,14 +10,14 @@
 }
 
 .schedule-container img{
-    margin-top: 50px;
+    margin-top: 30px;
     display: block;
     
 }
 
 .schedule-container h1{
 font-family: roboto condensed;
-font-size: 50px;
+font-size: 30px;
 font-weight: 500;
 
 }
@@ -25,7 +25,7 @@ font-weight: 500;
  
 
     .weekday {
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         position: relative;
-        margin-top: 30px;
+        margin-top: 20px;
     }
