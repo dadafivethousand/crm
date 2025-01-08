@@ -23,7 +23,7 @@ img{
 .client-table td {
   border: 1px solid #ddd;
   padding: 8px;
- 
+  max-width:25px;
   word-wrap: break-word; /* Prevents overflow issues */
 
 }
@@ -49,3 +49,12 @@ img{
 }
 
  
+.no-mail-button {
+  background-color: aqua;
+}
+
+.active {
+  background-color: rgb(147, 147, 9);
+  transform: scale(1.2);
+}
+

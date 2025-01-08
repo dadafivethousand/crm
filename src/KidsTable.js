@@ -105,32 +105,6 @@ function ClientTable({ membershipInfo, clients, setClients}) {
     }
   };
 
-  //this function is to put the client on the do not mail list
-  const handleNoEmail = async (key) => {
-
-      try {
-        const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key }),
-        });
-  
-        if (response.ok) {
-          setClients((prevClients) =>
-            prevClients.map((client) =>
-              client.key === key ? { ...client, data: { ...editedData } } : client
-            )
-          );
-          window.location.reload();
- 
-        } else {
-          console.error('Error adding client to the do not mail list');
-        }
-      } catch (error) {
-        console.error('EError adding client to the do not mail list:', error);
-      }
- 
-  };
 
    
  
@@ -178,22 +152,12 @@ function ClientTable({ membershipInfo, clients, setClients}) {
                     </button>
                   </>
                 ) : (
-                  <>
                   <button
                     className="edit-btn"
                     onClick={() => handleEditClick(index, client.data)}
                   >
                     ✏️
                   </button>
-
-                     <button
-                    className={`no-mail-button ${client.data.doNotMail ? 'active' : ''}`}
-                    onClick={() => handleNoEmail(client.key)}
-                  >
-                   Don't Email
-                  </button>
-                  </>
-
                 )}
               </td>
               {editingRow === index ? (
@@ -253,10 +217,10 @@ function ClientTable({ membershipInfo, clients, setClients}) {
                       onChange={(e) => handleInputChange(e, 'membershipDuration')}
                     >
               {membershipInfo.map((membership) => (
-                            !membership.free && membership.description?
-                            <option key={membership.description} value={membership.description}>
+                !membership.free &&
+                <option key={membership.description} value={membership.description}>
                     {membership.description}
-                </option> : null
+                </option>
             ))}
                     </select>
                   </td>

@@ -3,15 +3,33 @@ import ClientTable from './ClientTable';
 import AddClient from './AddClient';
 import './Stylesheets/App.css';
 import logo from './Images/logos.jpg'
+import LeadsTable from './LeadsTable';
 
 function App() {
   const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState([]);
+  const [loadingLeads, setLoadingLeads] = useState(true);
+  const [loadingClients, setLoadingClients] = useState(true);
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [convertToClientData, setConvertToClientData] = useState(null);
+  const [membershipInfo, setMembershipInfo] = useState(null)
+  const [clientFormData, setClientFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    startDate: "",
+    membershipDuration: "1-month",
+    endDate: "",
+    expiringSoon: false,
+    timestamp: "",
+  });
+ 
 
   useEffect(() => {
     async function fetchClients() {
       try {
-        const response = await fetch("https://my-cloudflare-worker.maxli5004.workers.dev/");
+        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-clients");
         if (response.ok) {
           const data = await response.json();
           setClients(data);
@@ -21,19 +39,90 @@ function App() {
       } catch (error) {
         console.error("Error fetching clients:", error);
       } finally {
-        setLoading(false);
+        setLoadingClients(false);
       }
     }
-
     fetchClients();
+
+    async function fetchLeads() {
+      try {
+        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-leads");
+        if (response.ok) {
+          const data = await response.json();
+          setLeads(data);
+        } else {
+          console.error("Failed to fetch leads");
+        }
+      } catch (error) {
+        console.error("Error fetching leads:", error);
+      } finally {
+        setLoadingLeads(false);
+      }
+    }
+    fetchLeads();
+
+
+    async function fetchMembershipInfo() {
+      try {
+        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/membership-info");
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data)
+          setMembershipInfo(data.adult);
+        } else {
+          console.error("Failed to fetch membership info");
+        }
+      } catch (error) {
+        console.error("Error fetching Membership Info:", error);
+      }  
+
+    }
+      fetchMembershipInfo();
+
+ 
+
   }, []);
 
   return (
     <div>
       <img src={logo}/>
 
-      {loading ? <p>Loading...</p> : <ClientTable clients={clients} setClients={setClients} />}
-      <AddClient setClients={setClients}/>
+      {loadingClients ? <p>Loading Clients...</p> : 
+                <ClientTable
+                clients={clients}
+                setClients={setClients}
+                membershipInfo={membershipInfo}
+              />
+      }
+
+{showClientForm ? <AddClient 
+       setConvertToClientData={setConvertToClientData}
+       prefilledData={convertToClientData}
+      showClientForm={showClientForm} 
+      setClientFormData={setClientFormData}
+      setShowClientForm={setShowClientForm}
+      clientFormData={clientFormData} 
+      membershipInfo={membershipInfo}
+      setClients={setClients} /> :  
+      <button className='plus' onClick={() => setShowClientForm(true)}>+</button>}
+
+
+
+      {loadingLeads ? <p>Loading Leads...</p> : 
+           <LeadsTable
+           leads={leads}
+           setLeads={setLeads}
+           setShowClientForm={setShowClientForm}
+           setClientFormData={setClientFormData}
+           setConvertToClientData={setConvertToClientData}
+ 
+           
+         />}
+
+    
+
+ 
+ 
     </div>
   );
 }
