@@ -42,7 +42,7 @@ font-weight: 400;
 
     hr {
         border: none; /* Removes default border */
-        height: 1px; /* Thickness of the line */
+        height: 2px; /* Thickness of the line */
         background-color: black; /* Line color */
         margin: 20px auto; /* Space around the line */
         width:40vw;
