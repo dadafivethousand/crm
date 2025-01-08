@@ -4,6 +4,7 @@ import AddClient from './AddClient';
 import './Stylesheets/App.css';
 import logo from './Images/logos.jpg'
 import LeadsTable from './LeadsTable';
+import Schedule from './Schedule';
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -122,7 +123,7 @@ function App() {
     
 
  
- 
+      <Schedule />
     </div>
   );
 }

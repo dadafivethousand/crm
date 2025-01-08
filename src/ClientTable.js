@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Stylesheets/ClientTable.css';
 import AddClient from './AddClient';
 
@@ -6,6 +6,24 @@ function ClientTable({ membershipInfo, clients, setClients}) {
   console.log(clients)
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
+  const [sortColumn, setSortColumn] = useState("firstName");
+const [sortDirection, setSortDirection] = useState("asc");
+
+useEffect(() => {
+  setClients(sortClients(clients, sortColumn, sortDirection));
+}, [sortColumn, sortDirection]); // Sort whenever column or direction changes
+
+  const sortClients = (clients, column, direction) => {
+    return [...clients].sort((a, b) => {
+      let valueA = a.data[column]?.toString().toLowerCase() || "";
+      let valueB = b.data[column]?.toString().toLowerCase() || "";
+  
+      if (valueA < valueB) return direction === "asc" ? -1 : 1;
+      if (valueA > valueB) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+  
 
   const handleEditClick = (index, clientData) => {
     setEditingRow(index);
