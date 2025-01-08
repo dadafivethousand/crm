@@ -5,6 +5,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
+    text-align: center;
  
     
 }
@@ -33,8 +35,6 @@ font-weight: 400;
         position: relative;
         margin-top: 15px;
         position: relative;
-        left:46%;
- 
         display: inline-block; /* Prevents it from stretching to full width */
  
         
