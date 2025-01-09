@@ -43,18 +43,57 @@ img{
 
  
 
-.client-table .small {
-  width: 10px; /* Adjust to the desired width */
- 
+
+
+.table-header:hover{
+  cursor: pointer;
+  }
+  
+  .header-arrow{
+      margin-left:10px
+  }
+  
+  .header-arrow:hover{
+  cursor: pointer
 }
+
+
+.edit-btn{
+ display:block
+ 
+
+}
+   
 
  
 .no-mail-button {
-  background-color: aqua;
+  background-color: rgb(255, 255, 255);
+  border: 1px solid red;
+  font-size: 15px;
+  font-family: roboto condensed;
+
+  
 }
 
 .active {
-  background-color: rgb(147, 147, 9);
-  transform: scale(1.2);
+  background-color: rgb(171, 30, 23);
+  border: 1px solid black;
+ 
 }
 
+
+.small button{
+  margin: 0;
+  display:block
+}
+
+
+.client-table .small {
+  min-width:15px ;/* Adjust to the desired width */
+  max-width:15px;
+  border: 1px solid red;
+}
+
+.button-flex{
+  display: flex;
+}

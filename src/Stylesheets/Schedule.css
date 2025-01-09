@@ -28,17 +28,13 @@ font-weight: 400;
 
 }
 
- 
+
 
     .weekday {
         margin-bottom: 15px;
         position: relative;
-    
-        
         position: relative;
         display: inline-block; /* Prevents it from stretching to full width */
- 
-        
     }
 
     hr {
@@ -49,3 +45,11 @@ font-weight: 400;
 
       }
       
+ .header{
+    display: flex;
+    justify-content: center;
+ }
+
+ .header-arrow{
+    font-size: 20px;
+ }

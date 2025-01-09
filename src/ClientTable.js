@@ -8,6 +8,22 @@ function ClientTable({ membershipInfo, clients, setClients}) {
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
 const [sortDirection, setSortDirection] = useState("asc");
+const [reminder, setReminderWindow] = useState(false)
+
+const [headers, setHeaders] = useState([
+  { key: "firstName", label: "First Name" },
+  { key: "lastName", label: "Last Name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "startDate", label: "Start Date" },
+  { key: "endDate", label: "End Date" },
+  { key: "paymentStatus", label: "Payment Status" },
+  { key: "membershipDuration", label: "Membership Duration" },
+  { key: "expiringSoon", label: "Expiring Soon" },
+ 
+]);
+
+
 
 useEffect(() => {
   setClients(sortClients(clients, sortColumn, sortDirection));
@@ -23,7 +39,48 @@ useEffect(() => {
       return 0;
     });
   };
+
+  const handleSort = (key) => {
+    if (sortColumn === key) {
+      setSortDirection((prevDirection) => (prevDirection === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(key);
+      setSortDirection("asc");
+    }
+  };
   
+  function calculatePaymentDates(startDate, endDate) {
+    const paymentDates = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= new Date(endDate)) {
+        paymentDates.push(new Date(currentDate)); // Add current payment date to the list
+        currentDate.setMonth(currentDate.getMonth() + 1); // Move to the next month
+    }
+
+    return paymentDates.map(date => date.toISOString()); // Convert to ISO strings for the backend
+}
+
+async function handleToggleInstallmentReminders(student) {
+    const { startDate, endDate } = student.data;
+  console.log(startDate, endDate, student.key)
+    // Calculate payment dates
+    const reminderDates = calculatePaymentDates(startDate, endDate);
+
+    // Send request to backend
+    const response = await fetch('https://worker-consolidated.maxli5004.workers.dev/installment-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: student.key, reminderDates }),
+    });
+
+    if (response.ok) {
+        console.log("Reminders successfully set!");
+    } else {
+        console.error("Failed to set reminders.");
+    }
+}
+
 
   const handleEditClick = (index, clientData) => {
     setEditingRow(index);
@@ -161,22 +218,21 @@ useEffect(() => {
  
  
       <table className="client-table">
-        <thead>
+      <thead>
           <tr>
-            <th className='small'> </th>
-            <th><p>First Name </p></th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Payment Status</th>
-            <th>Membership Duration</th>
-            <th>1 Week Expiration Notification Sent</th>
-            <th>Kids</th>
-            <th className='small'></th>
+            <th className="small"></th> {/* For edit/delete buttons */}
+            {headers.map((header) => (
+              <th key={header.key}  onClick={() => handleSort(header.key)}>
+                <div className='header'>
+               <div className='table-header'> {header.label}</div>
+               <div className='header-arrow'>  {sortColumn === header.key && (sortDirection === "asc" ? "↓" : "↑")}</div>
+               </div>
+              </th>
+            ))}
+            <th className="small"></th> {/* For additional actions */}
           </tr>
-        </thead>
+      </thead>
+
         <tbody>
           {clients
            .filter((client) => client && client.data)  //Filter out null or undefined clients
@@ -197,18 +253,25 @@ useEffect(() => {
                   </>
                 ) : (
                   <>
+                  <div className='button-flex'>
                   <button
                     className="edit-btn"
                     onClick={() => handleEditClick(index, client.data)}
                   >
                     ✏️
                   </button>
-
+                  <button
+                  className={`reminder-btn ${client.data.reminderDates ? 'active' : ''}`}
+                  onClick={() => handleToggleInstallmentReminders(client)}
+                  >
+                      🔔
+                  </button>
+                  </div>
                      <button
                     className={`no-mail-button ${client.data.doNotMail ? 'active' : ''}`}
                     onClick={() => handleNoEmail(client.key)}
                   >
-                   Don't Email
+                   No Email
                   </button>
                   </>
 
@@ -291,8 +354,8 @@ useEffect(() => {
                   <td>{client.data.paymentStatus}</td>
                   <td>{client.data.membershipDuration}</td>
                   <td>{client.data.expiringSoon ? "yes": 'no'}</td>
-                  <td>
-  {client.data.kids && client.data.kids.length > 0 ? (
+               
+  {/* {client.data.kids && client.data.kids.length > 0 ? (
     client.data.kids.map((kid, i) => (
       <div key={i}>
         {kid.firstName} {kid.lastName} ({kid.dob})
@@ -300,8 +363,8 @@ useEffect(() => {
     ))
   ) : (
     "No kids"
-  )}
-</td>
+  )} */}
+ 
          
                 </>
               )}
