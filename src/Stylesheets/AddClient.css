@@ -57,9 +57,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    display: block;
+
     margin: 0 auto;
-    background-color: #4caf50;
+    background-color: #000000;
     color: white;
     font-size: 50px;
     border: none

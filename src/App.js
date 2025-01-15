@@ -69,7 +69,7 @@ function App() {
         if (response.ok) {
           const data = await response.json();
           console.log(data)
-          setMembershipInfo(data.adult);
+          setMembershipInfo(data[0]);
         } else {
           console.error("Failed to fetch membership info");
         }

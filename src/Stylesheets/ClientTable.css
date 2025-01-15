@@ -97,3 +97,8 @@ img{
 .button-flex{
   display: flex;
 }
+
+.red {
+  background-color: rgba(255, 0, 0, 0.751);
+  width:100%
+}

@@ -64,7 +64,7 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
         if (!startDate) return;
 
         const date = new Date(startDate);
-        const matchingMembership = membershipInfo.find(
+        const matchingMembership = membershipInfo.info.find(
             (membership) => membership.description === duration
         );
         // If a match is found, update the date
@@ -162,7 +162,7 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
                         <input type="date" name="startDate" value={clientFormData.startDate} onChange={handleInputChange} />
                         <label>Membership Duration:</label>
                         <select name="membershipDuration" value={clientFormData.membershipDuration} onChange={handleInputChange}>
-                        {membershipInfo.map((membership) => (
+                        {membershipInfo.info.map((membership) => (
                             !membership.free && membership.description?
                             <option key={membership.description} value={membership.description}>
                                 {membership.description}

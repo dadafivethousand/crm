@@ -9,6 +9,7 @@ function ClientTable({ membershipInfo, clients, setClients}) {
   const [sortColumn, setSortColumn] = useState("firstName");
 const [sortDirection, setSortDirection] = useState("asc");
 const [reminder, setReminderWindow] = useState(false)
+ 
 
 const [headers, setHeaders] = useState([
   { key: "firstName", label: "First Name" },
@@ -237,7 +238,10 @@ async function handleToggleInstallmentReminders(student) {
           {clients
            .filter((client) => client && client.data)  //Filter out null or undefined clients
           .map((client, index) => (
-            <tr key={index}>
+            <tr key={index}
+            className={`${client.data.endDate && new Date() >= new Date(client.data.endDate) ? 'red' : ''}`}
+             >
+
               <td className='small'>
                 {editingRow === index ? (
                   <>
@@ -333,7 +337,7 @@ async function handleToggleInstallmentReminders(student) {
                       value={editedData.membershipDuration || ''}
                       onChange={(e) => handleInputChange(e, 'membershipDuration')}
                     >
-              {membershipInfo.map((membership) => (
+              {membershipInfo.info.map((membership) => (
                             !membership.free && membership.description?
                             <option key={membership.description} value={membership.description}>
                     {membership.description}
@@ -344,6 +348,7 @@ async function handleToggleInstallmentReminders(student) {
                   <td>{client.data.expiringSoon ? "yes": 'no'}</td>
                 </>
               ) : (
+               
                 <>
                   <td> <p>{client.data.firstName}</p></td>
                   <td>{client.data.lastName}</td>
@@ -364,8 +369,6 @@ async function handleToggleInstallmentReminders(student) {
   ) : (
     "No kids"
   )} */}
- 
-         
                 </>
               )}
               <td className='small'>
