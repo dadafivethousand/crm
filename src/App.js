@@ -5,6 +5,8 @@ import './Stylesheets/App.css';
 import logo from './Images/logos.jpg'
 import LeadsTable from './LeadsTable';
 import Schedule from './Schedule';
+import AddLead from './AddLead';
+import KidsTable from './KidsTable'
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -13,6 +15,9 @@ function App() {
   const [loadingClients, setLoadingClients] = useState(true);
   const [showClientForm, setShowClientForm] = useState(false);
   const [convertToClientData, setConvertToClientData] = useState(null);
+  const [showAdultClients, setShowAdultClients]=useState(false)
+  const [showKidClients, setShowKidClients]=useState(false)
+  const [showLeads, setShowLeads]=useState(false)
   const [membershipInfo, setMembershipInfo] = useState(null)
   const [clientFormData, setClientFormData] = useState({
     firstName: "",
@@ -25,7 +30,20 @@ function App() {
     expiringSoon: false,
     timestamp: "",
   });
+
+  const toggleShowAdultClients=()=>{
+    setShowAdultClients(prev => !prev);
+  }
  
+
+  const toggleShowKidClients=()=>{
+    setShowKidClients(prev => !prev);
+  }
+
+  const toggleShowLeads=()=>{
+    setShowLeads(prev => !prev);
+  }
+
 
   useEffect(() => {
     async function fetchClients() {
@@ -87,13 +105,14 @@ function App() {
   return (
     <div>
       <img src={logo}/>
-
+    <button onClick={toggleShowAdultClients} className='toggle-table-display'> Toggle Client Display  </button> 
       {loadingClients ? <p>Loading Clients...</p> : 
-                <ClientTable
+          showAdultClients &&     <ClientTable
                 clients={clients}
                 setClients={setClients}
                 membershipInfo={membershipInfo}
-              />
+            
+              /> 
       }
 
 {showClientForm ? <AddClient 
@@ -105,25 +124,39 @@ function App() {
       clientFormData={clientFormData} 
       membershipInfo={membershipInfo}
       setClients={setClients} /> :  
-      <button className='plus' onClick={() => setShowClientForm(true)}>+</button>}
+      <button className='plus' onClick={() => setShowClientForm(true)}>Add Adult/Teen Client</button>}
 
 
+<button onClick={toggleShowKidClients} className='toggle-table-display'> Toggle Kids Display  </button> 
+{loadingLeads ? <p>Loading Leads...</p> : 
+      showKidClients &&
+        <KidsTable
+                clients={clients}
+                setClients={setClients}
+                membershipInfo={membershipInfo}
+            
+              /> 
+      }
+      <AddLead />
+
+
+<button onClick={toggleShowLeads} className='toggle-table-display'> Toggle Leads Display  </button> 
 
       {loadingLeads ? <p>Loading Leads...</p> : 
+      showLeads &&
            <LeadsTable
            leads={leads}
            setLeads={setLeads}
            setShowClientForm={setShowClientForm}
            setClientFormData={setClientFormData}
            setConvertToClientData={setConvertToClientData}
- 
-           
          />}
 
     
 
- 
+ {/*
       <Schedule />
+   */ }
     </div>
   );
 }

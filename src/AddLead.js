@@ -93,7 +93,7 @@ export default function AddLead({ setLeads }) {
 
     return (
         <div className='add-client-container'>
-            <button className='plus' onClick={() => setshowLeadForm(true)}>+</button>
+            <button className='plus' onClick={() => setshowLeadForm(true)}>Add Lead</button>
 
             {showLeadForm && (
                 <div className="overlay">

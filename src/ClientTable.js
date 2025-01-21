@@ -215,6 +215,7 @@ async function handleToggleInstallmentReminders(student) {
 
   return (
     <div className="client-table-container">
+      <h1>Adult & Teen Students</h1>
 
  
  

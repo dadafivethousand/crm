@@ -113,7 +113,7 @@ function ClientTable({ membershipInfo, clients, setClients}) {
 
   return (
     <div className="client-table-container">
-
+<h1>Kid Students</h1>
  
  
       <table className="client-table">

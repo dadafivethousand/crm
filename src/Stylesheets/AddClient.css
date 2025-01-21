@@ -1,5 +1,7 @@
 .add-client-container {
     text-align: center;
+    background-color: white;
+    z-index: 5;
 }
 
 .overlay {
@@ -51,8 +53,8 @@
 .plus {
  
     height:60px;
-    width:60px;
-    border-radius: 50%;
+  
+ 
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -61,8 +63,8 @@
     margin: 0 auto;
     background-color: #000000;
     color: white;
-    font-size: 50px;
-    border: none
+    font-size: 30px;
+    padding: 5px 20px;
 }
 
 button[type="submit"] {

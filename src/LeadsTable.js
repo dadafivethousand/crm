@@ -81,6 +81,7 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
 
   return (
     <div className="client-table-container">
+      <h1>Free Trial</h1>
       <table className="client-table">
         <thead>
           <tr>
