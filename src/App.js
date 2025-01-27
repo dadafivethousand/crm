@@ -44,6 +44,8 @@ function App() {
     setShowLeads(prev => !prev);
   }
 
+  const day='Monday'
+
 
   useEffect(() => {
     async function fetchClients() {
@@ -154,9 +156,9 @@ function App() {
 
     
 
- {/*
-      <Schedule />
-   */ }
+
+      <Schedule day={day} />
+  
     </div>
   );
 }
