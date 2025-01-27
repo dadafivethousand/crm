@@ -109,7 +109,7 @@ function Schedule({ day }) {
   return (
     <div className="schedule-container">
 
-    <TypeEffect />
+  
 
 
       <h1>{day}</h1>
@@ -127,7 +127,7 @@ function Schedule({ day }) {
                     </h4>
                   ))}
               </div>
-              <hr />
+        
             </>
           )}
 
@@ -142,7 +142,7 @@ function Schedule({ day }) {
                     </h4>
                   ))}
               </div>
-              <hr />
+ 
             </>
           )}
 
@@ -162,7 +162,7 @@ function Schedule({ day }) {
         <p>No classes scheduled for this day.</p>
       )}
 
-      <img src={logo} alt="Gym Logo" />
+     {/* <img src={logo} alt="Gym Logo" /> */}
     </div>
   );
 }

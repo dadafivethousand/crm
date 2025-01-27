@@ -7,6 +7,7 @@ import LeadsTable from './LeadsTable';
 import Schedule from './Schedule';
 import AddLead from './AddLead';
 import KidsTable from './KidsTable'
+import LionKingIntro from './LionKingIntro';
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -157,8 +158,8 @@ function App() {
     
 
 
-      <Schedule day={day} />
-  
+     {/* <Schedule day={day} />  */}
+        <LionKingIntro />
     </div>
   );
 }
