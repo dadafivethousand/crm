@@ -8,6 +8,8 @@ import Schedule from './Schedule';
 import AddLead from './AddLead';
 import KidsTable from './KidsTable'
 import LionKingIntro from './LionKingIntro';
+import StarWarsIntro from './StarWarsIntro';
+ 
 
 function App() {
   const [clients, setClients] = useState([]);
@@ -45,7 +47,7 @@ function App() {
     setShowLeads(prev => !prev);
   }
 
-  const day='Monday'
+  const day='Wednesday'
 
 
   useEffect(() => {
@@ -159,7 +161,9 @@ function App() {
 
 
      {/* <Schedule day={day} />  */}
-        <LionKingIntro />
+       {/*  <LionKingIntro />*/}
+       < StarWarsIntro/>
+
     </div>
   );
 }

@@ -1,61 +1,8 @@
  import logo from "./Images/logos.jpg"; // Adjust path if necessary
 import './Stylesheets/Schedule.css'
 import { useState, useEffect } from "react";
-import TypeEffect from "./TypeEffect";
+ 
 function Schedule({ day }) {
-
-  const text = ["Pull Up", "Ossssssss"];
-  const [count, setCount] = useState(0);
-  const [index, setIndex] = useState(0);
-  const [letter, setLetter] = useState('');
-  const [isPausing, setIsPausing] = useState(false);
-  const [currentText, setCurrentText] = useState(['Pull Up']);
-
-  useEffect(() => {
-    if (isPausing) {
-        const pauseTimer = setTimeout(() => {
-            setIsPausing(false);
-            setIndex(index + 1);
-        }, 1000); // 1-2 second pause
-        return () => clearTimeout(pauseTimer);
-    }
-
-    const type = () => {
-        if (count >= currentText.length) {
-            setCount(0);
-            return;
-        }
-
-        
-            
-        if (index <= currentText.length) {
-            console.log(currentText)
-            // Typing phase
-            setLetter(currentText.slice(0, index));
-            setIndex(index + 1);
-        } else if (index > currentText.length && index <= currentText.length * 2) {
-            // Deleting phase
-            setLetter(currentText.slice(0, currentText.length * 2 - index));
-            setIndex(index + 1);
-        }
-
-        if (index === currentText.length) {
-            // Start pause after typing phase
-            setIsPausing(true);
-        } else if (index === currentText.length * 2) {
-            // Reset for the next word
-            setCount((prevCount) => (prevCount + 1) % currentText.length);
-            setIndex(0);
-        }
-    };
-
-    if (!isPausing) {
-        const timerId = setTimeout(type, 120);
-        return () => clearTimeout(timerId);
-    }
-}, [index, count, isPausing]);
-
-
 
   const schedule = {
     Monday: [
@@ -108,9 +55,6 @@ function Schedule({ day }) {
 
   return (
     <div className="schedule-container">
-
-  
-
 
       <h1>{day}</h1>
 
