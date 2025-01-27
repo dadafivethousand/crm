@@ -9,8 +9,8 @@
 }
 
 .sun {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   background: radial-gradient(circle, #ffcc00, #ff6600);
   border-radius: 50%;
   position: absolute;
