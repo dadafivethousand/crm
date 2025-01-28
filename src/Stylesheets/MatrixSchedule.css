@@ -3,7 +3,7 @@
 .matrix-container {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: 130vh;
   background: black;
   overflow: hidden;
   display: flex;
@@ -29,17 +29,18 @@
   z-index: 10;
  
   padding: 20px;
+  padding-top:150px;
   border-radius: 10px;
 }
 
 .matrix-schedule h1 {
-  font-size: 2.5rem;
+  font-size: 3.5rem;
   text-shadow: 0 0 10px #00ff00;
   margin-bottom: 20px;
 }
 
 /* Glowing green schedule text */
 .schedule-container h4 {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   text-shadow: 0 0 5px #00ff00;
 }
