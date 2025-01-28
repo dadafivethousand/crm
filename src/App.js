@@ -48,7 +48,7 @@ function App() {
     setShowLeads(prev => !prev);
   }
 
-  const day='Wednesday'
+  const day='Thursday'
 
 
   useEffect(() => {

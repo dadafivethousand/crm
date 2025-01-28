@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Pirata+One&display=swap');
+
+.pirates-container {
+  width: 100vw;
+  height: 100vh;
+  background: url("https://i.imgur.com/1c9CpqF.jpg") no-repeat center center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Weathered Old Parchment Effect */
+.parchment {
+  width: 80%;
+  max-width: 600px;
+  background: url("https://i.imgur.com/A8rZg8W.png");
+  background-size: cover;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  font-family: 'Pirata One', cursive;
+  color: #4b2900;
+  font-size: 1.5rem;
+  position: relative;
+  animation: parchmentWave 4s infinite alternate ease-in-out;
+}
+
+/* Old Paper Floating Effect */
+@keyframes parchmentWave {
+  0% { transform: rotate(-1deg) translateY(3px); }
+  100% { transform: rotate(1deg) translateY(-3px); }
+}
+
+/* Pirate Title */
+.pirates-title {
+  font-size: 2.5rem;
+  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+  color: darkred;
+}
+
+/* X Marks The Spot */
+.x-mark {
+  position: absolute;
+  bottom: 10%;
+  right: 10%;
+  font-size: 4rem;
+  font-weight: bold;
+  color: red;
+  transform: rotate(-20deg);
+  animation: xBounce 1s infinite alternate ease-in-out;
+}
+
+/* X Bouncing Slightly */
+@keyframes xBounce {
+  0% { transform: rotate(-20deg) scale(1); }
+  100% { transform: rotate(-20deg) scale(1.1); }
+}
