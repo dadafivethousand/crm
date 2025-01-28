@@ -5,7 +5,7 @@
     flex-direction: column;
     justify-content: flex-start;
     position: relative;
-    top: -200px
+    top: -200px;
  
  
  
@@ -39,7 +39,7 @@ margin-bottom:15px
     .weekday {
         margin-bottom: 15px;
         position: relative;
-        left:50%;
+        left:35%;
         display: inline-block; /* Prevents it from stretching to full width */
         transform: translateX(-75px);
     }

@@ -9,6 +9,7 @@ import AddLead from './AddLead';
 import KidsTable from './KidsTable'
 import LionKingIntro from './LionKingIntro';
 import StarWarsIntro from './StarWarsIntro';
+import MatrixSchedule from './MatrixSchedule';
  
 
 function App() {
@@ -163,6 +164,7 @@ function App() {
      {/* <Schedule day={day} />  */}
        {/*  <LionKingIntro />*/}
        < StarWarsIntro/>
+       <MatrixSchedule day={day}/>
 
     </div>
   );
