@@ -10,7 +10,6 @@ import KidsTable from './KidsTable'
 import LionKingIntro from './LionKingIntro';
 import StarWarsIntro from './StarWarsIntro';
 import MatrixSchedule from './MatrixSchedule';
-import PiratesSchedule from './Pirates';
  
 
 function App() {
@@ -49,7 +48,7 @@ function App() {
     setShowLeads(prev => !prev);
   }
 
-  const day='Friday'
+  const day='Thursday'
 
 
   useEffect(() => {
@@ -111,7 +110,7 @@ function App() {
 
   return (
     <div>
-        <PiratesSchedule day={day}/>
+        <MatrixSchedule day={day}/>
       <img src={logo}/>
     <button onClick={toggleShowAdultClients} className='toggle-table-display'> Toggle Client Display  </button> 
       {loadingClients ? <p>Loading Clients...</p> : 
