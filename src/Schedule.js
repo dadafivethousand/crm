@@ -56,7 +56,7 @@ function Schedule({ day }) {
   return (
     <div className="schedule-container">
 
-      <h1>{day}</h1>
+   
 
       {daySchedule.length > 0 ? (
         <>

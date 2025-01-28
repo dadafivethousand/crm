@@ -1,13 +1,13 @@
 import React from "react";
-import Schedule from "./Stylesheets/Schedule";
-import "./PiratesSchedule.css";
+import Schedule from "./Schedule";
+import "./Stylesheets/Pirates.css";
 
 export default function PiratesSchedule({ day }) {
   return (
     <div className="pirates-container">
-      {/* Background: Old Treasure Map */}
+      {/* Old Treasure Map Background */}
       <div className="parchment">
- 
+        <h1 className="pirates-title">{day}</h1>
         <Schedule day={day} />
       </div>
 
