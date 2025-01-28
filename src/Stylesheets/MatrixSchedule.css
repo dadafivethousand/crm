@@ -41,6 +41,6 @@
 
 /* Glowing green schedule text */
 .schedule-container h4 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   text-shadow: 0 0 5px #00ff00;
 }
