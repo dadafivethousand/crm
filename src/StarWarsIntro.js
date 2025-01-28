@@ -12,7 +12,7 @@ export default function StarWarsIntro() {
     const firstEffect = setTimeout(() => {
       setShowText(true)
 
-    }, 3000)
+    }, 2000)
  
   }, [])
 
