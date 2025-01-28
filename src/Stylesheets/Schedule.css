@@ -31,7 +31,9 @@
     font-family:"Fugaz One"; font-weight:400; margin-bottom: 50px;;
 font-size: 40px;
 font-weight: 400;
-margin-bottom:15px
+margin-bottom:15px;
+width: 100vw;
+text-align: center;
 
 }
 
