@@ -110,7 +110,7 @@ function App() {
 
   return (
     <div>
-        <MatrixSchedule day={day}/>
+   
       <img src={logo}/>
     <button onClick={toggleShowAdultClients} className='toggle-table-display'> Toggle Client Display  </button> 
       {loadingClients ? <p>Loading Clients...</p> : 
@@ -164,8 +164,7 @@ function App() {
 
      {/* <Schedule day={day} />  */}
        {/*  <LionKingIntro />*/}
-       < StarWarsIntro/>
-     
+      
 
     </div>
   );
