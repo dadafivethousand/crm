@@ -4,12 +4,9 @@ import AddClient from './AddClient';
 import './Stylesheets/App.css';
 import logo from './Images/logos.jpg'
 import LeadsTable from './LeadsTable';
-import Schedule from './Schedule';
-import AddLead from './AddLead';
+ import AddLead from './AddLead';
 import KidsTable from './KidsTable'
-import LionKingIntro from './LionKingIntro';
-import StarWarsIntro from './StarWarsIntro';
-import MatrixSchedule from './MatrixSchedule';
+ 
  
 
 function App() {
@@ -158,13 +155,8 @@ function App() {
            setClientFormData={setClientFormData}
            setConvertToClientData={setConvertToClientData}
          />}
-
-    
-
-
      {/* <Schedule day={day} />  */}
        {/*  <LionKingIntro />*/}
-      
 
     </div>
   );
