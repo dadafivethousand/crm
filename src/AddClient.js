@@ -157,13 +157,14 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
                         <input type="text" name="lastName" value={clientFormData.lastName} onChange={handleInputChange} placeholder="Last Name" />
                         <input type="email" name="email" value={clientFormData.email} onChange={handleInputChange} placeholder="Email" />
                         <input type="tel" name="phone" value={clientFormData.phone} onChange={handleInputChange} placeholder="Phone Number" /> <br></br>
-                        
+                        <input type="text" name="kids" value={clientFormData.kids} onChange={handleInputChange} placeholder="kids" /> <br></br>
+
                         <label>Membership Start Date:</label>
                         <input type="date" name="startDate" value={clientFormData.startDate} onChange={handleInputChange} />
                         <label>Membership Duration:</label>
                         <select name="membershipDuration" value={clientFormData.membershipDuration} onChange={handleInputChange}>
                         {membershipInfo.info.map((membership) => (
-                            !membership.free && membership.description?
+                            !membership.free && membership.description && membership.duration?
                             <option key={membership.description} value={membership.description}>
                                 {membership.description}
                             </option> : null
