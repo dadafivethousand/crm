@@ -30,11 +30,20 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
 
 
     useEffect(() => {
+
         setClientFormData((prevData) => ({
             ...prevData,
             ...prefilledData, // Override with prefilled data
         }));
+
     }, []);
+
+    useEffect(() => {
+
+        updateEndDate('1 Month', membershipInfo, clientFormData.startDate) 
+
+    }, [clientFormData.startDate]);
+  
 
     // Handle form input changes
     const handleInputChange = (e) => {
