@@ -1,7 +1,11 @@
+import KidsForm from './KidsForm';
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
 
 export default function AddClient({ membershipInfo, setConvertToClientData, clientFormData, showClientForm, setShowClientForm, setClients, setClientFormData, prefilledData = {} }) {
+    const [forChild, setForChild] = useState(false)
+    const [kidsFormData, setKidsFormData] = useState([{ firstName: '', lastName: '' }]);
+
     // Initialize state
  
 
@@ -13,30 +17,49 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
             lastName: "",
             email: "",
             phone: "",
-         
+            
             startDate: "",
             membershipDuration: "1-month",
             endDate: "",
             expiringSoon: false,
-            timestamp: "",
+             timestamp: "",
         });
     };
+
+    const clearForChild = () => {
+        setForChild(false)
+        setKidsFormData([{ firstName: '', lastName: '' }])
+    }
 
     // Save state to localStorage whenever it changes
     useEffect(() => {
         localStorage.setItem("showClientForm", showClientForm.toString());
-        localStorage.setItem("clientFormData", JSON.stringify(clientFormData ));
+        localStorage.setItem("clientFormData", JSON.stringify(clientFormData));
     }, [showClientForm, clientFormData]);
 
 
     useEffect(() => {
-
         setClientFormData((prevData) => ({
             ...prevData,
             ...prefilledData, // Override with prefilled data
         }));
-
     }, []);
+
+
+    useEffect(() => {
+        setClientFormData((prevData) => ({
+            ...prevData,
+            kidsMembership: forChild
+        }));
+    }, [ forChild]);
+
+
+    useEffect(() => {
+        setClientFormData((prevData) => ({
+            ...prevData,
+             kids: kidsFormData
+        }));
+    }, [kidsFormData]);
 
     useEffect(() => {
 
@@ -49,7 +72,6 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
     const handleInputChange = (e) => {
         console.log('handlinginputchange')
         const { name, value } = e.target;
-
         // Update clientFormData  with the new value
         setClientFormData((prevData) => {
             const updatedData = { ...prevData, [name]: value };
@@ -65,6 +87,7 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
 
             return updatedData;
         });
+        
     };
 
     // Update end date based on membership duration
@@ -99,14 +122,25 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
 
         // Set the timestamp at the time of form submission
         const timestamp = new Date().toISOString();
+        const formDataToSend = {
+            ...clientFormData,
+            timestamp,
+        };
 
+        if (forChild) {
+            formDataToSend.kids = kidsFormData;
+        } else {
+            delete formDataToSend.kids; // Ensure 'kids' is not sent when it's not needed
+        }
+ 
         try {
             const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/add-client", {
+                
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ ...clientFormData , timestamp }), // Include the timestamp
+                body: JSON.stringify( formDataToSend ), // Include the timestamp
             });
 
             if (response.ok) {
@@ -130,10 +164,10 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
                     expiringSoon: false,
                     timestamp: "",
                 });
-                console.log('hiiiiiii')
+       
                 localStorage.removeItem("showClientForm");
                 localStorage.removeItem("clientFormData");
-                console.log('hiiiiiii')
+                
                 setShowClientForm(false);
                 window.location.reload();
                 // Delete the lead from KV if this was a conversion
@@ -161,13 +195,40 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
                 <div className="overlay">
                     <form className="user-form" onSubmit={handleSubmit}>
                         <h2>Add New Client</h2>
+                    
 
                         <input type="text" name="firstName" value={clientFormData.firstName} onChange={handleInputChange} placeholder="First Name" />
                         <input type="text" name="lastName" value={clientFormData.lastName} onChange={handleInputChange} placeholder="Last Name" />
                         <input type="email" name="email" value={clientFormData.email} onChange={handleInputChange} placeholder="Email" />
                         <input type="tel" name="phone" value={clientFormData.phone} onChange={handleInputChange} placeholder="Phone Number" /> <br></br>
-                        <input type="text" name="kids" value={clientFormData.kids} onChange={handleInputChange} placeholder="kids" /> <br></br>
+                        
+                        <div className="membership-type">
+                        <label>
+                            <input
+                                type="radio"
+                                name="membershipType"
+                                value="self"
+                                checked={!forChild}
+                                onChange={clearForChild}
+                            />
+                            Self
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="membershipType"
+                                value="child"
+                                checked={forChild}
+                                onChange={() => setForChild(true)}
+                            />
+                            Child
+                        </label>
+                    </div>
 
+                        {forChild && 
+                        <KidsForm kidsFormData={kidsFormData} setKidsFormData={setKidsFormData} />
+                        }
+                        <br></br>
                         <label>Membership Start Date:</label>
                         <input type="date" name="startDate" value={clientFormData.startDate} onChange={handleInputChange} />
                         <label>Membership Duration:</label>

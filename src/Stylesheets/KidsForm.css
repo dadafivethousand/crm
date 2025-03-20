@@ -1,0 +1,187 @@
+/* Kids Form Container */
+.kids-form-container {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  z-index: 40;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-height: 80vh;
+}
+
+/* Form Title */
+.kids-form-container h3 {
+  margin-bottom: 5px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Subtitle */
+.kids-form-title {
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* Form Layout */
+.kids-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+
+/* Input Groups */
+.kids-form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Input Container */
+.input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+/* Input Fields */
+.kids-form-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.kids-form-input:focus {
+  border-color: #007bff;
+}
+
+/* DOB Section */
+.kids-form-dob {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.kids-form-dob p {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+/* Buttons */
+button {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+/* Submit Button */
+.kids-form-submit-button {
+  background-color: black;
+  color: white;
+  width: 100%;
+}
+
+.kids-form-submit-button:hover {
+  background-color: #333;
+  transform: scale(1.05);
+}
+
+/* Add Kid Button */
+#kids-form-add-button {
+  background-color: green;
+  color: white;
+  width: 110px;
+}
+
+#kids-form-add-button:hover {
+  background-color: #008000;
+  transform: scale(1.05);
+}
+
+/* Remove Kid Button */
+#kids-form-remove-button {
+  background-color: red;
+  color: white;
+  width: 100px;
+}
+
+#kids-form-remove-button:hover {
+  background-color: darkred;
+  transform: scale(1.05);
+}
+
+/* Close Button */
+.kids-form-close {
+  font-size: 26px;
+  cursor: pointer;
+  color: #444;
+}
+
+.kids-form-close:hover {
+  color: #000;
+}
+
+/* Image Styling */
+.pic {
+  height: 150px;
+  border-radius: 8px;
+}
+
+/* Parent Email Container */
+.parent-email-container {
+  margin-top: 30px;
+}
+
+/* Remove Calendar Icon for Date Inputs */
+.kids-form-input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .kids-form-container {
+      width: 90%;
+      padding: 15px;
+  }
+
+  .kids-form {
+      flex-direction: column;
+  }
+
+  button {
+      width: 100%;
+  }
+
+  #kids-form-add-button,
+  #kids-form-remove-button {
+      width: 100%;
+  }
+}

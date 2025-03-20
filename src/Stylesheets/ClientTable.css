@@ -1,104 +1,160 @@
+/* Container for the client table */
 .client-table-container {
   margin: 20px;
   overflow-x: auto;
 }
 
-img{
-  height:150px;
+/* Image Styling */
+img {
+  height: 150px;
   margin: 0 auto;
   display: block;
-
 }
 
- 
-
+/* Client Table */
 .client-table {
   width: 100%;
   border-collapse: collapse;
   font-family: Arial, sans-serif;
-   text-align: center;
+  text-align: center;
 }
 
+/* Table Header & Cells */
 .client-table th,
 .client-table td {
   border: 1px solid #ddd;
-  padding: 8px;
-  max-width:25px;
-  word-wrap: break-word; /* Prevents overflow issues */
-
+  padding: 10px;
+  max-width: 100px; /* Increased max-width for better text wrapping */
+  word-wrap: break-word;
+  white-space: normal;
 }
 
+/* Table Header */
 .client-table th {
   background-color: #f4f4f4;
   font-weight: bold;
+  padding: 12px;
 }
 
+/* Alternating Row Colors */
 .client-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
+/* Hover Effect for Rows */
 .client-table tr:hover {
   background-color: #f1f1f1;
 }
 
- 
-
-
-
-.table-header:hover{
+/* Sortable Table Headers */
+.table-header:hover {
   cursor: pointer;
-  }
-  
-  .header-arrow{
-      margin-left:10px
-  }
-  
-  .header-arrow:hover{
-  cursor: pointer
+  color: #007bff;
 }
 
-
-.edit-btn{
- display:block
- 
-
+.header-arrow {
+  margin-left: 10px;
 }
-   
 
- 
+.header-arrow:hover {
+  cursor: pointer;
+}
+
+/* Edit Button */
+.edit-btn {
+  display: block;
+  margin: auto;
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.edit-btn:hover {
+  background-color: #0056b3;
+}
+
+/* No-Mail Button */
 .no-mail-button {
-  background-color: rgb(255, 255, 255);
+  background-color: white;
   border: 1px solid red;
   font-size: 15px;
-  font-family: roboto condensed;
-
-  
+  font-family: "Roboto Condensed", sans-serif;
+  color: red;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
 }
 
+.no-mail-button:hover {
+  background-color: red;
+  color: white;
+}
+
+/* Active Status */
 .active {
   background-color: rgb(171, 30, 23);
   border: 1px solid black;
- 
+  color: white;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 4px;
 }
 
-
-.small button{
+/* Small Buttons */
+.small button {
   margin: 0;
-  display:block
+  display: block;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
-
+/* Small Table Column */
 .client-table .small {
-  min-width:15px ;/* Adjust to the desired width */
-  max-width:15px;
+  min-width: 25px;
+ 
+  text-align: center;
   border: 1px solid red;
 }
 
-.button-flex{
+/* Button Flex Wrapper */
+.button-flex {
   display: flex;
+  gap: 10px;
 }
 
+/* Red Alert Styling */
 .red {
-  background-color: rgba(255, 0, 0, 0.751);
-  width:100%
+  background-color: rgba(255, 0, 0, 0.75);
+ 
+  width: 100%;
+  padding: 8px;
+  text-align: center;
+ 
+  border-radius: 4px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .client-table-container {
+    margin: 10px;
+    overflow-x: scroll;
+  }
+
+  .client-table th,
+  .client-table td {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .edit-btn,
+  .no-mail-button {
+    font-size: 13px;
+    padding: 5px 8px;
+  }
 }

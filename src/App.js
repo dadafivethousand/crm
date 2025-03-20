@@ -11,6 +11,7 @@ import KidsTable from './KidsTable'
 
 function App() {
   const [clients, setClients] = useState([]);
+  const [kids, setKids] = useState([]);
   const [leads, setLeads] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [loadingClients, setLoadingClients] = useState(true);
@@ -54,7 +55,8 @@ function App() {
         const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-clients");
         if (response.ok) {
           const data = await response.json();
-          setClients(data);
+          setClients(data['clients']);
+          setKids(data['kids']);
         } else {
           console.error("Failed to fetch clients");
         }
@@ -109,17 +111,8 @@ function App() {
     <div>
    
       <img src={logo}/>
-    <button onClick={toggleShowAdultClients} className='toggle-table-display'> Toggle Client Display  </button> 
-      {loadingClients ? <p>Loading Clients...</p> : 
-          showAdultClients &&     <ClientTable
-                clients={clients}
-                setClients={setClients}
-                membershipInfo={membershipInfo}
-            
-              /> 
-      }
 
-{showClientForm ? <AddClient 
+      {showClientForm ? <AddClient 
        setConvertToClientData={setConvertToClientData}
        prefilledData={convertToClientData}
       showClientForm={showClientForm} 
@@ -128,23 +121,35 @@ function App() {
       clientFormData={clientFormData} 
       membershipInfo={membershipInfo}
       setClients={setClients} /> :  
-      <button className='plus' onClick={() => setShowClientForm(true)}>Add Adult/Teen Client</button>}
+      <button className='plus' onClick={() => setShowClientForm(true)}>Add Client</button>}
 
 
-<button onClick={toggleShowKidClients} className='toggle-table-display'> Toggle Kids Display  </button> 
-{loadingLeads ? <p>Loading Leads...</p> : 
-      showKidClients &&
-        <KidsTable
+    <button onClick={toggleShowAdultClients} className='toggle-table-display'> Teens & Adults  </button> 
+      {loadingClients ? <p>Loading Clients...</p> : 
+          showAdultClients &&     <ClientTable
                 clients={clients}
                 setClients={setClients}
                 membershipInfo={membershipInfo}
             
               /> 
       }
-      <AddLead />
+<br></br>
+<button onClick={toggleShowKidClients} className='toggle-table-display'> Kids </button> 
+{loadingLeads ? <p>Loading Leads...</p> : 
+      showKidClients &&
+        <KidsTable
+              kids={kids}
+                setKids={setKids}
+                clients={clients}
+                setClients={setClients}
+                membershipInfo={membershipInfo}
+            
+              /> 
+      }
+    {/*  <AddLead />  */}
 
-
-<button onClick={toggleShowLeads} className='toggle-table-display'> Toggle Leads Display  </button> 
+<br></br>
+<button onClick={toggleShowLeads} className='toggle-table-display'>  Leads   </button> 
 
       {loadingLeads ? <p>Loading Leads...</p> : 
       showLeads &&

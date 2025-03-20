@@ -92,9 +92,9 @@ async function handleToggleInstallmentReminders(student) {
     if (!startDate) return "";
 
     const date = new Date(startDate);
-
+    console.log(membershipInfo)
     // Find the membership matching the given duration
-    const matchingMembership = membershipInfo.find(
+    const matchingMembership = membershipInfo.info.find(
         (membership) => membership.description === duration
 
     );
@@ -237,7 +237,7 @@ async function handleToggleInstallmentReminders(student) {
 
         <tbody>
           {clients
-           .filter((client) => client && client.data)  //Filter out null or undefined clients
+           .filter((client) => client && client.data && !client.data.kidsMembership)  //Filter out null or undefined clients
           .map((client, index) => (
             <tr key={index}
             className={`${client.data.endDate && new Date() >= new Date(client.data.endDate) ? 'red' : ''}`}
@@ -339,7 +339,7 @@ async function handleToggleInstallmentReminders(student) {
                       onChange={(e) => handleInputChange(e, 'membershipDuration')}
                     >
               {membershipInfo.info.map((membership) => (
-                            !membership.free && membership.description?
+                          !membership.free && membership.description && membership.duration?
                             <option key={membership.description} value={membership.description}>
                     {membership.description}
                 </option> : null

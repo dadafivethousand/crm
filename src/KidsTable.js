@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './Stylesheets/ClientTable.css';
 import AddClient from './AddClient';
 
-function ClientTable({ membershipInfo, clients, setClients}) {
+function KidsTable({ membershipInfo, clients, setClients, kids, setKids}) {
   console.log(clients)
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
@@ -20,9 +20,7 @@ function ClientTable({ membershipInfo, clients, setClients}) {
     // Find the membership matching the given duration
     const matchingMembership = membershipInfo.find(
         (membership) => membership.description === duration
-
     );
-
     // If a match is found, update the date
     if (matchingMembership) {
       console.log('matchingmembershipfound')
@@ -33,9 +31,6 @@ function ClientTable({ membershipInfo, clients, setClients}) {
     // If no match is found, return an empty string
     return "";
 };
-
-
-
   const handleCancelEdit = () => {
     setEditingRow(null);
     setEditedData({});
@@ -62,15 +57,15 @@ function ClientTable({ membershipInfo, clients, setClients}) {
 
   const handleSaveChanges = async (key) => {
     try {
-      const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-client`, {
+      const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-kid`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, data: editedData }),
       });
   
       if (response.ok) {
-        setClients((prevClients) =>
-          prevClients.map((client) =>
+        setKids((prevKids) =>
+          prevKids.map((client) =>
             client.key === key ? { ...client, data: { ...editedData } } : client
           )
         );
@@ -83,27 +78,32 @@ function ClientTable({ membershipInfo, clients, setClients}) {
     }
   };
  
-  const handleDelete = async (key) => {
+  const handleDelete = async (key, client) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-client`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key }),
-        });
-  
-        if (response.ok) {
-          setClients((prevClients) =>
-            prevClients.filter((client) => client.key !== key)
-          );
-        } else {
-          console.error('Error deleting record');
+      console.log(key)
+      console.log(client)
+        try {
+            const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-kid`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key }),
+            });
+
+            const data = await response.json(); // Extract response body
+
+            if (response.ok) {
+                console.log("Response from backend:", data); // Log actual message
+                setKids((prevKids) =>
+                    prevKids.filter((kid) => kid.key !== key)
+                );
+            } else {
+                console.error('Error deleting record:', data);
+            }
+        } catch (error) {
+            console.error('Error deleting record:', error);
         }
-      } catch (error) {
-        console.error('Error deleting record:', error);
-      }
     }
-  };
+};
 
 
    
@@ -122,21 +122,21 @@ function ClientTable({ membershipInfo, clients, setClients}) {
             <th className='small'> </th>
             <th><p>First Name </p></th>
             <th>Last Name</th>
-            <th>Email</th>
+            <th> Email</th>
             <th>Phone</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Payment Status</th>
             <th>Membership Duration</th>
             <th>1 Week Expiration Notification Sent</th>
-            <th>Kids</th>
+            <th>Parent First Name</th>
+            <th>Parent Last Name</th>
             <th className='small'></th>
           </tr>
         </thead>
         <tbody>
-          {clients
-           .filter((client) => client && client.data)  //Filter out null or undefined clients
-          .map((client, index) => (
+          {  //Filter out null or undefined clients
+          kids.map((client, index) => (
             <tr key={index}>
               <td className='small'>
                 {editingRow === index ? (
@@ -216,7 +216,7 @@ function ClientTable({ membershipInfo, clients, setClients}) {
                       value={editedData.membershipDuration || ''}
                       onChange={(e) => handleInputChange(e, 'membershipDuration')}
                     >
-              {membershipInfo.map((membership) => (
+              {membershipInfo.info.map((membership) => (
                 !membership.free &&
                 <option key={membership.description} value={membership.description}>
                     {membership.description}
@@ -225,36 +225,47 @@ function ClientTable({ membershipInfo, clients, setClients}) {
                     </select>
                   </td>
                   <td>{client.data.expiringSoon ? "yes": 'no'}</td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editedData.parentFirstName || ''}
+                      onChange={(e) => handleInputChange(e, 'parentFirstName')}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editedData.parentLastName || ''}
+                      onChange={(e) => handleInputChange(e, 'parentLastName')}
+                    />
+                  </td>
+   
+                  
                 </>
               ) : (
                 <>
                   <td> <p>{client.data.firstName}</p></td>
                   <td>{client.data.lastName}</td>
-                  <td>{client.data.email}</td>
+                  <td>{client.data.parentEmail}</td>
                   <td>{client.data.phone}</td>
+               
                   <td>{client.data.startDate}</td>
                   <td>{client.data.endDate}</td>
                   <td>{client.data.paymentStatus}</td>
                   <td>{client.data.membershipDuration}</td>
-                  <td>{client.data.expiringSoon ? "yes": 'no'}</td>
-                  <td>
-  {client.data.kids && client.data.kids.length > 0 ? (
-    client.data.kids.map((kid, i) => (
-      <div key={i}>
-        {kid.firstName} {kid.lastName} ({kid.dob})
-      </div>
-    ))
-  ) : (
-    "No kids"
-  )}
-</td>
-         
+                  <td>{client.data.expiringSoon}</td>
+                  <td>{client.data.parentFirstName}</td>
+                  <td>{client.data.parentLastName}</td>
+
+
+             
+ 
                 </>
               )}
               <td className='small'>
                 <button
                   className="delete-btn"
-                  onClick={() => handleDelete(client.key)}
+                  onClick={() => handleDelete(client.key, client)}
                 >
                   🗑️
                 </button>
@@ -268,4 +279,4 @@ function ClientTable({ membershipInfo, clients, setClients}) {
   );
 }
 
-export default ClientTable;
+export default KidsTable;
