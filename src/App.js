@@ -31,6 +31,7 @@ function App() {
     endDate: "",
     expiringSoon: false,
     timestamp: "",
+    confirmationEmail: true,
   });
 
   const toggleShowAdultClients=()=>{

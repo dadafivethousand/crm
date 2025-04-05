@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function AddClient({ membershipInfo, setConvertToClientData, clientFormData, showClientForm, setShowClientForm, setClients, setClientFormData, prefilledData = {} }) {
     const [forChild, setForChild] = useState(false)
+  
     const [kidsFormData, setKidsFormData] = useState([{ firstName: '', lastName: '' }]);
 
     // Initialize state
@@ -23,6 +24,7 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
             endDate: "",
             expiringSoon: false,
              timestamp: "",
+             confirmationEmail: true,
         });
     };
 
@@ -194,15 +196,16 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
         <div className='add-client-container'>
                 <div className="overlay">
                     <form className="user-form" onSubmit={handleSubmit}>
-                        <h2>Add New Client</h2>
+                        <h2 className='new-client-title'>Add New Client</h2>
                     
-
+                    <div>           
                         <input type="text" name="firstName" value={clientFormData.firstName} onChange={handleInputChange} placeholder="First Name" />
                         <input type="text" name="lastName" value={clientFormData.lastName} onChange={handleInputChange} placeholder="Last Name" />
                         <input type="email" name="email" value={clientFormData.email} onChange={handleInputChange} placeholder="Email" />
                         <input type="tel" name="phone" value={clientFormData.phone} onChange={handleInputChange} placeholder="Phone Number" /> <br></br>
-                        
+                        </div>
                         <div className="membership-type">
+                      <span>  Membership is for:  </span>
                         <label>
                             <input
                                 type="radio"
@@ -231,6 +234,7 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
                         <br></br>
                         <label>Membership Start Date:</label>
                         <input type="date" name="startDate" value={clientFormData.startDate} onChange={handleInputChange} />
+                        <br></br>
                         <label>Membership Duration:</label>
                         <select name="membershipDuration" value={clientFormData.membershipDuration} onChange={handleInputChange}>
                         {membershipInfo.info.map((membership) => (
@@ -240,10 +244,32 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
                             </option> : null
             ))}
                         </select>
+                        <br></br>
                         <label>Membership End Date:</label> 
                         <input type="date" name="endDate" value={clientFormData.endDate} onChange={handleInputChange} /><br></br>
+                        <div className="welcome-email">
+     <div className="welcome-email">
+    <label>
+        <input
+            type="checkbox"
+            checked={!clientFormData.confirmationEmail} // If checked, email is NOT sent
+            onChange={() =>
+                setClientFormData((prevData) => ({
+                    ...prevData,
+                    confirmationEmail: !prevData.confirmationEmail // Toggle between true/false
+                }))
+            }
+        />
+        Do not send welcome email
+    </label>
+</div>
+</div>
+
+                       
+                       <div className='save-and-submit-buttons'>
                         <button type="submit">Save</button>
                         <button type="button" onClick={() => closeForm()}>Cancel</button>
+                        </div>
                     </form>
                 </div>
          

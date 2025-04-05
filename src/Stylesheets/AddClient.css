@@ -1,7 +1,16 @@
+/* General Container */
 .add-client-container {
     text-align: center;
     background-color: white;
     z-index: 5;
+}
+
+.save-and-submit-buttons{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    height:20px;
+    margin-top:15px
 }
 
 /* Overlay to blur background and center form */
@@ -11,88 +20,118 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
+     overflow: scroll;
 }
 
 /* Main Form */
 .user-form {
     background: #fff;
-    padding: 25px;
-    border-radius: 12px;
-    width: 380px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    padding: 30px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: fadeIn 0.3s ease-in-out;
+    align-items: center;
+ 
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Title */
+.new-client-title {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    color: #222;
 }
 
 /* Input Row Layout */
 .form-row {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     margin-bottom: 15px;
 }
 
 /* Labels */
-.form-row label {
-    width: 140px;
+label {
+    font-weight: bold;
+    color: #444;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+/* Inputs & Selects */
+input,
+select {
+    width: 40%;
+  
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+    background: #f9f9f9;
+}
+
+/* Input Focus */
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+/* Radio Button Group */
+.membership-type {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: center;
+}
+
+.membership-type span {
     font-weight: bold;
     color: #333;
 }
 
-/* Inputs & Selects */
-.form-row input,
-.form-row select {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #bbb;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-/* Form Actions (Submit/Cancel Buttons) */
-.form-actions {
+.membership-type label {
     display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-/* Plus Button */
-.plus {
-    height: 60px;
-    width: fit-content;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
     align-items: center;
-    margin: 20px auto;
-    background-color: #000;
-    color: white;
-    font-size: 18px;
-    padding: 10px 25px;
+    gap: 5px;
+    font-weight: normal;
+}
+
+/* Buttons */
+button {
+    width: 60%;
+    padding: 10px;
+    border: none;
     border-radius: 8px;
-    border: none;
-    transition: background 0.2s ease;
-}
-
-.plus:hover {
-    background-color: #222;
-}
-
-/* Submit & Cancel Buttons */
-button[type="submit"],
-button[type="button"] {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    margin: 0 auto;
+    display: block;
 }
 
+/* Submit Button */
 button[type="submit"] {
     background-color: #4caf50;
     color: white;
@@ -100,22 +139,58 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
     background-color: #45a049;
+    transform: scale(1.03);
 }
 
+/* Cancel Button */
 button[type="button"] {
     background-color: #f44336;
     color: white;
-    margin-left: 10px;
+ 
 }
 
 button[type="button"]:hover {
     background-color: #d7382c;
+    transform: scale(1.03);
 }
+
+/* Plus Button */
+.plus {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    background-color: #222;
+    color: white;
+    font-size: 18px;
+    padding: 12px 30px;
+    border-radius: 10px;
+    border: none;
+    transition: all 0.2s ease-in-out;
+    width: 200px;
+}
+
+.plus:hover {
+    background-color: #000;
+    transform: scale(1.05);
+}
+
+ 
 
 /* Mobile Responsiveness */
 @media (max-width: 450px) {
     .user-form {
         width: 90%;
-        padding: 20px;
+        padding: 25px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    button[type="button"] {
+        margin-left: 0;
     }
 }
