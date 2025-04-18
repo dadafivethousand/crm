@@ -182,31 +182,29 @@ async function handleToggleInstallmentReminders(student) {
   };
 
   //this function is to put the client on the do not mail list
-  const handleNoEmail = async (key) => {
-
-      try {
-        const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key }),
-        });
+  const handleNoEmail = async (key, type) => {
+    try {
+      const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, type }), // ← pass type here
+      });
   
-        if (response.ok) {
-          setClients((prevClients) =>
-            prevClients.map((client) =>
-              client.key === key ? { ...client, data: { ...editedData } } : client
-            )
-          );
-          window.location.reload();
- 
-        } else {
-          console.error('Error adding client to the do not mail list');
-        }
-      } catch (error) {
-        console.error('EError adding client to the do not mail list:', error);
+      if (response.ok) {
+        setClients((prevClients) =>
+          prevClients.map((client) =>
+            client.key === key ? { ...client, data: { ...editedData } } : client
+          )
+        );
+        window.location.reload();
+      } else {
+        console.error('Error updating do-not-mail list');
       }
- 
+    } catch (error) {
+      console.error('Error updating do-not-mail list:', error);
+    }
   };
+  
 
    
  
@@ -215,7 +213,7 @@ async function handleToggleInstallmentReminders(student) {
 
   return (
     <div className="client-table-container">
-      <h1>Adult & Teen Students</h1>
+      <h1>  {clients.length} Adult & Teen Students </h1> 
 
  
  
@@ -265,16 +263,11 @@ async function handleToggleInstallmentReminders(student) {
                   >
                     ✏️
                   </button>
-                  <button
-                  className={`reminder-btn ${client.data.reminderDates ? 'active' : ''}`}
-                  onClick={() => handleToggleInstallmentReminders(client)}
-                  >
-                      🔔
-                  </button>
+         
                   </div>
                      <button
                     className={`no-mail-button ${client.data.doNotMail ? 'active' : ''}`}
-                    onClick={() => handleNoEmail(client.key)}
+                    onClick={() => handleNoEmail(client.key, 'student')}
                   >
                    No Email
                   </button>

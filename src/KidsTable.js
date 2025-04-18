@@ -105,6 +105,30 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids}) {
     }
 };
 
+const handleNoEmail = async (key, type) => {
+  try {
+    const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, type }), // ← pass type here
+    });
+
+    if (response.ok) {
+      setClients((prevClients) =>
+        prevClients.map((client) =>
+          client.key === key ? { ...client, data: { ...editedData } } : client
+        )
+      );
+      window.location.reload();
+    } else {
+      console.error('Error updating do-not-mail list');
+    }
+  } catch (error) {
+    console.error('Error updating do-not-mail list:', error);
+  }
+};
+
+
 
    
  
@@ -113,7 +137,7 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids}) {
 
   return (
     <div className="client-table-container">
-<h1>Kid Students</h1>
+<h1> {kids.length}  Kid Students</h1>
  
  
       <table className="client-table">
@@ -152,12 +176,24 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids}) {
                     </button>
                   </>
                 ) : (
+                  <>
+           
                   <button
                     className="edit-btn"
                     onClick={() => handleEditClick(index, client.data)}
                   >
                     ✏️
                   </button>
+       
+        
+                     <button
+                    className={`no-mail-button ${client.data.doNotMail ? 'active' : ''}`}
+                    onClick={() => handleNoEmail(client.key,  'kid')}
+                  >
+                   No Email
+                  </button>
+                  </>
+
                 )}
               </td>
               {editingRow === index ? (

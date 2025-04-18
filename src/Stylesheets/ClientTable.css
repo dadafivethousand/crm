@@ -116,7 +116,7 @@ img {
 
 /* Small Table Column */
 .client-table .small {
-  min-width: 25px;
+  min-width: 75px;
  
   text-align: center;
   border: 1px solid red;
