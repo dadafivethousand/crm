@@ -21,7 +21,6 @@ const [headers, setHeaders] = useState([
   { key: "paymentStatus", label: "Payment Status" },
   { key: "membershipDuration", label: "Membership Duration" },
   { key: "expiringSoon", label: "Expiring Soon" },
- 
 ]);
 
 
@@ -196,8 +195,7 @@ async function handleToggleInstallmentReminders(student) {
             client.key === key ? { ...client, data: { ...editedData } } : client
           )
         );
-        window.location.reload();
-      } else {
+       } else {
         console.error('Error updating do-not-mail list');
       }
     } catch (error) {

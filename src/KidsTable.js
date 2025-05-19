@@ -1,11 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Stylesheets/ClientTable.css';
 import AddClient from './AddClient';
 
 function KidsTable({ membershipInfo, clients, setClients, kids, setKids}) {
-  console.log(clients)
+ 
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
+    const [sortColumn, setSortColumn] = useState("firstName");
+  const [sortDirection, setSortDirection] = useState("asc");
+
+  const [headers, setHeaders] = useState([
+    { key: "firstName", label: "First Name" },
+    { key: "lastName", label: "Last Name" },
+    { key: "parentEmail", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "startDate", label: "Start Date" },
+    { key: "endDate", label: "End Date" },
+    { key: "paymentStatus", label: "Payment Status" },
+    { key: "membershipDuration", label: "Membership Duration" },
+    { key: "expiringSoon", label: "Expiring Soon" },
+    { key: "parentFirstName", label: "Parent First Name" },
+    { key: "parentLastName", label: "Parent Last Name" },
+    ]);
+
+  useEffect(() => {
+    setKids(sortClients(kids, sortColumn, sortDirection));
+  }, [sortColumn, sortDirection]); // Sort whenever column or direction changes
+  
+    const sortClients = (kids, column, direction) => {
+      console.log('sorging')
+      return [...kids].sort((a, b) => {
+        let valueA = a.data[column]?.toString().toLowerCase() || "";
+        let valueB = b.data[column]?.toString().toLowerCase() || "";
+    
+        if (valueA < valueB) return direction === "asc" ? -1 : 1;
+        if (valueA > valueB) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    };
+  
+
+    const handleSort = (key) => {
+    if (sortColumn === key) {
+      setSortDirection((prevDirection) => (prevDirection === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(key);
+      setSortDirection("asc");
+    }
+  };
+  
 
   const handleEditClick = (index, clientData) => {
     setEditingRow(index);
@@ -119,8 +162,7 @@ const handleNoEmail = async (key, type) => {
           client.key === key ? { ...client, data: { ...editedData } } : client
         )
       );
-      window.location.reload();
-    } else {
+     } else {
       console.error('Error updating do-not-mail list');
     }
   } catch (error) {
@@ -144,24 +186,23 @@ const handleNoEmail = async (key, type) => {
         <thead>
           <tr>
             <th className='small'> </th>
-            <th><p>First Name </p></th>
-            <th>Last Name</th>
-            <th> Email</th>
-            <th>Phone</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Payment Status</th>
-            <th>Membership Duration</th>
-            <th>1 Week Expiration Notification Sent</th>
-            <th>Parent First Name</th>
-            <th>Parent Last Name</th>
+          {headers.map((header) => (
+              <th key={header.key}  onClick={() => handleSort(header.key)}>
+                <div className='header'>
+               <div className='table-header'> {header.label}</div>
+               <div className='header-arrow'>  {sortColumn === header.key && (sortDirection === "asc" ? "↓" : "↑")}</div>
+               </div>
+              </th>
+            ))}
             <th className='small'></th>
           </tr>
         </thead>
         <tbody>
           {  //Filter out null or undefined clients
           kids.map((client, index) => (
-            <tr key={index}>
+            <tr key={index}
+          className={`${client.data.endDate && new Date() >= new Date(client.data.endDate) ? 'red' : ''}`}
+>
               <td className='small'>
                 {editingRow === index ? (
                   <>
