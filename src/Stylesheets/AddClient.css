@@ -117,7 +117,7 @@ select:focus {
 }
 
 /* Buttons */
-button {
+.add-client-container button {
     width: 60%;
     padding: 10px;
     border: none;

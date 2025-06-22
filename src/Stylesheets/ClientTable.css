@@ -14,8 +14,7 @@
 
 .ct-client-table th,
 .ct-client-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
+  border: 1px solid #000000; 
   max-width: 100px;
   word-wrap: break-word;
   white-space: normal;
@@ -24,12 +23,9 @@
 .ct-client-table th {
   background-color: #f4f4f4;
   font-weight: bold;
-  padding: 12px;
+ 
 }
-
-.ct-client-table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
+ 
 
 .ct-client-table tr:hover {
   background-color: #f1f1f1;
@@ -55,13 +51,14 @@
 .ct-cancel-btn,
 .ct-delete-btn {
   display: block;
-  margin: auto;
+  margin: 0 auto;
   padding: 6px 12px;
   font-size: 14px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.2s ease-in-out;
+
 }
 
 .ct-edit-btn {
@@ -89,8 +86,7 @@
 }
 
 .ct-delete-btn {
-  background-color: #dc3545;
-  color: white;
+   color: white;
 }
 .ct-delete-btn:hover {
   background-color: #c82333;
@@ -125,23 +121,21 @@
 }
 
 .ct-small{
-display: flex;
-
+  height: 55px;
+  text-align: center;
+  vertical-align: middle;
+  width:30px;
 }
 
 /* Utility Column + Flex */
 .ct-small button {
-  margin: 0;
+ 
   display: block;
   padding: 4px 8px;
   font-size: 12px;
 }
 
-.ct-client-table .ct-small {
-  text-align: center;
-  border: 1px solid red;
-}
-
+ 
 .ct-button-flex {
   display: flex;
   gap: 10px;
@@ -151,7 +145,7 @@ display: flex;
 
 /* Expired Client Highlight */
 .ct-red {
-  background-color: rgba(255, 0, 0, 0.75);
+  background-color: rgba(255, 0, 0, 0.904);
   width: 100%;
   padding: 8px;
   text-align: center;
@@ -164,7 +158,7 @@ display: flex;
   .ct-no-mail-button {
     font-size: 13px;
  
-     width: 45px;
+     width: 35px;
     display: flex;
     justify-content: center;
   }
@@ -187,8 +181,43 @@ display: flex;
 
 
 .ct-regular >* input, .ct-red >* input{
-width:80%;
+width:95%;
 }
 
 
+ #no-email{
+  width:25px;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Adjusted column widths */
+.ct-th-firstName,
+.ct-th-lastName {
+  width: 120px;
+}
+
+.ct-th-email {
+  width: 240px;
+}
+
+.ct-th-phone {
+  width: 130px;
+}
+
+.ct-th-startDate,
+.ct-th-endDate {
+  width: 40px;
+}
+
+.ct-th-membershipDuration{
+ width: 40px;
+  background-color: red;
  
+}
+
+
+ #ct-no-email-button{
+  margin: 0 auto;
+  display: block;
+ }

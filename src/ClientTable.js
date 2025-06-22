@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Stylesheets/ClientTable.css';
+import noemailimg from './Images/noemail.avif'
+import sendemail from "./Images/sendemail.png"
 
 function ClientTable({ membershipInfo, clients, setClients }) {
   const [editingRow, setEditingRow] = useState(null);
@@ -14,8 +16,9 @@ function ClientTable({ membershipInfo, clients, setClients }) {
     { key: "phone", label: "Phone" },
     { key: "startDate", label: "Start Date" },
     { key: "endDate", label: "End Date" },
+        { key: "membershipDuration", label: "Duration" },
     { key: "paymentStatus", label: "Notes" },
-    { key: "membershipDuration", label: "Membership Duration" },
+
   ];
 
   useEffect(() => {
@@ -139,7 +142,7 @@ function ClientTable({ membershipInfo, clients, setClients }) {
           <tr>
             <th className="ct-small"></th>
             {headers.map((header) => (
-              <th key={header.key} onClick={() => handleSort(header.key)}>
+            <th key={header.key} onClick={() => handleSort(header.key)} className={`ct-th-${header.key}`}>
                 <div className="ct-header">
                   <div className="ct-table-header">{header.label}</div>
                   <div className="ct-header-arrow">
@@ -175,10 +178,10 @@ function ClientTable({ membershipInfo, clients, setClients }) {
                         <button className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)}>✏️</button>
                       </div>
                       <button
-                        className={`ct-no-mail-button ${client.data.doNotMail ? "active" : ""}`}
-                        onClick={() => handleNoEmail(client.key, "student")}
+                         onClick={() => handleNoEmail(client.key, "student")}
+                         id='ct-no-email-button'
                       >
-                        No Email
+                       {client.data.doNotMail ? <img id='no-email' src={noemailimg} /> : <img id='no-email' src={sendemail} />}
                       </button>
                     </>
                   )}
