@@ -194,3 +194,11 @@ button[type="button"]:hover {
         margin-left: 0;
     }
 }
+
+.welcome-email{
+    width:100%
+}
+
+#email-checkbox{
+    width:30px;
+}

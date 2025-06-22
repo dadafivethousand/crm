@@ -1,85 +1,103 @@
-/* Container for the client table */
-.client-table-container {
+/* Container */
+.ct-client-table-container {
   margin: 20px;
   overflow-x: auto;
 }
 
-/* Image Styling */
-img {
-  height: 150px;
-  margin: 0 auto;
-  display: block;
-}
-
-/* Client Table */
-.client-table {
+/* Table */
+.ct-client-table {
   width: 100%;
   border-collapse: collapse;
   font-family: Arial, sans-serif;
   text-align: center;
 }
 
-/* Table Header & Cells */
-.client-table th,
-.client-table td {
+.ct-client-table th,
+.ct-client-table td {
   border: 1px solid #ddd;
   padding: 10px;
-  max-width: 100px; /* Increased max-width for better text wrapping */
+  max-width: 100px;
   word-wrap: break-word;
   white-space: normal;
 }
 
-/* Table Header */
-.client-table th {
+.ct-client-table th {
   background-color: #f4f4f4;
   font-weight: bold;
   padding: 12px;
 }
 
-/* Alternating Row Colors */
-.client-table tr:nth-child(even) {
+.ct-client-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-/* Hover Effect for Rows */
-.client-table tr:hover {
+.ct-client-table tr:hover {
   background-color: #f1f1f1;
 }
 
 /* Sortable Table Headers */
-.table-header:hover {
+.ct-table-header:hover {
   cursor: pointer;
   color: #007bff;
 }
 
-.header-arrow {
+.ct-header-arrow {
   margin-left: 10px;
 }
 
-.header-arrow:hover {
+.ct-header-arrow:hover {
   cursor: pointer;
 }
 
-/* Edit Button */
-.edit-btn {
+/* Buttons */
+.ct-edit-btn,
+.ct-save-btn,
+.ct-cancel-btn,
+.ct-delete-btn {
   display: block;
   margin: auto;
   padding: 6px 12px;
   font-size: 14px;
-  background-color: #007bff;
-  color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.2s ease-in-out;
 }
 
-.edit-btn:hover {
+.ct-edit-btn {
+  background-color: #007bff;
+  color: white;
+}
+.ct-edit-btn:hover {
   background-color: #0056b3;
 }
 
+.ct-save-btn {
+  background-color: #28a745;
+  color: white;
+}
+.ct-save-btn:hover {
+  background-color: #218838;
+}
+
+.ct-cancel-btn {
+  background-color: #6c757d;
+  color: white;
+}
+.ct-cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+.ct-delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+.ct-delete-btn:hover {
+  background-color: #c82333;
+}
+
 /* No-Mail Button */
-.no-mail-button {
+.ct-no-mail-button {
   background-color: white;
   border: 1px solid red;
   font-size: 15px;
@@ -91,7 +109,7 @@ img {
   transition: background 0.2s ease-in-out;
 }
 
-.no-mail-button:hover {
+.ct-no-mail-button:hover {
   background-color: red;
   color: white;
 }
@@ -106,55 +124,71 @@ img {
   border-radius: 4px;
 }
 
-/* Small Buttons */
-.small button {
+.ct-small{
+display: flex;
+
+}
+
+/* Utility Column + Flex */
+.ct-small button {
   margin: 0;
   display: block;
   padding: 4px 8px;
   font-size: 12px;
 }
 
-/* Small Table Column */
-.client-table .small {
-  min-width: 75px;
- 
+.ct-client-table .ct-small {
   text-align: center;
   border: 1px solid red;
 }
 
-/* Button Flex Wrapper */
-.button-flex {
+.ct-button-flex {
   display: flex;
   gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-/* Red Alert Styling */
-.red {
+/* Expired Client Highlight */
+.ct-red {
   background-color: rgba(255, 0, 0, 0.75);
- 
   width: 100%;
   padding: 8px;
   text-align: center;
- 
   border-radius: 4px;
+  color: white;
+  font-weight: bold;
 }
 
-/* Mobile Responsiveness */
+  .ct-edit-btn,
+  .ct-no-mail-button {
+    font-size: 13px;
+ 
+     width: 45px;
+    display: flex;
+    justify-content: center;
+  }
+ 
+
+/* Responsive */
 @media (max-width: 768px) {
-  .client-table-container {
+  .ct-client-table-container {
     margin: 10px;
     overflow-x: scroll;
   }
 
-  .client-table th,
-  .client-table td {
+  .ct-client-table th,
+  .ct-client-table td {
     padding: 8px;
     font-size: 14px;
   }
-
-  .edit-btn,
-  .no-mail-button {
-    font-size: 13px;
-    padding: 5px 8px;
-  }
 }
+
+
+
+.ct-regular >* input, .ct-red >* input{
+width:80%;
+}
+
+
+ 

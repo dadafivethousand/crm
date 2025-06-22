@@ -251,6 +251,7 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
      <div className="welcome-email">
     <label>
         <input
+        id="email-checkbox"
             type="checkbox"
             checked={!clientFormData.confirmationEmail} // If checked, email is NOT sent
             onChange={() =>

@@ -109,7 +109,7 @@ function App() {
   }, []);
 
   return (
-    <div>
+    <div className='crm-container'>
    
       <img src={logo}/>
 

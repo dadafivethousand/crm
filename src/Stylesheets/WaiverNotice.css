@@ -1,0 +1,36 @@
+.waiver-notice-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 40px auto;
+}
+
+.waiver-logo {
+  max-width: 180px;
+  margin-bottom: 20px;
+}
+
+.waiver-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #111;
+}
+
+.waiver-qr {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 10px;
+}
+
+.waiver-url {
+  font-size: 1rem;
+  color: #333;
+}
