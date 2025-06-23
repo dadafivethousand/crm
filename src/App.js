@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
-import ClientTable from './ClientTable';
-import AddClient from './AddClient';
-import './Stylesheets/App.css';
-import logo from './Images/logos.jpg'
-import LeadsTable from './LeadsTable';
- import AddLead from './AddLead';
-import KidsTable from './KidsTable'
- 
- 
+import { useState, useEffect } from "react";
+import { onAuthStateChanged, getIdToken } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+
+import ClientTable from "./ClientTable";
+import AddClient from "./AddClient";
+import LeadsTable from "./LeadsTable";
+import AddLead from "./AddLead";
+import KidsTable from "./KidsTable";
+import LoginForm from "./LoginForm";
+
+import "./Stylesheets/App.css";
+import logo from "./Images/logos.jpg";
 
 function App() {
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const [clients, setClients] = useState([]);
   const [kids, setKids] = useState([]);
   const [leads, setLeads] = useState([]);
@@ -17,10 +22,10 @@ function App() {
   const [loadingClients, setLoadingClients] = useState(true);
   const [showClientForm, setShowClientForm] = useState(false);
   const [convertToClientData, setConvertToClientData] = useState(null);
-  const [showAdultClients, setShowAdultClients]=useState(false)
-  const [showKidClients, setShowKidClients]=useState(false)
-  const [showLeads, setShowLeads]=useState(false)
-  const [membershipInfo, setMembershipInfo] = useState(null)
+  const [showAdultClients, setShowAdultClients] = useState(false);
+  const [showKidClients, setShowKidClients] = useState(false);
+  const [showLeads, setShowLeads] = useState(false);
+  const [membershipInfo, setMembershipInfo] = useState(null);
   const [clientFormData, setClientFormData] = useState({
     firstName: "",
     lastName: "",
@@ -34,21 +39,36 @@ function App() {
     confirmationEmail: true,
   });
 
-  const toggleShowAdultClients=()=>{
-    setShowAdultClients(prev => !prev);
-  }
- 
+  const handleLogin = (token, user) => {
+    setToken(token);
+    setUser(user);
+  };
 
-  const toggleShowKidClients=()=>{
-    setShowKidClients(prev => !prev);
-  }
+  const toggleShowAdultClients = () => {
+    setShowAdultClients((prev) => !prev);
+  };
 
-  const toggleShowLeads=()=>{
-    setShowLeads(prev => !prev);
-  }
+  const toggleShowKidClients = () => {
+    setShowKidClients((prev) => !prev);
+  };
 
-  const day='Thursday'
+  const toggleShowLeads = () => {
+    setShowLeads((prev) => !prev);
+  };
 
+  const day = "Thursday";
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const token = await getIdToken(firebaseUser);
+        setUser(firebaseUser);
+        setToken(token);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function fetchClients() {
@@ -56,8 +76,8 @@ function App() {
         const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-clients");
         if (response.ok) {
           const data = await response.json();
-          setClients(data['clients']);
-          setKids(data['kids']);
+          setClients(data["clients"]);
+          setKids(data["kids"]);
         } else {
           console.error("Failed to fetch clients");
         }
@@ -86,84 +106,105 @@ function App() {
     }
     fetchLeads();
 
-
     async function fetchMembershipInfo() {
       try {
         const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/membership-info");
         if (response.ok) {
           const data = await response.json();
-          console.log(data)
           setMembershipInfo(data[0]);
         } else {
           console.error("Failed to fetch membership info");
         }
       } catch (error) {
         console.error("Error fetching Membership Info:", error);
-      }  
-
+      }
     }
-      fetchMembershipInfo();
-
- 
-
+    fetchMembershipInfo();
   }, []);
 
+  if (!token) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
+
   return (
-    <div className='crm-container'>
-   
-      <img src={logo}/>
-
-      {showClientForm ? <AddClient 
-       setConvertToClientData={setConvertToClientData}
-       prefilledData={convertToClientData}
-      showClientForm={showClientForm} 
-      setClientFormData={setClientFormData}
-      setShowClientForm={setShowClientForm}
-      clientFormData={clientFormData} 
-      membershipInfo={membershipInfo}
-      setClients={setClients} /> :  
-      <button className='plus' onClick={() => setShowClientForm(true)}>Add Client</button>}
+    <div className="crm-container">
+            <button
+        className="logout-button"
+        onClick={async () => {
+          await auth.signOut();
+          setUser(null);
+          setToken(null);
+        }}
+      >
+        Logout
+      </button>
+      <img src={logo} alt="Logo" />
 
 
-    <button onClick={toggleShowAdultClients} className='toggle-table-display'> Teens & Adults  </button> 
-      {loadingClients ? <p>Loading Clients...</p> : 
-          showAdultClients &&     <ClientTable
-                clients={clients}
-                setClients={setClients}
-                membershipInfo={membershipInfo}
-            
-              /> 
-      }
-<br></br>
-<button onClick={toggleShowKidClients} className='toggle-table-display'> Kids </button> 
-{loadingLeads ? <p>Loading Leads...</p> : 
-      showKidClients &&
-        <KidsTable
-              kids={kids}
-                setKids={setKids}
-                clients={clients}
-                setClients={setClients}
-                membershipInfo={membershipInfo}
-            
-              /> 
-      }
-    {/*  <AddLead />  */}
 
-<br></br>
-<button onClick={toggleShowLeads} className='toggle-table-display'>  Leads   </button> 
+      {showClientForm ? (
+        <AddClient
+          setConvertToClientData={setConvertToClientData}
+          prefilledData={convertToClientData}
+          showClientForm={showClientForm}
+          setClientFormData={setClientFormData}
+          setShowClientForm={setShowClientForm}
+          clientFormData={clientFormData}
+          membershipInfo={membershipInfo}
+          setClients={setClients}
+        />
+      ) : (
+        <button className="plus" onClick={() => setShowClientForm(true)}>
+          Add Client
+        </button>
+      )}
 
-      {loadingLeads ? <p>Loading Leads...</p> : 
-      showLeads &&
-           <LeadsTable
-           leads={leads}
-           setLeads={setLeads}
-           setShowClientForm={setShowClientForm}
-           setClientFormData={setClientFormData}
-           setConvertToClientData={setConvertToClientData}
-         />}
-     {/* <Schedule day={day} />  */}
-       {/*  <LionKingIntro />*/}
+      <button onClick={toggleShowAdultClients} className="toggle-table-display">
+        Teens & Adults
+      </button>
+      {loadingClients ? (
+        <p>Loading Clients...</p>
+      ) : (
+        showAdultClients && (
+          <ClientTable clients={clients} setClients={setClients} membershipInfo={membershipInfo} />
+        )
+      )}
 
+      <br />
+      <button onClick={toggleShowKidClients} className="toggle-table-display">
+        Kids
+      </button>
+      {loadingClients ? (
+        <p>Loading Kids...</p>
+      ) : (
+        showKidClients && (
+          <KidsTable
+            kids={kids}
+            setKids={setKids}
+            clients={clients}
+            setClients={setClients}
+            membershipInfo={membershipInfo}
+          />
+        )
+      )}
+
+      <br />
+      <button onClick={toggleShowLeads} className="toggle-table-display">
+        Leads
+      </button>
+      {loadingLeads ? (
+        <p>Loading Leads...</p>
+      ) : (
+        showLeads && (
+          <LeadsTable
+            leads={leads}
+            setLeads={setLeads}
+            setShowClientForm={setShowClientForm}
+            setClientFormData={setClientFormData}
+            setConvertToClientData={setConvertToClientData}
+          />
+        )
+      )}
     </div>
   );
 }
