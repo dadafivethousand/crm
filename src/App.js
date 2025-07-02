@@ -56,8 +56,6 @@ function App() {
     setShowLeads((prev) => !prev);
   };
 
-  const day = "Thursday";
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -87,7 +85,6 @@ function App() {
         setLoadingClients(false);
       }
     }
-    fetchClients();
 
     async function fetchLeads() {
       try {
@@ -104,7 +101,6 @@ function App() {
         setLoadingLeads(false);
       }
     }
-    fetchLeads();
 
     async function fetchMembershipInfo() {
       try {
@@ -119,6 +115,9 @@ function App() {
         console.error("Error fetching Membership Info:", error);
       }
     }
+
+    fetchClients();
+    fetchLeads();
     fetchMembershipInfo();
   }, []);
 
@@ -128,7 +127,7 @@ function App() {
 
   return (
     <div className="crm-container">
-            <button
+      <button
         className="logout-button"
         onClick={async () => {
           await auth.signOut();
@@ -140,10 +139,10 @@ function App() {
       </button>
       <img src={logo} alt="Logo" />
 
-
-
       {showClientForm ? (
         <AddClient
+          token={token}
+          user={user}
           setConvertToClientData={setConvertToClientData}
           prefilledData={convertToClientData}
           showClientForm={showClientForm}
@@ -166,7 +165,13 @@ function App() {
         <p>Loading Clients...</p>
       ) : (
         showAdultClients && (
-          <ClientTable clients={clients} setClients={setClients} membershipInfo={membershipInfo} />
+          <ClientTable
+            clients={clients}
+            setClients={setClients}
+            membershipInfo={membershipInfo}
+            token={token}
+            user={user}
+          />
         )
       )}
 
@@ -184,6 +189,8 @@ function App() {
             clients={clients}
             setClients={setClients}
             membershipInfo={membershipInfo}
+            token={token}
+            user={user}
           />
         )
       )}
@@ -202,6 +209,8 @@ function App() {
             setShowClientForm={setShowClientForm}
             setClientFormData={setClientFormData}
             setConvertToClientData={setConvertToClientData}
+            token={token}
+            user={user}
           />
         )
       )}

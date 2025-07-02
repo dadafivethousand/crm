@@ -2,7 +2,7 @@ import KidsForm from './KidsForm';
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
 
-export default function AddClient({ membershipInfo, setConvertToClientData, clientFormData, showClientForm, setShowClientForm, setClients, setClientFormData, prefilledData = {} }) {
+export default function AddClient({ membershipInfo, setConvertToClientData, clientFormData, showClientForm, setShowClientForm, setClients, setClientFormData, prefilledData = {}, token, user }) {
     const [forChild, setForChild] = useState(false)
   
     const [kidsFormData, setKidsFormData] = useState([{ firstName: '', lastName: '' }]);
@@ -136,14 +136,16 @@ export default function AddClient({ membershipInfo, setConvertToClientData, clie
         }
  
         try {
-            const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/add-client", {
-                
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify( formDataToSend ), // Include the timestamp
-            });
+            const idToken = await user.getIdToken(); // always fresh
+        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/add-client", {
+        method: "POST",
+        headers: {
+         "Content-Type": "application/json",
+         "Authorization": `Bearer ${idToken}`
+            },
+            body: JSON.stringify(formDataToSend),
+        });
+
 
             if (response.ok) {
                 const newClientKey = `student:${clientFormData.email}`;
