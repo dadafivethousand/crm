@@ -56,8 +56,11 @@ export default function AddLead({ setLeads }) {
         try {
             const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/add-lead", {
                 method: "POST",
+        
                 headers: {
+                    
                     "Content-Type": "application/json",
+      
                 },
                 body: JSON.stringify({ ...formData, timestamp }), // Include the timestamp
             });

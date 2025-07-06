@@ -1,7 +1,7 @@
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
 
-export default function AddKidClient() {
+export default function AddKidClient(token, user) {
     // Initialize state
     const [showKidClientForm, setShowKidClientForm] = useState(() => {
         const savedShowKidClientForm = localStorage.getItem("showKidClientForm");
@@ -56,9 +56,10 @@ export default function AddKidClient() {
         try {
             const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/add-lead", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                     headers: {
+         "Content-Type": "application/json",
+         "Authorization": `Bearer ${idToken}`
+            },
                 body: JSON.stringify({ ...formData, timestamp }), // Include the timestamp
             });
 

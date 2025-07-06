@@ -3,7 +3,7 @@ import './Stylesheets/ClientTable.css';
 import noemailimg from './Images/noemail.avif'
 import sendemail from "./Images/sendemail.png"
 
-function ClientTable({ membershipInfo, clients, setClients }) {
+function ClientTable({ membershipInfo, clients, setClients, token, user }) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
@@ -82,9 +82,12 @@ function ClientTable({ membershipInfo, clients, setClients }) {
 
   const handleSaveChanges = async (key) => {
     try {
+     const idToken = await user.getIdToken(); // always fresh
       const res = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-client`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 
+                  "Authorization": `Bearer ${idToken}`
+         },
         body: JSON.stringify({ key, data: editedData }),
       });
       if (res.ok) {
@@ -101,9 +104,12 @@ function ClientTable({ membershipInfo, clients, setClients }) {
   const handleDelete = async (key) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
       try {
+        const idToken = await user.getIdToken(); // always fresh
         const res = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-client`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 
+                    "Authorization": `Bearer ${idToken}`
+           },
           body: JSON.stringify({ key }),
         });
         if (res.ok) {
@@ -117,9 +123,12 @@ function ClientTable({ membershipInfo, clients, setClients }) {
 
   const handleNoEmail = async (key, type) => {
     try {
+      const idToken = await user.getIdToken(); // always fresh
       const res = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+              "Authorization": `Bearer ${idToken}`
+        },
         body: JSON.stringify({ key, type }),
       });
       if (res.ok) {

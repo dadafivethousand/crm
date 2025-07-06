@@ -3,7 +3,7 @@ import './Stylesheets/ClientTable.css';
 import AddLead from './AddLead';
 import AddClient from './AddClient';
 
-function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm, setClientFormData }) {
+function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm, setClientFormData, token, user }) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
  
@@ -25,9 +25,10 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
 
   const handleSaveChanges = async (key) => {
     try {
+           const idToken = await user.getIdToken(); // always fresh
       const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-lead`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',"Authorization": `Bearer ${idToken}` },
         body: JSON.stringify({ key, data: editedData }),
       });
 
@@ -49,9 +50,10 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
   const handleDelete = async (key) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
       try {
+        const idToken = await user.getIdToken(); // always fresh
         const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-lead`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${idToken}` },
           body: JSON.stringify({ key }),
         });
 
