@@ -127,16 +127,7 @@ function App() {
 
   return (
     <div className="crm-container">
-      <button
-        className="logout-button"
-        onClick={async () => {
-          await auth.signOut();
-          setUser(null);
-          setToken(null);
-        }}
-      >
-        Logout
-      </button>
+  
       <img src={logo} alt="Logo" />
 
       {showClientForm ? (
@@ -214,6 +205,16 @@ function App() {
           />
         )
       )}
+          <button
+        className="logout-button"
+        onClick={async () => {
+          await auth.signOut();
+          setUser(null);
+          setToken(null);
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }
