@@ -209,7 +209,7 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
                 <>
                   <td><input type="text" value={editedData.firstName || ''} onChange={(e) => handleInputChange(e, 'firstName')} /></td>
                   <td><input type="text" value={editedData.lastName || ''} onChange={(e) => handleInputChange(e, 'lastName')} /></td>
-                  <td><input type="email" value={editedData.email || ''} onChange={(e) => handleInputChange(e, 'email')} /></td>
+                  <td><input type="email" value={editedData.parentEmail || ''} onChange={(e) => handleInputChange(e, 'email')} /></td>
                   <td><input type="tel" value={editedData.phone || ''} onChange={(e) => handleInputChange(e, 'phone')} /></td>
                   <td><input type="date" value={editedData.startDate || ''} onChange={(e) => handleInputChange(e, 'startDate')} /></td>
                   <td><input type="date" value={editedData.endDate || ''} onChange={(e) => handleInputChange(e, 'endDate')} /></td>
