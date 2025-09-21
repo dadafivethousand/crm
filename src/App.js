@@ -69,9 +69,18 @@ function App() {
   }, []);
 
   useEffect(() => {
+      if (!user) return;
+      
     async function fetchClients() {
       try {
-        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-clients");
+        const idToken = await user.getIdToken(); // always fresh
+        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-clients", 
+            {
+        headers: {
+         "Content-Type": "application/json",
+         "Authorization": `Bearer ${idToken}`
+            },}
+        );
         if (response.ok) {
           const data = await response.json();
           setClients(data["clients"]);
@@ -88,7 +97,15 @@ function App() {
 
     async function fetchLeads() {
       try {
-        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-leads");
+        const idToken = await user.getIdToken(); // always fresh
+
+        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-leads", 
+          {
+        headers: {
+         "Content-Type": "application/json",
+         "Authorization": `Bearer ${idToken}`
+            },}
+        );
         if (response.ok) {
           const data = await response.json();
           setLeads(data);
@@ -101,25 +118,11 @@ function App() {
         setLoadingLeads(false);
       }
     }
-
-    async function fetchMembershipInfo() {
-      try {
-        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/membership-info");
-        if (response.ok) {
-          const data = await response.json();
-          setMembershipInfo(data[0]);
-        } else {
-          console.error("Failed to fetch membership info");
-        }
-      } catch (error) {
-        console.error("Error fetching Membership Info:", error);
-      }
-    }
-
+ 
     fetchClients();
     fetchLeads();
-    fetchMembershipInfo();
-  }, []);
+ 
+  }, [user]);
 
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
