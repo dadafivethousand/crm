@@ -1,36 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import './Stylesheets/ClientTable.css';
-import AddClient from './AddClient';
-import noemailimg from './Images/noemail.avif'
-import sendemail from "./Images/sendemail.png"
+import noemailimg from './Images/noemail.avif';
+import sendemail from "./Images/sendemail.png";
 
-function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, user }) {
+function KidsTable({
+  membershipInfo,
+  clients,      // not used here, but kept for parity with your signature
+  setClients,   // not used here
+  kids,
+  setKids,
+  token,        // still accepted if you need elsewhere
+  user,         // still accepted if you need elsewhere
+  buildHeaders, // <-- injected from App
+}) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  const [headers, setHeaders] = useState([
-    { key: "firstName", label: "First Name" },
-    { key: "lastName", label: "Last Name" },
-    { key: "parentEmail", label: "Email" },
-    { key: "phone", label: "Phone" },
-    { key: "startDate", label: "Start Date" },
-    { key: "endDate", label: "End Date" },
-    { key: "paymentStatus", label: "Notes" },
+  const headers = [
+    { key: "firstName",        label: "First Name" },
+    { key: "lastName",         label: "Last Name" },
+    { key: "parentEmail",      label: "Email" },
+    { key: "phone",            label: "Phone" },
+    { key: "startDate",        label: "Start Date" },
+    { key: "endDate",          label: "End Date" },
+    { key: "paymentStatus",    label: "Notes" },
     { key: "membershipDuration", label: "Membership Duration" },
-     { key: "parentFirstName", label: "Parent First Name" },
-    { key: "parentLastName", label: "Parent Last Name" },
-  ]);
+    { key: "parentFirstName",  label: "Parent First Name" },
+    { key: "parentLastName",   label: "Parent Last Name" },
+  ];
 
   useEffect(() => {
     setKids(sortClients(kids, sortColumn, sortDirection));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortColumn, sortDirection]);
 
-  const sortClients = (kids, column, direction) => {
-    return [...kids].sort((a, b) => {
-      let valueA = a.data[column]?.toString().toLowerCase() || "";
-      let valueB = b.data[column]?.toString().toLowerCase() || "";
+  const sortClients = (kidsArr, column, direction) => {
+    return [...kidsArr].sort((a, b) => {
+      const av = a?.data?.[column];
+      const bv = b?.data?.[column];
+      const valueA = (av ?? "").toString().toLowerCase();
+      const valueB = (bv ?? "").toString().toLowerCase();
       if (valueA < valueB) return direction === "asc" ? -1 : 1;
       if (valueA > valueB) return direction === "asc" ? 1 : -1;
       return 0;
@@ -51,13 +62,13 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
     setEditedData(clientData);
   };
 
-  const updateEndDate = (duration, membershipInfo, startDate) => {
-    if (!startDate) return "";
+  const updateEndDate = (duration, membershipInfoObj, startDate) => {
+    if (!startDate || !membershipInfoObj?.info?.length) return "";
     const date = new Date(startDate);
-    const matchingMembership = membershipInfo.find(
+    const matchingMembership = membershipInfoObj.info.find(
       (membership) => membership.description === duration
     );
-    if (matchingMembership) {
+    if (matchingMembership?.duration) {
       date.setMonth(date.getMonth() + matchingMembership.duration);
       return date.toISOString().split("T")[0];
     }
@@ -87,12 +98,15 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
 
   const handleSaveChanges = async (key) => {
     try {
-      const idToken = await user.getIdToken(); // always fresh
-      const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-kid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ key, data: editedData }),
-      });
+      const headers = await buildHeaders();
+      const response = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/edit-kid`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ key, data: editedData }),
+        }
+      );
 
       if (response.ok) {
         setKids((prevKids) =>
@@ -102,55 +116,63 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
         );
         handleCancelEdit();
       } else {
-        console.error('Error saving changes');
+        const err = await response.json().catch(() => ({}));
+        console.error('Error saving changes', err);
       }
     } catch (error) {
       console.error('Error saving changes:', error);
     }
   };
 
-  const handleDelete = async (key, client) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        const idToken = await user.getIdToken(); // always fresh
-        const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-kid`, {
+  const handleDelete = async (key) => {
+    if (!window.confirm('Are you sure you want to delete this record?')) return;
+    try {
+      const headers = await buildHeaders();
+      const response = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/delete-kid`,
+        {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${idToken}` },
+          headers,
           body: JSON.stringify({ key }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setKids((prevKids) =>
-            prevKids.filter((kid) => kid.key !== key)
-          );
-        } else {
-          console.error('Error deleting record:', data);
         }
-      } catch (error) {
-        console.error('Error deleting record:', error);
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        setKids((prevKids) => prevKids.filter((kid) => kid.key !== key));
+      } else {
+        console.error('Error deleting record:', data);
       }
+    } catch (error) {
+      console.error('Error deleting record:', error);
     }
   };
 
-  const handleNoEmail = async (key, type) => {
+  const handleNoEmail = async (key) => {
     try {
-      const idToken = await user.getIdToken(); // always fresh
-      const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' , "Authorization": `Bearer ${idToken}`},
-        body: JSON.stringify({ key, type }),
-      });
+      const headers = await buildHeaders();
+      const response = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ key, type: "kid" }), // <-- type must be "kid"
+        }
+      );
 
       if (response.ok) {
-        setClients((prevClients) =>
-          prevClients.map((client) =>
-            client.key === key ? { ...client, data: { ...editedData } } : client
+        // Toggle the flag locally
+        setKids((prevKids) =>
+          prevKids.map((kid) =>
+            kid.key === key
+              ? { ...kid, data: { ...kid.data, doNotMail: !kid.data.doNotMail } }
+              : kid
           )
         );
       } else {
-        console.error('Error updating do-not-mail list');
+        const err = await response.json().catch(() => ({}));
+        console.error('Error updating do-not-mail list', err);
       }
     } catch (error) {
       console.error('Error updating do-not-mail list:', error);
@@ -181,11 +203,11 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
           {kids.map((client, index) => (
             <tr
               key={index}
-              className={`${
+              className={
                 client.data.endDate && new Date() >= new Date(client.data.endDate)
                   ? 'ct-red'
-                  : ''
-              }`}
+                  : 'ct-regular'
+              }
             >
               <td className="ct-small">
                 {editingRow === index ? (
@@ -196,28 +218,34 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
                 ) : (
                   <>
                     <button className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)}>✏️</button>
-                             <button
-                         onClick={() => handleNoEmail(client.key, "student")}
-                      >
-                       {client.data.doNotMail ? <img id='no-email' src={noemailimg} /> : <img id='no-email' src={sendemail} />}
-                      </button>
+                    <button
+                      onClick={() => handleNoEmail(client.key)}
+                      title={client.data.doNotMail ? "Allow emails" : "Do not email"}
+                    >
+                      {client.data.doNotMail
+                        ? <img id='no-email' src={noemailimg} alt="No email" />
+                        : <img id='no-email' src={sendemail} alt="Send email" />}
+                    </button>
                   </>
                 )}
               </td>
 
               {editingRow === index ? (
                 <>
-                  <td><input type="text" value={editedData.firstName || ''} onChange={(e) => handleInputChange(e, 'firstName')} /></td>
-                  <td><input type="text" value={editedData.lastName || ''} onChange={(e) => handleInputChange(e, 'lastName')} /></td>
-                  <td><input type="email" value={editedData.parentEmail || ''} onChange={(e) => handleInputChange(e, 'email')} /></td>
-                  <td><input type="tel" value={editedData.phone || ''} onChange={(e) => handleInputChange(e, 'phone')} /></td>
-                  <td><input type="date" value={editedData.startDate || ''} onChange={(e) => handleInputChange(e, 'startDate')} /></td>
-                  <td><input type="date" value={editedData.endDate || ''} onChange={(e) => handleInputChange(e, 'endDate')} /></td>
-                  <td><input type="text" value={editedData.paymentStatus || ''} onChange={(e) => handleInputChange(e, 'paymentStatus')} /></td>
+                  <td><input type="text"  value={editedData.firstName || ''}        onChange={(e) => handleInputChange(e, 'firstName')} /></td>
+                  <td><input type="text"  value={editedData.lastName || ''}         onChange={(e) => handleInputChange(e, 'lastName')} /></td>
+                  <td><input type="email" value={editedData.parentEmail || ''}      onChange={(e) => handleInputChange(e, 'parentEmail')} /></td>
+                  <td><input type="tel"   value={editedData.phone || ''}            onChange={(e) => handleInputChange(e, 'phone')} /></td>
+                  <td><input type="date"  value={editedData.startDate || ''}        onChange={(e) => handleInputChange(e, 'startDate')} /></td>
+                  <td><input type="date"  value={editedData.endDate || ''}          onChange={(e) => handleInputChange(e, 'endDate')} /></td>
+                  <td><input type="text"  value={editedData.paymentStatus || ''}    onChange={(e) => handleInputChange(e, 'paymentStatus')} /></td>
                   <td>
-                    <select value={editedData.membershipDuration || ''} onChange={(e) => handleInputChange(e, 'membershipDuration')}>
-                      {membershipInfo.info.map((membership) =>
-                        !membership.free ? (
+                    <select
+                      value={editedData.membershipDuration || ''}
+                      onChange={(e) => handleInputChange(e, 'membershipDuration')}
+                    >
+                      {membershipInfo?.info?.map((membership) =>
+                        !membership.free && membership.description && membership.duration ? (
                           <option key={membership.description} value={membership.description}>
                             {membership.description}
                           </option>
@@ -225,8 +253,8 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
                       )}
                     </select>
                   </td>
-                  <td><input type="text" value={editedData.parentFirstName || ''} onChange={(e) => handleInputChange(e, 'parentFirstName')} /></td>
-                  <td><input type="text" value={editedData.parentLastName || ''} onChange={(e) => handleInputChange(e, 'parentLastName')} /></td>
+                  <td><input type="text"  value={editedData.parentFirstName || ''}  onChange={(e) => handleInputChange(e, 'parentFirstName')} /></td>
+                  <td><input type="text"  value={editedData.parentLastName || ''}   onChange={(e) => handleInputChange(e, 'parentLastName')} /></td>
                 </>
               ) : (
                 <>
@@ -238,14 +266,13 @@ function KidsTable({ membershipInfo, clients, setClients, kids, setKids, token, 
                   <td>{client.data.endDate}</td>
                   <td>{client.data.paymentStatus}</td>
                   <td>{client.data.membershipDuration}</td>
-
                   <td>{client.data.parentFirstName}</td>
                   <td>{client.data.parentLastName}</td>
                 </>
               )}
 
               <td className="ct-small">
-                <button className="ct-delete-btn" onClick={() => handleDelete(client.key, client)}>🗑️</button>
+                <button className="ct-delete-btn" onClick={() => handleDelete(client.key)}>🗑️</button>
               </td>
             </tr>
           ))}

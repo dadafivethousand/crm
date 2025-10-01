@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './Stylesheets/ClientTable.css';
-import noemailimg from './Images/noemail.avif'
-import sendemail from "./Images/sendemail.png"
+import noemailimg from './Images/noemail.avif';
+import sendemail from "./Images/sendemail.png";
 
-function ClientTable({ membershipInfo, clients, setClients, token, user }) {
+function ClientTable({
+  membershipInfo,
+  clients,
+  setClients,
+  token, // still accepted if used elsewhere
+  user,  // still accepted if used elsewhere
+  buildHeaders, // <-- injected from App
+}) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
@@ -16,19 +23,21 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
     { key: "phone", label: "Phone" },
     { key: "startDate", label: "Start Date" },
     { key: "endDate", label: "End Date" },
-        { key: "membershipDuration", label: "Duration" },
+    { key: "membershipDuration", label: "Duration" },
     { key: "paymentStatus", label: "Notes" },
-
   ];
 
   useEffect(() => {
     setClients(sortClients(clients, sortColumn, sortDirection));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortColumn, sortDirection]);
 
   const sortClients = (clients, column, direction) => {
     return [...clients].sort((a, b) => {
-      let valueA = a.data[column]?.toString().toLowerCase() || "";
-      let valueB = b.data[column]?.toString().toLowerCase() || "";
+      const av = a?.data?.[column];
+      const bv = b?.data?.[column];
+      const valueA = (av ?? "").toString().toLowerCase();
+      const valueB = (bv ?? "").toString().toLowerCase();
       if (valueA < valueB) return direction === "asc" ? -1 : 1;
       if (valueA > valueB) return direction === "asc" ? 1 : -1;
       return 0;
@@ -45,10 +54,10 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
   };
 
   const updateEndDate = (duration, membershipInfo, startDate) => {
-    if (!startDate) return "";
+    if (!startDate || !membershipInfo?.info?.length) return "";
     const date = new Date(startDate);
     const match = membershipInfo.info.find((m) => m.description === duration);
-    if (match) {
+    if (match?.duration) {
       date.setMonth(date.getMonth() + match.duration);
       return date.toISOString().split("T")[0];
     }
@@ -82,19 +91,23 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
 
   const handleSaveChanges = async (key) => {
     try {
-     const idToken = await user.getIdToken(); // always fresh
-      const res = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-client`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 
-                  "Authorization": `Bearer ${idToken}`
-         },
-        body: JSON.stringify({ key, data: editedData }),
-      });
+      const headers = await buildHeaders();
+      const res = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/edit-client`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ key, data: editedData }),
+        }
+      );
       if (res.ok) {
         setClients((prev) =>
           prev.map((c) => (c.key === key ? { ...c, data: editedData } : c))
         );
         handleCancelEdit();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error('Error saving changes:', err);
       }
     } catch (err) {
       console.error('Error saving changes:', err);
@@ -102,41 +115,48 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
   };
 
   const handleDelete = async (key) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        const idToken = await user.getIdToken(); // always fresh
-        const res = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-client`, {
+    if (!window.confirm('Are you sure you want to delete this record?')) return;
+    try {
+      const headers = await buildHeaders();
+      const res = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/delete-client`,
+        {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', 
-                    "Authorization": `Bearer ${idToken}`
-           },
+          headers,
           body: JSON.stringify({ key }),
-        });
-        if (res.ok) {
-          setClients((prev) => prev.filter((c) => c.key !== key));
         }
-      } catch (err) {
+      );
+      if (res.ok) {
+        setClients((prev) => prev.filter((c) => c.key !== key));
+      } else {
+        const err = await res.json().catch(() => ({}));
         console.error('Error deleting record:', err);
       }
+    } catch (err) {
+      console.error('Error deleting record:', err);
     }
   };
 
   const handleNoEmail = async (key, type) => {
     try {
-      const idToken = await user.getIdToken(); // always fresh
-      const res = await fetch(`https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' ,
-              "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({ key, type }),
-      });
+      const headers = await buildHeaders();
+      const res = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ key, type }),
+        }
+      );
       if (res.ok) {
         setClients((prev) =>
           prev.map((c) =>
-            c.key === key ? { ...c, data: { ...c.data, doNotMail: true } } : c
+            c.key === key ? { ...c, data: { ...c.data, doNotMail: !c.data.doNotMail } } : c
           )
         );
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error('Error updating do-not-mail list:', err);
       }
     } catch (err) {
       console.error('Error updating do-not-mail list:', err);
@@ -151,7 +171,11 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
           <tr>
             <th className="ct-small"></th>
             {headers.map((header) => (
-            <th key={header.key} onClick={() => handleSort(header.key)} className={`ct-th-${header.key}`}>
+              <th
+                key={header.key}
+                onClick={() => handleSort(header.key)}
+                className={`ct-th-${header.key}`}
+              >
                 <div className="ct-header">
                   <div className="ct-table-header">{header.label}</div>
                   <div className="ct-header-arrow">
@@ -187,10 +211,13 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
                         <button className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)}>✏️</button>
                       </div>
                       <button
-                         onClick={() => handleNoEmail(client.key, "student")}
-                         id='ct-no-email-button'
+                        onClick={() => handleNoEmail(client.key, "student")}
+                        id='ct-no-email-button'
+                        title={client.data.doNotMail ? "Allow emails" : "Do not email"}
                       >
-                       {client.data.doNotMail ? <img id='no-email' src={noemailimg} /> : <img id='no-email' src={sendemail} />}
+                        {client.data.doNotMail
+                          ? <img id='no-email' src={noemailimg} alt="No email" />
+                          : <img id='no-email' src={sendemail} alt="Send email" />}
                       </button>
                     </>
                   )}
@@ -205,7 +232,7 @@ function ClientTable({ membershipInfo, clients, setClients, token, user }) {
                             value={editedData[header.key] || ""}
                             onChange={(e) => handleInputChange(e, header.key)}
                           >
-                            {membershipInfo.info.map((m) =>
+                            {membershipInfo?.info?.map((m) =>
                               !m.free && m.description && m.duration ? (
                                 <option key={m.description} value={m.description}>
                                   {m.description}

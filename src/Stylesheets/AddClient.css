@@ -3,6 +3,7 @@
     text-align: center;
     background-color: white;
     z-index: 5;
+   
 }
 
 .save-and-submit-buttons{
@@ -40,6 +41,7 @@
     justify-content: space-between;
     animation: fadeIn 0.3s ease-in-out;
     align-items: center;
+ 
  
 }
 
@@ -156,12 +158,11 @@ button[type="button"]:hover {
 
 /* Plus Button */
 .plus {
+ 
     cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px auto;
-    background-color: #222;
+ 
+    margin: 20px 5px;
+    background-color: #356322;
     color: white;
     font-size: 18px;
     padding: 12px 30px;

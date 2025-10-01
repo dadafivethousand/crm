@@ -12,6 +12,7 @@
   width: 100%;
   max-width: 450px;
   animation: fadeIn 0.3s ease-in-out;
+  margin-bottom:30px;
 }
 
 /* Fade-in animation */
@@ -45,6 +46,7 @@
   border-bottom: 1px solid #ddd;
   padding-bottom: 15px;
   margin-bottom: 15px;
+  
 }
 
 /* Input Groups */

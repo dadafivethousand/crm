@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import './Stylesheets/ClientTable.css';
 import AddLead from './AddLead';
-import AddClient from './AddClient';
 
-function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm, setClientFormData, token, user }) {
+function LeadsTable({
+  setConvertToClientData,
+  leads,
+  setLeads,
+  setShowClientForm,
+  setClientFormData, // (kept in signature if you need later)
+  token,             // (kept for parity)
+  user,              // (kept for parity)
+  buildHeaders,      // <-- from App
+}) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
- 
 
   const handleEditClick = (index, leadData) => {
     setEditingRow(index);
@@ -20,19 +27,22 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
 
   const handleInputChange = (e, field) => {
     const { value } = e.target;
-    setEditedData((prevData) => ({ ...prevData, [field]: value }));
+    setEditedData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveChanges = async (key) => {
     try {
-           const idToken = await user.getIdToken(); // always fresh
-      const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/edit-lead`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json',"Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ key, data: editedData }),
-      });
+      const headers = await buildHeaders();
+      const res = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/edit-lead`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ key, data: editedData }),
+        }
+      );
 
-      if (response.ok) {
+      if (res.ok) {
         setLeads((prevLeads) =>
           prevLeads.map((lead) =>
             lead.key === key ? { ...lead, data: { ...editedData } } : lead
@@ -40,7 +50,8 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
         );
         handleCancelEdit();
       } else {
-        console.error('Error saving changes');
+        const err = await res.json().catch(() => ({}));
+        console.error('Error saving changes', err);
       }
     } catch (error) {
       console.error('Error saving changes:', error);
@@ -48,37 +59,32 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
   };
 
   const handleDelete = async (key) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        const idToken = await user.getIdToken(); // always fresh
-        const response = await fetch(`https://worker-consolidated.maxli5004.workers.dev/delete-lead`, {
+    if (!window.confirm('Are you sure you want to delete this record?')) return;
+    try {
+      const headers = await buildHeaders();
+      const res = await fetch(
+        `https://worker-consolidated.maxli5004.workers.dev/delete-lead`,
+        {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${idToken}` },
+          headers,
           body: JSON.stringify({ key }),
-        });
-
-        if (response.ok) {
-          setLeads((prevLeads) =>
-            prevLeads.filter((lead) => lead.key !== key)
-          );
-        } else {
-          console.error('Error deleting record');
         }
-      } catch (error) {
-        console.error('Error deleting record:', error);
+      );
+
+      if (res.ok) {
+        setLeads((prevLeads) => prevLeads.filter((lead) => lead.key !== key));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error('Error deleting record', err);
       }
+    } catch (error) {
+      console.error('Error deleting record:', error);
     }
   };
 
   const handleConvertToClient = (lead) => {
     setConvertToClientData(lead.data);
-    console.log(lead.data)
-    setShowClientForm(true)
-   
-  };
-
-  const handleClientAdded = () => {
-    setConvertToClientData(null); // Close the AddClient form
+    setShowClientForm(true);
   };
 
   return (
@@ -87,21 +93,21 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
       <table className="client-table">
         <thead>
           <tr>
-            <th className='small'> </th>
+            <th className="small"> </th>
             <th><p>First Name</p></th>
             <th>Last Name</th>
             <th>Email</th>
             <th>Phone</th>
-            <th className='small'></th>
-            <th className='small'></th>
+            <th className="small"></th>
+            <th className="small"></th>
           </tr>
         </thead>
         <tbody>
           {leads
-            .filter((lead) => lead && lead.data) // Filter out null or undefined leads
+            ?.filter((lead) => lead && lead.data)
             .map((lead, index) => (
-              <tr key={index}>
-                <td className='small'>
+              <tr key={lead.key ?? index}>
+                <td className="small">
                   {editingRow === index ? (
                     <>
                       <button
@@ -123,6 +129,7 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
                     </button>
                   )}
                 </td>
+
                 {editingRow === index ? (
                   <>
                     <td>
@@ -162,7 +169,8 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
                     <td>{lead.data.phone}</td>
                   </>
                 )}
-                <td className='small'>
+
+                <td className="small">
                   <button
                     className="delete-btn"
                     onClick={() => handleDelete(lead.key)}
@@ -170,10 +178,11 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
                     🗑️
                   </button>
                 </td>
-                <td className='small'>
+                <td className="small">
                   <button
                     className="convert-btn"
                     onClick={() => handleConvertToClient(lead)}
+                    title="Convert to Client"
                   >
                     ➡️
                   </button>
@@ -182,14 +191,9 @@ function LeadsTable({ setConvertToClientData, leads, setLeads, setShowClientForm
             ))}
         </tbody>
       </table>
-      <AddLead setLeads={setLeads} />
- {/*     {convertToClientData && (
-        <AddClient
-          setClients={setClients}
-          prefilledData={convertToClientData}
-          onClientAdded={handleClientAdded}
-        />
-      )}      */}
+
+      {/* Add Lead modal/inline form */}
+      <AddLead setLeads={setLeads} buildHeaders={buildHeaders} />
     </div>
   );
 }

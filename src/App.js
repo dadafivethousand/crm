@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { onAuthStateChanged, getIdToken } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
@@ -11,10 +11,18 @@ import LoginForm from "./LoginForm";
 
 import "./Stylesheets/App.css";
 import logo from "./Images/logos.jpg";
+import rhlogo from "./Images/logo-grayscale.png"
 
 function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+
+  // tenant state with localStorage persistence
+  const [isMaple, setIsMaple] = useState(() => {
+    const saved = localStorage.getItem("isMaple");
+    return saved === "true"; // default false if null
+  });
+  const [forChild, setForChild] = useState(false);
   const [clients, setClients] = useState([]);
   const [kids, setKids] = useState([]);
   const [leads, setLeads] = useState([]);
@@ -44,47 +52,78 @@ function App() {
     setUser(user);
   };
 
-  const toggleShowAdultClients = () => {
-    setShowAdultClients((prev) => !prev);
+  const toggleShowAdultClients = () => setShowAdultClients((p) => !p);
+  const toggleShowKidClients = () => setShowKidClients((p) => !p);
+  const toggleShowLeads = () => setShowLeads((p) => !p);
+
+    const showKidForm = () => {
+    setShowClientForm(true);
+    setForChild(true);
   };
 
-  const toggleShowKidClients = () => {
-    setShowKidClients((prev) => !prev);
-  };
+  // persist isMaple changes to localStorage
+  // Persist isMaple changes, but force RH email to always be false
+useEffect(() => {
+  if (user?.email === "richmondhillbjj@gmail.com") {
+    if (isMaple) {
+      // force state correction too
+      setIsMaple(false);
+    }
+    localStorage.setItem("isMaple", "false");
+  } else {
+    localStorage.setItem("isMaple", String(isMaple));
+  }
+}, [isMaple, user]);
 
-  const toggleShowLeads = () => {
-    setShowLeads((prev) => !prev);
-  };
 
+  // Auth listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const token = await getIdToken(firebaseUser);
         setUser(firebaseUser);
         setToken(token);
+      } else {
+        setUser(null);
+        setToken(null);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
+  // Lock RH for RH email (hide toggle in UI AND force isMaple=false in state)
   useEffect(() => {
-      if (!user) return;
-      
+    if (user?.email === "richmondhillbjj@gmail.com" && isMaple) {
+      setIsMaple(false);
+    }
+  }, [user, isMaple]);
+
+  // Memoized helper to build headers (adds X-Maple on every request)
+  const buildHeaders = useCallback(async () => {
+    const idToken = user ? await user.getIdToken() : null;
+    return {
+      "Content-Type": "application/json",
+      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+      "X-Maple": String(isMaple), // <- maple boolean included in header
+    };
+  }, [user, isMaple]);
+
+  // Fetch data whenever user or isMaple changes
+  useEffect(() => {
+    if (!user) return;
+
     async function fetchClients() {
+      setLoadingClients(true);
       try {
-        const idToken = await user.getIdToken(); // always fresh
-        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-clients", 
-            {
-        headers: {
-         "Content-Type": "application/json",
-         "Authorization": `Bearer ${idToken}`
-            },}
+        const headers = await buildHeaders();
+        const response = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/get-clients",
+          { headers }
         );
         if (response.ok) {
           const data = await response.json();
-          setClients(data["clients"]);
-          setKids(data["kids"]);
+          setClients(data["clients"] || []);
+          setKids(data["kids"] || []);
         } else {
           console.error("Failed to fetch clients");
         }
@@ -96,19 +135,16 @@ function App() {
     }
 
     async function fetchLeads() {
+      setLoadingLeads(true);
       try {
-        const idToken = await user.getIdToken(); // always fresh
-
-        const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/get-leads", 
-          {
-        headers: {
-         "Content-Type": "application/json",
-         "Authorization": `Bearer ${idToken}`
-            },}
+        const headers = await buildHeaders();
+        const response = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/get-leads",
+          { headers }
         );
         if (response.ok) {
           const data = await response.json();
-          setLeads(data);
+          setLeads(data || []);
         } else {
           console.error("Failed to fetch leads");
         }
@@ -118,23 +154,75 @@ function App() {
         setLoadingLeads(false);
       }
     }
- 
+
+    async function fetchMembershipInfo() {
+      try {
+        const headers = await buildHeaders();
+        const response = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/membership-info",
+          { headers }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setMembershipInfo(data?.[0] ?? null);
+          console.log(data);
+        } else {
+          console.error("Failed to fetch membership info");
+        }
+      } catch (error) {
+        console.error("Error fetching Membership Info:", error);
+      }
+    }
+
+    fetchMembershipInfo();
     fetchClients();
     fetchLeads();
- 
-  }, [user]);
+  }, [user, isMaple, buildHeaders]);
 
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
   }
 
+  const showTenantToggle = user?.email !== "richmondhillbjj@gmail.com";
+
   return (
     <div className="crm-container">
-  
-      <img src={logo} alt="Logo" />
+ 
+
+      {/* Toggle gyms only if user is not the RH email */}
+      {showTenantToggle ? (
+        <div style={{ margin: "8px 0" }}>
+          <div className="flex">
+
+            <button
+              className={`toggle-table-display ${!isMaple ? "bright-and-center" : "not-dim"}`}
+              onClick={() => setIsMaple(false)}
+              disabled={!isMaple}
+            >
+            <img src={rhlogo} />
+            </button>
+
+            <button
+              className={`toggle-table-display ${isMaple ? "bright-and-center" : "not-dim"}`}
+              onClick={() => setIsMaple(true)}
+              disabled={isMaple}
+              style={{ marginLeft: 8 }}
+            >
+            <img src={logo} />
+            </button>
+
+          </div>
+ 
+        </div>
+      ) :
+        <img src={rhlogo} />
+    
+    }
 
       {showClientForm ? (
         <AddClient
+        setForChild={setForChild}
+          forChild={forChild}
           token={token}
           user={user}
           setConvertToClientData={setConvertToClientData}
@@ -145,11 +233,18 @@ function App() {
           clientFormData={clientFormData}
           membershipInfo={membershipInfo}
           setClients={setClients}
+          isMaple={isMaple}
+          buildHeaders={buildHeaders}
         />
       ) : (
+        <div className="adding-client-buttons flex"> 
         <button className="plus" onClick={() => setShowClientForm(true)}>
-          Add Client
+          New Adult Client
         </button>
+        <button className="plus" onClick={() => showKidForm(true)}>
+          New Kid Client
+        </button>
+        </div>
       )}
 
       <button onClick={toggleShowAdultClients} className="toggle-table-display">
@@ -165,6 +260,8 @@ function App() {
             membershipInfo={membershipInfo}
             token={token}
             user={user}
+            isMaple={isMaple}
+            buildHeaders={buildHeaders}
           />
         )
       )}
@@ -185,6 +282,8 @@ function App() {
             membershipInfo={membershipInfo}
             token={token}
             user={user}
+            isMaple={isMaple}
+            buildHeaders={buildHeaders}
           />
         )
       )}
@@ -205,10 +304,13 @@ function App() {
             setConvertToClientData={setConvertToClientData}
             token={token}
             user={user}
+            isMaple={isMaple}
+            buildHeaders={buildHeaders}
           />
         )
       )}
-          <button
+
+      <button
         className="logout-button"
         onClick={async () => {
           await auth.signOut();
