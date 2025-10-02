@@ -69,15 +69,7 @@ export default function LoginForm({ onLogin }) {
             required
             disabled={loading}
           />
-          <button
-            type="button"
-            className="toggle-pw"
-            onClick={() => setShowPw((s) => !s)}
-            aria-label={showPw ? "Hide password" : "Show password"}
-            disabled={loading}
-          >
-            {showPw ? "🙈" : "👁️"}
-          </button>
+ 
         </div>
 
         {error && <p className="login-error">{error}</p>}
