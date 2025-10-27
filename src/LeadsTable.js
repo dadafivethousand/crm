@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Stylesheets/ClientTable.css';
 import AddLead from './AddLead';
 
@@ -14,6 +14,59 @@ function LeadsTable({
 }) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
+  // initialize
+const [selected, setSelected] = useState(() => new Set());
+ const [actionsOpen, setActionsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const actionsRef = useRef(null);
+
+  
+  // Close dropdown when clicking outside + handle Escape key
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
+        setActionsOpen(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setActionsOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('touchstart', onDocClick);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('touchstart', onDocClick);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
+
+// toggle one key
+const toggleSelect = (key) => {
+  setSelected(prev => {
+    const next = new Set(prev); // copy so we don't mutate prev
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    return next;
+  });
+};
+
+// check if selected
+const isSelected = (key) => selected.has(key);
+
+// clear
+const clearSelection = () => setSelected(new Set());
+
+// get array of keys
+const selectedKeys = () => Array.from(selected);
+
+    const handleSendEmail = async () => {
+    const keys = Array.from(selected);
+    if (!keys.length) return alert('Select at least one lead to email.');
+    // TODO: implement actual email flow (open modal, call API, etc.)
+    console.log('Send email to keys:', keys);
+    setActionsOpen(false);
+  };
 
   const handleEditClick = (index, leadData) => {
     setEditingRow(index);
@@ -87,17 +140,121 @@ function LeadsTable({
     setShowClientForm(true);
   };
 
+  // Mass delete implementation (wired to dropdown Delete)
+  const handleMassDelete = async () => {
+    const keys = Array.from(selected);
+    if (!keys.length) return alert('Select at least one lead to delete.');
+    if (!window.confirm(`Delete ${keys.length} selected lead(s)? This cannot be undone.`)) return;
+
+    setLoading(true);
+    try {
+      const headers = await buildHeaders();
+      // adjust endpoint if needed
+      const res = await fetch('https://worker-consolidated.maxli5004.workers.dev/delete-multiple-leads', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ keys }),
+      });
+
+      if (res.ok) {
+        setLeads((prev) => prev.filter((l) => !selected.has(l.key)));
+        clearSelection();
+        setActionsOpen(false);
+      } else {
+        const text = await res.text().catch(() => 'Unknown error');
+        console.error('Mass delete failed:', text);
+        alert('Mass delete failed — check console.');
+      }
+    } catch (err) {
+      console.error('Mass delete error:', err);
+      alert('Network error during mass delete.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+ 
+
+  const handleMarkContacted = () => {
+    const keys = Array.from(selected);
+    if (!keys.length) return alert('Select at least one lead to mark.');
+    setLeads((prev) => prev.map((l) => (selected.has(l.key) ? { ...l, data: { ...l.data, contacted: true } } : l)));
+    clearSelection();
+    setActionsOpen(false);
+  };
+
+
   return (
-    <div className="client-table-container">
+    <div className="ct-client-table-container">
       <h1>Free Trial</h1>
-      <table className="client-table">
+      
+      {/* Toolbar with Actions dropdown */}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+       <div ref={actionsRef} style={{ position: 'relative' }}>
+  {/* Always enabled so user can open menu; show reason in title */}
+  <button
+    className="mass-actions-btn"
+    onClick={() => setActionsOpen(s => !s)}
+    title={selected.size === 0 ? 'Select rows to enable actions' : `${selected.size} selected`}
+    disabled={loading}                 // only disable while loading
+    aria-expanded={actionsOpen}
+    aria-haspopup="menu"
+  >
+    Actions ▾
+  </button>
+
+  {actionsOpen && (
+    <div className="actions-dropdown" role="menu">
+      <button
+        className="dropdown-item"
+        onClick={handleSendEmail}
+        disabled={loading || selected.size === 0}    // disabled until selection
+        aria-disabled={selected.size === 0}
+      >
+        Send Email
+      </button>
+
+      <button
+        className="dropdown-item"
+        onClick={handleMassDelete}
+        disabled={loading || selected.size === 0}
+         aria-disabled={selected.size === 0}
+      >
+        Delete
+      </button>
+
+      <button
+        className="dropdown-item"
+        onClick={handleMarkContacted}
+        disabled={loading || selected.size === 0}
+      >
+        Mark as Contacted
+      </button>
+
+      {/* optional quick helper */}
+      <div style={{ padding: '6px 12px', fontSize: 12, color: '#666' }}>
+        {selected.size === 0 ? 'No rows selected' : `${selected.size} selected`}
+      </div>
+    </div>
+  )}
+</div>
+
+
+        {selected.size > 0 && <div style={{ fontSize: 14 }}>{selected.size} selected</div>}
+      </div>
+
+
+
+      <table className="ct-client-table">
         <thead>
           <tr>
+             <th className="small"> </th>
             <th className="small"> </th>
             <th><p>First Name</p></th>
             <th>Last Name</th>
             <th>Email</th>
             <th>Phone</th>
+            <th>Notes</th>
             <th className="small"></th>
             <th className="small"></th>
           </tr>
@@ -107,6 +264,20 @@ function LeadsTable({
             ?.filter((lead) => lead && lead.data)
             .map((lead, index) => (
               <tr key={lead.key ?? index}>
+                         <td>
+                <input
+                  type="checkbox"
+                  checked={selected.has(lead.key)}
+                  onChange={() => {
+                    setSelected(prev => {
+                      const next = new Set(prev);
+                      if (next.has(lead.key)) next.delete(lead.key);
+                      else next.add(lead.key);
+                      return next;
+                    });
+                  }}
+                />
+              </td>
                 <td className="small">
                   {editingRow === index ? (
                     <>
@@ -160,13 +331,22 @@ function LeadsTable({
                         onChange={(e) => handleInputChange(e, 'phone')}
                       />
                     </td>
+                      <td>
+                      <textarea
+                        type="text"
+                        value={editedData.notes || ''}
+                        onChange={(e) => handleInputChange(e, 'notes')}
+                      />
+                    </td>
                   </>
                 ) : (
                   <>
+        
                     <td><p>{lead.data.firstName}</p></td>
                     <td>{lead.data.lastName}</td>
                     <td>{lead.data.email}</td>
                     <td>{lead.data.phone}</td>
+                    <td>{lead.data.notes}</td>
                   </>
                 )}
 

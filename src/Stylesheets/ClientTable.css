@@ -10,6 +10,7 @@
   border-collapse: collapse;
   font-family: Arial, sans-serif;
   text-align: center;
+  margin: 0 auto;
 }
 
 .ct-client-table th,
@@ -221,3 +222,33 @@ width:95%;
   margin: 0 auto;
   display: block;
  }
+
+ input[type="checkbox"] {
+  transform: scale(1.3); /* easiest cross-browser resize */
+  margin: 4px;
+}
+
+.actions-dropdown {
+  position: absolute; /* needed to float below button */
+  top: 100%;          /* just below the button */
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 100;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+.dropdown-item {
+  padding: 6px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.dropdown-item:hover {
+  background: #f1f1f1;
+}
