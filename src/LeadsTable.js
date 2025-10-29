@@ -111,66 +111,64 @@ const selectedKeys = () => Array.from(selected);
     }
   };
 
-  const handleDelete = async (key) => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
-    try {
-      const headers = await buildHeaders();
-      const res = await fetch(
-        `https://worker-consolidated.maxli5004.workers.dev/delete-lead`,
-        {
-          method: 'DELETE',
-          headers,
-          body: JSON.stringify({ key }),
-        }
-      );
+ // --- unified delete handler (replace your handleDelete & handleMassDelete) ---
+const handleDelete = async (keyOrKeys) => {
+  // normalize to array
+  const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+  if (!keys.length) return;
 
-      if (res.ok) {
-        setLeads((prevLeads) => prevLeads.filter((lead) => lead.key !== key));
-      } else {
-        const err = await res.json().catch(() => ({}));
-        console.error('Error deleting record', err);
+  // confirmation message depends on count
+  const confirmMsg =
+    keys.length === 1
+      ? 'Are you sure you want to delete this record?'
+      : `Delete ${keys.length} selected lead(s)? This cannot be undone.`;
+
+  if (!window.confirm(confirmMsg)) return;
+
+  setLoading(true);
+  try {
+    const headers = await buildHeaders();
+    // send array of keys; backend should handle single-or-multiple
+    const res = await fetch(
+      `https://worker-consolidated.maxli5004.workers.dev/delete-lead`, // keep endpoint or change to /delete-leads if you like
+      {
+        method: 'DELETE', // you can also use POST if your worker prefers; keep consistent with backend
+        headers,
+        body: JSON.stringify({ keys }), // always send an array
       }
-    } catch (error) {
-      console.error('Error deleting record:', error);
+    );
+
+    if (res.ok) {
+      // remove all deleted keys from local state
+      const keySet = new Set(keys);
+      setLeads((prevLeads) => prevLeads.filter((lead) => !keySet.has(lead.key)));
+
+      // clear selection if any of the deleted items were selected
+      setSelected((prev) => {
+        const next = new Set(prev);
+        keys.forEach((k) => next.delete(k));
+        return next;
+      });
+
+      // close actions menu if it was open
+      setActionsOpen(false);
+    } else {
+      // try to get error message, fallback gracefully
+      const err = await res.json().catch(() => ({}));
+      console.error('Error deleting record(s):', err);
+      alert('Delete failed — check console for details.');
     }
-  };
+  } catch (error) {
+    console.error('Network error deleting record(s):', error);
+    alert('Network error during delete. See console.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleConvertToClient = (lead) => {
     setConvertToClientData(lead.data);
     setShowClientForm(true);
-  };
-
-  // Mass delete implementation (wired to dropdown Delete)
-  const handleMassDelete = async () => {
-    const keys = Array.from(selected);
-    if (!keys.length) return alert('Select at least one lead to delete.');
-    if (!window.confirm(`Delete ${keys.length} selected lead(s)? This cannot be undone.`)) return;
-
-    setLoading(true);
-    try {
-      const headers = await buildHeaders();
-      // adjust endpoint if needed
-      const res = await fetch('https://worker-consolidated.maxli5004.workers.dev/delete-multiple-leads', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ keys }),
-      });
-
-      if (res.ok) {
-        setLeads((prev) => prev.filter((l) => !selected.has(l.key)));
-        clearSelection();
-        setActionsOpen(false);
-      } else {
-        const text = await res.text().catch(() => 'Unknown error');
-        console.error('Mass delete failed:', text);
-        alert('Mass delete failed — check console.');
-      }
-    } catch (err) {
-      console.error('Mass delete error:', err);
-      alert('Network error during mass delete.');
-    } finally {
-      setLoading(false);
-    }
   };
 
  
@@ -216,7 +214,7 @@ const selectedKeys = () => Array.from(selected);
 
       <button
         className="dropdown-item"
-        onClick={handleMassDelete}
+        onClick={() => handleDelete(Array.from(selected))}
         disabled={loading || selected.size === 0}
          aria-disabled={selected.size === 0}
       >
