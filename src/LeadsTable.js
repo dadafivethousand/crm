@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Stylesheets/ClientTable.css';
 import AddLead from './AddLead';
+import EmailComposer from './Components/EmailComposer';
+import TextComposer from './Components/TextComposer';
 
 function LeadsTable({
+  
   setConvertToClientData,
   leads,
   setLeads,
@@ -19,6 +22,16 @@ const [selected, setSelected] = useState(() => new Set());
  const [actionsOpen, setActionsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const actionsRef = useRef(null);
+  // email modal state
+  const [textOpen, setTextOpen] = useState(false);
+  const [textBody, setTextBody] = useState('');
+const [emailOpen, setEmailOpen] = useState(false);
+const [emailSubject, setEmailSubject] = useState('');
+const [emailBody, setEmailBody] = useState('');
+const [emailSending, setEmailSending] = useState(false);
+const [textSending, setTextSending] = useState(false);
+const emailRef = useRef(null);
+
 
   
   // Close dropdown when clicking outside + handle Escape key
@@ -51,6 +64,26 @@ const toggleSelect = (key) => {
   });
 };
 
+const selectAll = () => {
+  setSelected(prev => {
+    // Create a set of all lead keys
+    const allKeys = new Set(leads.map(lead => lead.key));
+
+    // Check if there is at least one key not selected
+    const hasUnselected = [...allKeys].some(key => !prev.has(key));
+
+    if (hasUnselected) {
+      // Select all
+      return allKeys;
+    } else {
+      // All were already selected, so deselect all
+      return new Set();
+    }
+  });
+};
+
+ 
+
 // check if selected
 const isSelected = (key) => selected.has(key);
 
@@ -60,13 +93,153 @@ const clearSelection = () => setSelected(new Set());
 // get array of keys
 const selectedKeys = () => Array.from(selected);
 
-    const handleSendEmail = async () => {
-    const keys = Array.from(selected);
-    if (!keys.length) return alert('Select at least one lead to email.');
-    // TODO: implement actual email flow (open modal, call API, etc.)
-    console.log('Send email to keys:', keys);
-    setActionsOpen(false);
-  };
+const handleSendText = async () => {
+  const keys = Array.from(selected);
+  if (!keys.length) {
+    alert('Select at least one lead to text.');
+    return;
+  }
+
+  // open the compose modal if not already open
+  setTextOpen(true);
+};
+ 
+
+const handleSendEmail = async () => {
+  const keys = Array.from(selected);
+  if (!keys.length) {
+    alert('Select at least one lead to email.');
+    return;
+  }
+
+  // open the compose modal if not already open
+  setEmailOpen(true);
+};
+
+const submitText = async (e) => {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const recipients = Array.from(selected);
+  if (!recipients.length) {
+    alert('No recipients selected.');
+    setTextOpen(false);
+    return;
+  }
+
+  if (!textBody || !textBody.trim()) {
+    alert('Please enter a message.');
+    return;
+  }
+
+  setTextSending(true);
+  try {
+    const baseHeaders = await buildHeaders();
+
+    const headers = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+    headers.set('Content-Type', 'application/json');
+
+    const payload = {
+      message: textBody,      // worker expects `message`
+      recipients,
+    };
+
+    console.log('[submitText] payload ->', payload);
+
+    // Use the route your worker defines; the handler was documented as POST /text-blaster
+    const res = await fetch('https://worker-consolidated.maxli5004.workers.dev/text', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    const responseText = await res.text().catch(() => '');
+    let responseJson = null;
+    try { responseJson = JSON.parse(responseText); } catch (err) { /* not JSON */ }
+
+    if (!res.ok) {
+      console.error('Text API error status:', res.status, 'body:', responseText);
+      alert('Failed to send texts — check console for details.');
+    } else {
+      console.log('Text API response (text):', responseText);
+      console.log('Text API response (parsed):', responseJson);
+      alert('Texts queued/sent successfully.');
+      setTextBody('');
+      setTextOpen(false);
+    }
+  } catch (err) {
+    console.error('Network error sending text:', err);
+    alert('Network error sending text — see console.');
+  } finally {
+    setTextSending(false);
+  }
+};
+
+
+const submitEmail = async (e) => {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const recipients = Array.from(selected);
+  if (!recipients.length) {
+    alert('No recipients selected.');
+    setEmailOpen(false);
+    return;
+  }
+  if (!emailSubject.trim()) {
+    alert('Please enter a subject.');
+    return;
+  }
+  if (!emailBody.trim()) {
+    alert('Please enter a message.');
+    return;
+  }
+
+  setEmailSending(true);
+  try {
+    const baseHeaders = await buildHeaders();
+
+    // Normalize headers to a Headers instance so .set() works
+    const headers = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+    headers.set('Content-Type', 'application/json');
+
+    const payload = {
+      subject: emailSubject,
+      body: emailBody,      // <-- required by your worker
+      message: emailBody,   // <-- keep for compatibility if other things expect it
+      recipients,
+    };
+
+    console.log('[submitEmail] payload ->', payload);
+
+    const res = await fetch('https://worker-consolidated.maxli5004.workers.dev/email', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    const responseText = await res.text().catch(() => '');
+    let responseJson = null;
+    try { responseJson = JSON.parse(responseText); } catch (err) { /* not JSON */ }
+
+    if (!res.ok) {
+      console.error('Email API error status:', res.status, 'body:', responseText);
+      alert('Failed to send email — check console for details.');
+    } else {
+      console.log('Email API response (text):', responseText);
+      console.log('Email API response (parsed):', responseJson);
+      alert('Emails queued/sent successfully.');
+      setEmailSubject('');
+      setEmailBody('');
+      setEmailOpen(false);
+    }
+  } catch (err) {
+    console.error('Network error sending email:', err);
+    alert('Network error sending email — see console.');
+  } finally {
+    setEmailSending(false);
+  }
+};
+
+
 
   const handleEditClick = (index, leadData) => {
     setEditingRow(index);
@@ -184,6 +357,31 @@ const handleDelete = async (keyOrKeys) => {
 
   return (
     <div className="ct-client-table-container">
+{    emailOpen &&     <EmailComposer
+          open={emailOpen}
+          onClose={() => setEmailOpen(false)}
+          onSend={submitEmail}
+          sending={emailSending}
+          subject={emailSubject}
+          setSubject={setEmailSubject}
+          body={emailBody}
+          setBody={setEmailBody}
+          selectedCount={selected.size}
+        />
+}
+
+{    textOpen &&     <TextComposer
+          open={textOpen}
+          onClose={() => setTextOpen(false)}
+
+          onSend={submitText}
+          sending={textSending}
+          message={textBody}          // <-- changed prop name
+          setMessage={setTextBody}    // <-- changed prop name
+          selectedCount={selected.size}
+        />
+}
+      
       <h1>Free Trial</h1>
       
       {/* Toolbar with Actions dropdown */}
@@ -210,6 +408,15 @@ const handleDelete = async (keyOrKeys) => {
         aria-disabled={selected.size === 0}
       >
         Send Email
+      </button>
+
+          <button
+        className="dropdown-item"
+        onClick={handleSendText}
+        disabled={loading || selected.size === 0}    // disabled until selection
+        aria-disabled={selected.size === 0}
+      >
+        Send Text
       </button>
 
       <button
@@ -246,13 +453,14 @@ const handleDelete = async (keyOrKeys) => {
       <table className="ct-client-table">
         <thead>
           <tr>
-             <th className="small"> </th>
+             <th className="small "> <button className='select-all-button'     onClick={() => selectAll()}>Select <br></br> All</button>  </th>
             <th className="small"> </th>
             <th><p>First Name</p></th>
             <th>Last Name</th>
             <th>Email</th>
             <th>Phone</th>
             <th>Notes</th>
+                 <th>TimeStamp</th>
             <th className="small"></th>
             <th className="small"></th>
           </tr>
@@ -336,6 +544,22 @@ const handleDelete = async (keyOrKeys) => {
                         onChange={(e) => handleInputChange(e, 'notes')}
                       />
                     </td>
+                            <td>
+                   <td>
+  {lead.data.createdAt
+    ? (() => {
+        const d = new Date(lead.data.createdAt);
+        if (isNaN(d)) return ''; // fallback in case it's an invalid date
+        const month = d.toLocaleString('en-US', { month: 'short' }).toLowerCase();
+        const day = String(d.getDate()).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${month}-${day}-${year}`;
+      })()
+    : ''}
+</td>
+
+                    </td>
+
                   </>
                 ) : (
                   <>
@@ -345,6 +569,19 @@ const handleDelete = async (keyOrKeys) => {
                     <td>{lead.data.email}</td>
                     <td>{lead.data.phone}</td>
                     <td>{lead.data.notes}</td>
+                   <td>
+  {lead.data.createdAt
+    ? (() => {
+        const d = new Date(lead.data.createdAt);
+        if (isNaN(d)) return ''; // fallback in case it's an invalid date
+        const month = d.toLocaleString('en-US', { month: 'short' }).toLowerCase();
+        const day = String(d.getDate()).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${month}-${day}-${year}`;
+      })()
+    : ''}
+</td>
+
                   </>
                 )}
 

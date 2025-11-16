@@ -252,3 +252,7 @@ width:95%;
 .dropdown-item:hover {
   background: #f1f1f1;
 }
+.select-all-button{
+  background-color: rgb(156, 155, 155);
+  border:1px solid black
+}
