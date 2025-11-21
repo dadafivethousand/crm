@@ -119,8 +119,8 @@ const handleSendEmail = async () => {
 const submitText = async (e) => {
   if (e && e.preventDefault) e.preventDefault();
 
-  const recipients = Array.from(selected);
-  if (!recipients.length) {
+  const allRecipients = Array.from(selected);
+  if (!allRecipients.length) {
     alert('No recipients selected.');
     setTextOpen(false);
     return;
@@ -131,41 +131,53 @@ const submitText = async (e) => {
     return;
   }
 
+  const BATCH_SIZE = 25;
+  const batches = [];
+  for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
+    batches.push(allRecipients.slice(i, i + BATCH_SIZE));
+  }
+
   setTextSending(true);
   try {
     const baseHeaders = await buildHeaders();
-
-    const headers = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+    const headers =
+      baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
     headers.set('Content-Type', 'application/json');
 
-    const payload = {
-      message: textBody,      // worker expects `message`
-      recipients,
-    };
+    for (const recipients of batches) {
+      const payload = {
+        message: textBody,      // worker expects `message`
+        recipients,
+        listType: "leads",
+      };
 
-    console.log('[submitText] payload ->', payload);
+      console.log('[LeadsTable submitText] batch payload ->', payload);
 
-    // Use the route your worker defines; the handler was documented as POST /text-blaster
-    const res = await fetch('https://worker-consolidated.maxli5004.workers.dev/text', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch(
+        'https://worker-consolidated.maxli5004.workers.dev/text',
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        }
+      );
 
-    const responseText = await res.text().catch(() => '');
-    let responseJson = null;
-    try { responseJson = JSON.parse(responseText); } catch (err) { /* not JSON */ }
+      const responseText = await res.text().catch(() => '');
+      let responseJson = null;
+      try { responseJson = JSON.parse(responseText); } catch (_) {}
 
-    if (!res.ok) {
-      console.error('Text API error status:', res.status, 'body:', responseText);
-      alert('Failed to send texts — check console for details.');
-    } else {
-      console.log('Text API response (text):', responseText);
-      console.log('Text API response (parsed):', responseJson);
-      alert('Texts queued/sent successfully.');
-      setTextBody('');
-      setTextOpen(false);
+      if (!res.ok) {
+        console.error('Text API error (leads batch):', res.status, 'body:', responseText);
+        alert('Some text batches failed — check console for details.');
+        break;
+      } else {
+        console.log('[LeadsTable submitText] batch response:', responseJson || responseText);
+      }
     }
+
+    alert('Texts queued/sent (batched).');
+    setTextBody('');
+    setTextOpen(false);
   } catch (err) {
     console.error('Network error sending text:', err);
     alert('Network error sending text — see console.');
@@ -175,11 +187,12 @@ const submitText = async (e) => {
 };
 
 
+
 const submitEmail = async (e) => {
   if (e && e.preventDefault) e.preventDefault();
 
-  const recipients = Array.from(selected);
-  if (!recipients.length) {
+  const allRecipients = Array.from(selected);
+  if (!allRecipients.length) {
     alert('No recipients selected.');
     setEmailOpen(false);
     return;
@@ -193,44 +206,56 @@ const submitEmail = async (e) => {
     return;
   }
 
+  const BATCH_SIZE = 25;
+  const batches = [];
+  for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
+    batches.push(allRecipients.slice(i, i + BATCH_SIZE));
+  }
+
   setEmailSending(true);
   try {
     const baseHeaders = await buildHeaders();
-
-    // Normalize headers to a Headers instance so .set() works
-    const headers = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+    const headers =
+      baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
     headers.set('Content-Type', 'application/json');
 
-    const payload = {
-      subject: emailSubject,
-      body: emailBody,      // <-- required by your worker
-      message: emailBody,   // <-- keep for compatibility if other things expect it
-      recipients,
-    };
+    for (const recipients of batches) {
+      const payload = {
+        subject: emailSubject,
+        body: emailBody,      // required by worker
+        message: emailBody,   // backwards compatibility
+        recipients,
+        listType: "leads",
+      };
 
-    console.log('[submitEmail] payload ->', payload);
+      console.log('[LeadsTable submitEmail] batch payload ->', payload);
 
-    const res = await fetch('https://worker-consolidated.maxli5004.workers.dev/email', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch(
+        'https://worker-consolidated.maxli5004.workers.dev/email',
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        }
+      );
 
-    const responseText = await res.text().catch(() => '');
-    let responseJson = null;
-    try { responseJson = JSON.parse(responseText); } catch (err) { /* not JSON */ }
+      const responseText = await res.text().catch(() => '');
+      let responseJson = null;
+      try { responseJson = JSON.parse(responseText); } catch (_) {}
 
-    if (!res.ok) {
-      console.error('Email API error status:', res.status, 'body:', responseText);
-      alert('Failed to send email — check console for details.');
-    } else {
-      console.log('Email API response (text):', responseText);
-      console.log('Email API response (parsed):', responseJson);
-      alert('Emails queued/sent successfully.');
-      setEmailSubject('');
-      setEmailBody('');
-      setEmailOpen(false);
+      if (!res.ok) {
+        console.error('Email API error (leads batch):', res.status, 'body:', responseText);
+        alert('Some email batches failed — check console for details.');
+        break;
+      } else {
+        console.log('[LeadsTable submitEmail] batch response:', responseJson || responseText);
+      }
     }
+
+    alert('Emails queued/sent (batched).');
+    setEmailSubject('');
+    setEmailBody('');
+    setEmailOpen(false);
   } catch (err) {
     console.error('Network error sending email:', err);
     alert('Network error sending email — see console.');
@@ -238,6 +263,7 @@ const submitEmail = async (e) => {
     setEmailSending(false);
   }
 };
+
 
 
 
