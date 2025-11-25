@@ -554,7 +554,7 @@ function ClientTable({
             <tr
               key={client.key ?? index}
               className={
-                client.data.endDate && new Date() >= new Date(client.data.endDate)
+                client.data.endDate && new Date() > new Date(client.data.endDate)
                   ? "ct-red"
                   : "ct-regular"
               }
