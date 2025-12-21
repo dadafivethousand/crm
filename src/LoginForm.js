@@ -8,7 +8,6 @@ export default function LoginForm({ onLogin }) {
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
-  const [showPw, setShowPw]     = useState(false);
 
   const friendlyError = (err) => {
     const code = err?.code || "";
@@ -30,7 +29,7 @@ export default function LoginForm({ onLogin }) {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-      const token = await userCredential.user.getIdToken(/* forceRefresh? false */);
+      const token = await userCredential.user.getIdToken();
       onLogin(token, userCredential.user);
     } catch (err) {
       console.error("Login failed:", err);
@@ -43,7 +42,10 @@ export default function LoginForm({ onLogin }) {
   return (
     <div className="login-form-container">
       <form onSubmit={handleLogin} className="login-form" noValidate>
-        <h2>Login</h2>
+        <img className="login-logo" src={require("./Images/crmlogo.png")} alt="CRM" />
+
+        <h2 className="login-title">Sign in</h2>
+        <p className="login-subtitle">Use your account to continue.</p>
 
         <label className="sr-only" htmlFor="login-email">Email</label>
         <input
@@ -58,24 +60,21 @@ export default function LoginForm({ onLogin }) {
         />
 
         <label className="sr-only" htmlFor="login-password">Password</label>
-        <div className="password-field">
-          <input
-            id="login-password"
-            type={showPw ? "text" : "password"}
-            placeholder="Password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-          />
- 
-        </div>
+        <input
+          id="login-password"
+          type="password"
+          placeholder="Password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={loading}
+        />
 
-        {error && <p className="login-error">{error}</p>}
+        {error && <div className="login-error" role="alert">{error}</div>}
 
         <button type="submit" disabled={loading}>
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
     </div>
