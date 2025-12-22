@@ -10,8 +10,8 @@ import KidsTable from "./KidsTable";
 import LoginForm from "./LoginForm";
 
 import "./Stylesheets/App.css";
-import logo from "./Images/logos.jpg";
-import rhlogo from "./Images/logo-grayscale.png"
+import logo from "./Images/whitelogonobg.png";
+import rhlogo from "./Images/new_logo.png"
 
 function App() {
   const [token, setToken] = useState(null);
