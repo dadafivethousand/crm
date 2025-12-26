@@ -409,7 +409,7 @@ const handleDelete = async (keyOrKeys) => {
         />
 }
       
-      <h1>Free Trial</h1>
+      <h1>Leads</h1>
       
       {/* Toolbar with Actions dropdown */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
