@@ -16,6 +16,7 @@ import rhlogo from "./Images/new_logo.png"
 function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const isLeadsReadOnlyUser = user?.email?.toLowerCase() === "maxli5004@gmail.com";
 
   // tenant state with localStorage persistence
   const [isMaple, setIsMaple] = useState(() => {
@@ -109,81 +110,153 @@ useEffect(() => {
   }, [user, isMaple]);
 
   // Fetch data whenever user or isMaple changes
-  useEffect(() => {
-    if (!user) return;
+useEffect(() => {
+  if (!user) return;
 
-    async function fetchClients() {
-      setLoadingClients(true);
-      try {
-        const headers = await buildHeaders();
-        const response = await fetch(
-          "https://worker-consolidated.maxli5004.workers.dev/get-clients",
-          { headers }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setClients(data["clients"] || []);
-          setKids(data["kids"] || []);
-        } else {
-          console.error("Failed to fetch clients");
-        }
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      } finally {
-        setLoadingClients(false);
+  async function fetchClients() {
+    setLoadingClients(true);
+    try {
+      const headers = await buildHeaders();
+      const response = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/get-clients",
+        { headers }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data["clients"] || []);
+        setKids(data["kids"] || []);
+      } else {
+        console.error("Failed to fetch clients");
       }
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    } finally {
+      setLoadingClients(false);
     }
+  }
 
-    async function fetchLeads() {
-      setLoadingLeads(true);
-      try {
-        const headers = await buildHeaders();
-        const response = await fetch(
-          "https://worker-consolidated.maxli5004.workers.dev/get-leads",
-          { headers }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setLeads(data || []);
-        } else {
-          console.error("Failed to fetch leads");
-        }
-      } catch (error) {
-        console.error("Error fetching leads:", error);
-      } finally {
-        setLoadingLeads(false);
+  async function fetchLeads() {
+    setLoadingLeads(true);
+    try {
+      const headers = await buildHeaders();
+      const response = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/get-leads",
+        { headers }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setLeads(data || []);
+      } else {
+        console.error("Failed to fetch leads");
       }
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+    } finally {
+      setLoadingLeads(false);
     }
+  }
 
-    async function fetchMembershipInfo() {
-      try {
-        const headers = await buildHeaders();
-        const response = await fetch(
-          "https://worker-consolidated.maxli5004.workers.dev/membership-info",
-          { headers }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setMembershipInfo(data?.[0] ?? null);
-          console.log(data);
-        } else {
-          console.error("Failed to fetch membership info");
-        }
-      } catch (error) {
-        console.error("Error fetching Membership Info:", error);
+  async function fetchMembershipInfo() {
+    try {
+      const headers = await buildHeaders();
+      const response = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/membership-info",
+        { headers }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setMembershipInfo(data?.[0] ?? null);
+        console.log(data);
+      } else {
+        console.error("Failed to fetch membership info");
       }
+    } catch (error) {
+      console.error("Error fetching Membership Info:", error);
     }
+  }
 
-    fetchMembershipInfo();
-    fetchClients();
+  // 🔒 Max: leads-only
+  if (isLeadsReadOnlyUser) {
     fetchLeads();
-  }, [user, isMaple, buildHeaders]);
+    return;
+  }
+
+  // everyone else
+  fetchMembershipInfo();
+  fetchClients();
+  fetchLeads();
+}, [user, isMaple, buildHeaders, isLeadsReadOnlyUser]);
 
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
   }
 
   const showTenantToggle = user?.email !== "richmondhillbjj@gmail.com";
+  
+  if (isLeadsReadOnlyUser) {
+    return (
+      <div className="crm-container">
+        {/* Toggle gyms (allowed for Max) */}
+        {showTenantToggle ? (
+          <div style={{ margin: "8px 0" }}>
+            <div className="flex">
+              <button
+                className={`toggle-table-display ${
+                  !isMaple ? "bright-and-center" : "not-dim"
+                }`}
+                onClick={() => setIsMaple(false)}
+                disabled={!isMaple}
+              >
+                <img src={rhlogo} alt="Richmond Hill" />
+              </button>
+
+              <button
+                className={`toggle-table-display ${
+                  isMaple ? "bright-and-center" : "not-dim"
+                }`}
+                onClick={() => setIsMaple(true)}
+                disabled={isMaple}
+                style={{ marginLeft: 8 }}
+              >
+                <img src={logo} alt="Maple" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <img src={rhlogo} alt="Richmond Hill" />
+        )}
+
+        {loadingLeads ? (
+          <p>Loading Leads...</p>
+        ) : (
+          <LeadsTable
+            leads={leads}
+            setLeads={setLeads}
+            setShowClientForm={setShowClientForm}
+            setClientFormData={setClientFormData}
+            setConvertToClientData={setConvertToClientData}
+            token={token}
+            user={user}
+            isMaple={isMaple}
+            buildHeaders={buildHeaders}
+            readOnly // ✅ you must implement this in LeadsTable to hide ALL actions
+          />
+        )}
+
+        <button
+          className="logout-button"
+          onClick={async () => {
+            await auth.signOut();
+            setUser(null);
+            setToken(null);
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="crm-container">
