@@ -1,0 +1,109 @@
+/* ./Components/DeleteOptionsModal.css */
+
+.dom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(3px);
+}
+
+.dom-card {
+  width: min(520px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+  padding: 18px 18px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  animation: dom-pop 120ms ease-out;
+}
+
+@keyframes dom-pop {
+  from {
+    transform: translateY(6px) scale(0.985);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.dom-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  margin-bottom: 8px;
+  color: #111;
+}
+
+.dom-message {
+  font-size: 14px;
+  line-height: 1.35;
+  color: #333;
+  margin-bottom: 14px;
+}
+
+.dom-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.dom-btn {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.06s ease, opacity 0.12s ease,
+    background 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+
+.dom-btn:active {
+  transform: translateY(1px);
+}
+
+.dom-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dom-secondary {
+  background: #f4f4f4;
+}
+
+.dom-primary {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.dom-primary:hover:not(:disabled) {
+  background: #000;
+  border-color: #000;
+}
+
+.dom-danger {
+  background: #b00020;
+  color: #fff;
+  border-color: #b00020;
+}
+
+.dom-danger:hover:not(:disabled) {
+  background: #98001b;
+  border-color: #98001b;
+}
+
+.dom-loading {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #666;
+}

@@ -4,6 +4,8 @@ import noemailimg from './Images/noemail.avif';
 import sendemail from "./Images/sendemail.png";
 import EmailComposer from './Components/EmailComposer';
 import TextComposer from './Components/TextComposer';
+import DeleteOptionsModal from './Components/DeleteOptionsModal';
+
 
 function KidsTable({
   membershipInfo,
@@ -15,6 +17,9 @@ function KidsTable({
   user,
   buildHeaders,
 }) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
+
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
@@ -165,58 +170,73 @@ function KidsTable({
     }
   };
 
-  // unified delete: single or multiple keys
-  const handleDelete = async (keyOrKeys) => {
-    const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
-    if (!keys.length) return;
+// open the delete modal
+const requestDelete = (keyOrKeys) => {
+  const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+  if (!keys.length) return;
+  setPendingDeleteKeys(keys);
+  setDeleteOpen(true);
+};
 
-    const confirmMsg =
-      keys.length === 1
-        ? 'Are you sure you want to delete this record?'
-        : `Delete ${keys.length} selected kid(s)? This cannot be undone.`;
+const cancelDelete = () => {
+  if (loading) return;
+  setDeleteOpen(false);
+  setPendingDeleteKeys([]);
+};
 
-    if (!window.confirm(confirmMsg)) return;
+// this does the actual backend call
+const performDeleteKids = async ({ keys, saveAsLead }) => {
+  if (!keys.length) return;
 
-    setLoading(true);
-    try {
-      const baseHeaders = await buildHeaders();
-      const hdrs =
-        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+  setLoading(true);
+  try {
+    const baseHeaders = await buildHeaders();
+    const hdrs =
+      baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+    hdrs.set('Content-Type', 'application/json');
 
-      const response = await fetch(
-        `https://worker-consolidated.maxli5004.workers.dev/delete-kid`,
-        {
-          method: 'DELETE',
-          headers: hdrs,
-          body: JSON.stringify({ keys }),
-        }
-      );
-
-      const data = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        const keySet = new Set(keys);
-        setKids((prevKids) => prevKids.filter((kid) => !keySet.has(kid.key)));
-
-        // clear deleted from selection
-        setSelected((prev) => {
-          const next = new Set(prev);
-          keys.forEach((k) => next.delete(k));
-          return next;
-        });
-
-        setActionsOpen(false);
-      } else {
-        console.error('Error deleting record(s):', data);
-        alert('Delete failed — check console for details.');
+    const response = await fetch(
+      `https://worker-consolidated.maxli5004.workers.dev/delete-kid`,
+      {
+        method: 'DELETE',
+        headers: hdrs,
+        body: JSON.stringify({ keys, saveAsLead }), // ✅ NEW FLAG
       }
-    } catch (error) {
-      console.error('Error deleting record(s):', error);
-      alert('Network error during delete. See console.');
-    } finally {
-      setLoading(false);
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      const keySet = new Set(keys);
+      setKids((prevKids) => prevKids.filter((kid) => !keySet.has(kid.key)));
+
+      setSelected((prev) => {
+        const next = new Set(prev);
+        keys.forEach((k) => next.delete(k));
+        return next;
+      });
+
+      setActionsOpen(false);
+    } else {
+      console.error('Error deleting kid(s):', data);
+      alert('Delete failed — check console for details.');
     }
-  };
+  } catch (error) {
+    console.error('Network error during delete-kid:', error);
+    alert('Network error during delete. See console.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const confirmDelete = async (saveAsLead = false) => {
+  const keys = pendingDeleteKeys;
+  setDeleteOpen(false);
+  setPendingDeleteKeys([]);
+
+  await performDeleteKids({ keys, saveAsLead });
+};
+
 
   const handleNoEmail = async (key) => {
     try {
@@ -437,6 +457,16 @@ const submitText = async (e) => {
 
   return (
     <div className="ct-client-table-container">
+      <DeleteOptionsModal
+        open={deleteOpen}
+        loading={loading}
+        count={pendingDeleteKeys.length}
+        onCancel={cancelDelete}
+        onDelete={() => confirmDelete(false)}
+        onDeleteAndSaveAsLead={() => confirmDelete(true)}
+      />
+
+
       {/* Email + Text modals */}
       {emailOpen && (
         <EmailComposer
@@ -506,7 +536,7 @@ const submitText = async (e) => {
 
               <button
                 className="dropdown-item"
-                onClick={() => handleDelete(Array.from(selected))}
+                onClick={() => requestDelete(Array.from(selected))}
                 disabled={loading || selected.size === 0}
                 aria-disabled={selected.size === 0}
               >
@@ -717,7 +747,7 @@ const submitText = async (e) => {
               <td className="ct-small">
                 <button
                   className="ct-delete-btn"
-                  onClick={() => handleDelete(client.key)}
+                  onClick={() => requestDelete(client.key)}
                 >
                   🗑️
                 </button>
