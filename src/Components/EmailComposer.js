@@ -50,7 +50,7 @@ export default function EmailComposer({
   return (
     <div
       className="email-modal-overlay"
-      onClick={() => { if (!sending) onClose(); }}
+ 
     >
       <div
         ref={emailRef}
