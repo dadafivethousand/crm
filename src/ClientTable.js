@@ -640,7 +640,7 @@ const confirmDelete = async (saveAsLead = false) => {
                       >
                         ✏️
                       </button>
-                    </div>
+                   
                     <button
                       onClick={() => handleNoEmail(client.key, "student")}
                       id='ct-no-email-button'
@@ -650,6 +650,7 @@ const confirmDelete = async (saveAsLead = false) => {
                         ? <img id='no-email' src={noemailimg} alt="No email" />
                         : <img id='no-email' src={sendemail} alt="Send email" />}
                     </button>
+                     </div>
                   </>
                 )}
               </td>
@@ -685,7 +686,7 @@ const confirmDelete = async (saveAsLead = false) => {
               ) : (
                 <>
                   {headers.map((header) => (
-                    <td key={header.key}>{client.data[header.key]}</td>
+                    <td className='ct-content' key={header.key}>{client.data[header.key]}</td>
                   ))}
                 </>
               )}

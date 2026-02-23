@@ -6,7 +6,7 @@
 
 /* Table */
 .ct-client-table {
-width: 100%;
+ 
   border-collapse: collapse;
   font-family: Arial, sans-serif;
   text-align: center;
@@ -16,9 +16,9 @@ width: 100%;
 .ct-client-table th,
 .ct-client-table td {
   border: 1px solid #000000; 
-  max-width: 100px;
-  word-wrap: break-word;
-  white-space: normal;
+ padding:0 30px; 
+ 
+  min-width: fit-content;
 }
 
 .ct-client-table th {
@@ -124,8 +124,13 @@ width: 100%;
 .ct-small{
   height: 55px;
   text-align: center;
-  vertical-align: middle;
-  width:30px;
+ 
+  width:50px;
+ 
+}
+
+.ct-content{
+   white-space: nowrap;
 }
 
 /* Utility Column + Flex */
@@ -135,14 +140,9 @@ width: 100%;
   padding: 4px 8px;
   font-size: 12px;
 }
-
+ct-button
  
-.ct-button-flex {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
+ 
 
 /* Expired Client Highlight */
 .ct-red {
@@ -217,12 +217,9 @@ width:105%;
  
 }
 
+ 
 
- #ct-no-email-button{
-  margin: 0 auto;
-  display: block;
- }
-
+ 
  input[type="checkbox"] {
   transform: scale(1.3); /* easiest cross-browser resize */
   margin: 4px;
@@ -273,3 +270,5 @@ width:105%;
   background-color: rgb(156, 155, 155);
   border:1px solid black
 }
+
+
