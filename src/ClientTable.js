@@ -24,8 +24,10 @@ function ClientTable({
 
 
   // --- selection + actions state (mirrors LeadsTable) ---
+  const [individualSelection, setIndividualSelection] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [individualActionsOpen, setIndividualActionsOpen] = useState(false)
   const [loading, setLoading] = useState(false);
   const actionsRef = useRef(null);
 
@@ -86,6 +88,10 @@ function ClientTable({
       return 0;
     });
   };
+
+const toggleIndividualActions = (index) => {
+  setIndividualActionsOpen((prev) => (prev !== index ? index : null));
+};
 
   const handleSort = (key) => {
     if (sortColumn === key) {
@@ -288,28 +294,40 @@ const confirmDelete = async (saveAsLead = false) => {
 
   // --- text/email actions (same endpoints as LeadsTable) ---
 
-  const handleSendText = () => {
-    const keys = Array.from(selected);
-    if (!keys.length) {
-      alert('Select at least one client to text.');
-      return;
-    }
-    setTextOpen(true);
-  };
+  const handleSendText = (key) => {
+  const keys = Array.from(selected);
 
-  const handleSendEmail = () => {
-    const keys = Array.from(selected);
-    if (!keys.length) {
-      alert('Select at least one client to email.');
-      return;
-    }
+  if (key != null) setIndividualSelection(key);
+
+  if (!keys.length && key == null) {
+    alert('Select at least one client to text.');
+    return;
+  }
+
+  setTextOpen(true);
+};
+
+ const handleSendEmail = (key) => {
+  if (key != null) {
+    setIndividualSelection(key);
     setEmailOpen(true);
-  };
+    return;
+  }
+
+  if (!selected.size) {
+    alert('Select at least one client to email.');
+    return;
+  }
+
+  setIndividualSelection(null);
+  setEmailOpen(true);
+};
 
  const submitText = async (e) => {
   if (e && e.preventDefault) e.preventDefault();
 
-  const allRecipients = Array.from(selected);
+  const allRecipients = individualSelection != null ? [individualSelection] : Array.from(selected);
+  console.log(individualSelection)
   if (!allRecipients.length) {
     alert('No recipients selected.');
     setTextOpen(false);
@@ -367,6 +385,7 @@ const confirmDelete = async (saveAsLead = false) => {
 
     alert('Texts queued/sent (batched).');
     setTextBody('');
+    setIndividualSelection(null);   // ✅ HERE
     setTextOpen(false);
   } catch (err) {
     console.error('Network error sending text:', err);
@@ -380,7 +399,9 @@ const confirmDelete = async (saveAsLead = false) => {
   const submitEmail = async (e) => {
   if (e && e.preventDefault) e.preventDefault();
 
-  const allRecipients = Array.from(selected);
+const allRecipients =individualSelection != null ? [individualSelection] : Array.from(selected);  console.log(individualSelection)
+  console.log(allRecipients)
+
   if (!allRecipients.length) {
     alert('No recipients selected.');
     setEmailOpen(false);
@@ -444,6 +465,7 @@ const confirmDelete = async (saveAsLead = false) => {
     alert('Emails queued/sent (batched).');
     setEmailSubject('');
     setEmailBody('');
+    setIndividualSelection(null);   // ✅ HERE
     setEmailOpen(false);
   } catch (err) {
     console.error('Network error sending email:', err);
@@ -477,26 +499,31 @@ const confirmDelete = async (saveAsLead = false) => {
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
-          onClose={() => setEmailOpen(false)}
+          onClose={() => {setEmailOpen(false)
+              setIndividualSelection(null);
+            }
+          }
           onSend={submitEmail}
           sending={emailSending}
           subject={emailSubject}
           setSubject={setEmailSubject}
           body={emailBody}
           setBody={setEmailBody}
-          selectedCount={selected.size}
+          selectedCount={individualSelection != null ? 1 : selected.size}
         />
       )}
 
       {textOpen && (
         <TextComposer
           open={textOpen}
-          onClose={() => setTextOpen(false)}
+          onClose={() => {setTextOpen(false)
+              setIndividualSelection(null);}
+           }
           onSend={submitText}
           sending={textSending}
           message={textBody}
           setMessage={setTextBody}
-          selectedCount={selected.size}
+          selectedCount={individualSelection != null ? 1 : selected.size}
         />
       )}
 
@@ -524,7 +551,7 @@ const confirmDelete = async (saveAsLead = false) => {
             <div className="actions-dropdown" role="menu">
               <button
                 className="dropdown-item"
-                onClick={handleSendEmail}
+                 onClick={() => handleSendEmail(null)}
                 disabled={loading || selected.size === 0}
                 aria-disabled={selected.size === 0}
               >
@@ -533,7 +560,7 @@ const confirmDelete = async (saveAsLead = false) => {
 
               <button
                 className="dropdown-item"
-                onClick={handleSendText}
+             onClick={() => handleSendText(null)}
                 disabled={loading || selected.size === 0}
                 aria-disabled={selected.size === 0}
               >
@@ -592,7 +619,7 @@ const confirmDelete = async (saveAsLead = false) => {
                 </div>
               </th>
             ))}
-            <th className="ct-small"></th>
+            <th className="ct-small"> </th>
           </tr>
         </thead>
         <tbody>
@@ -641,15 +668,7 @@ const confirmDelete = async (saveAsLead = false) => {
                         ✏️
                       </button>
                    
-                    <button
-                      onClick={() => handleNoEmail(client.key, "student")}
-                      id='ct-no-email-button'
-                      title={client.data.doNotMail ? "Allow emails" : "Do not email"}
-                    >
-                      {client.data.doNotMail
-                        ? <img id='no-email' src={noemailimg} alt="No email" />
-                        : <img id='no-email' src={sendemail} alt="Send email" />}
-                    </button>
+          
                      </div>
                   </>
                 )}
@@ -694,13 +713,69 @@ const confirmDelete = async (saveAsLead = false) => {
               {/* delete column */}
               <td className="ct-small">
                 <button
-                  className="ct-delete-btn"
-                  onClick={() => requestDelete(client.key)}
-
+                  className=" "
+                  onClick={() => toggleIndividualActions(index)}
                 >
-                  🗑️
+              ⋮
                 </button>
+
+                 {individualActionsOpen === index && <div className="individual-actions-dropdown" role="menu">
+
+
+              <button
+                className="dropdown-item"
+                  onClick={() => {
+                 handleEditClick(index, client.data);
+                setIndividualActionsOpen(null);
+                }}
+                  disabled={loading}
+      
+              >
+               Edit
+              </button>
+
+              <button
+                className="dropdown-item"
+                onClick={() => {
+    handleSendEmail(client.key);
+    setIndividualActionsOpen(null);
+  }}
+                disabled={loading}
+              
+              >
+                Send Email
+              </button>
+
+              <button
+                className="dropdown-item"
+                  onClick={() => {
+    handleSendText(client.key);
+    setIndividualActionsOpen(null);
+  }}
+                disabled={loading}
+    
+              >
+                Send Text
+              </button>
+
+              <button
+                className="dropdown-item"
+                  onClick={() => {
+    requestDelete(client.key);
+    setIndividualActionsOpen(null);
+  }}
+
+                disabled={loading }
+
+              >
+                Delete
+              </button>
+
+         
+            </div> }
               </td>
+
+             
             </tr>
           ))}
         </tbody>

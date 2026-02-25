@@ -22,7 +22,7 @@ h1 {
 
 /* MAIN CRM SHELL */
 .crm-container {
- width:100vw;
+ width: fit-content;
   margin: 32px auto 48px;
   padding: 24px 16px 32px;
   border-radius: 18px;
@@ -33,6 +33,7 @@ h1 {
   box-shadow:
     0 16px 30px rgba(15, 23, 42, 0.12),
     0 0 0 1px rgba(209, 213, 219, 0.9);
+    overflow:scroll;
 }
 
 /* LOGO STYLING (top logos & standalone RH logo) */

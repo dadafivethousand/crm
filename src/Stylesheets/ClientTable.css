@@ -11,6 +11,7 @@
   font-family: Arial, sans-serif;
   text-align: center;
   margin: 0 auto;
+  overflow:scroll
 }
 
 .ct-client-table th,
@@ -271,4 +272,6 @@ width:105%;
   border:1px solid black
 }
 
-
+.individual-actions-dropdown{
+  position: absolute;
+}
