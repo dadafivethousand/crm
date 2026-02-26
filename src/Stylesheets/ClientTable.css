@@ -63,7 +63,7 @@
 
 }
 
-.ct-edit-btn {
+#ct-edit-btn {
   background-color: #007bff;
   color: white;
 }
@@ -275,4 +275,5 @@ width:105%;
 .individual-actions-dropdown{
   position: absolute;
   background-color: grey;
+  z-index:2
 }

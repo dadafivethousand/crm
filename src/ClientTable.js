@@ -1,18 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './Stylesheets/ClientTable.css';
-import noemailimg from './Images/noemail.avif';
-import sendemail from "./Images/sendemail.png";
-import EmailComposer from './Components/EmailComposer';
-import TextComposer from './Components/TextComposer';
-import DeleteOptionsModal from './Components/DeleteOptionsModal';
+import React, { useState, useEffect, useRef } from "react";
+import "./Stylesheets/ClientTable.css";
+
+import EmailComposer from "./Components/EmailComposer";
+import TextComposer from "./Components/TextComposer";
+import DeleteOptionsModal from "./Components/DeleteOptionsModal";
+
+// ✅ outsourced components (Option A: items-driven)
+import BulkActionsDropdown from "./Components/BulkActionsDropdown";
+import RowActionsDropdown from "./Components/RowActionsDropdown";
+import SortableTh from "./Components/SortableTh";
 
 function ClientTable({
   membershipInfo,
   clients,
   setClients,
-  token,        // still accepted if used elsewhere
-  user,         // still accepted if used elsewhere
-  buildHeaders, // injected from App
+  token, // still accepted if used elsewhere
+  user,  // still accepted if used elsewhere
+  buildHeaders,
 }) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
@@ -22,21 +26,21 @@ function ClientTable({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
 
-
-  // --- selection + actions state (mirrors LeadsTable) ---
+  // selection + actions state
   const [individualSelection, setIndividualSelection] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
+
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [individualActionsOpen, setIndividualActionsOpen] = useState(false)
+  const [individualActionsOpen, setIndividualActionsOpen] = useState(null); // row index or null
   const [loading, setLoading] = useState(false);
   const actionsRef = useRef(null);
 
-  // email / text compose modals
+  // email / text modals
   const [textOpen, setTextOpen] = useState(false);
-  const [textBody, setTextBody] = useState('');
+  const [textBody, setTextBody] = useState("");
   const [emailOpen, setEmailOpen] = useState(false);
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
   const [emailSending, setEmailSending] = useState(false);
   const [textSending, setTextSending] = useState(false);
 
@@ -51,7 +55,7 @@ function ClientTable({
     { key: "paymentStatus", label: "Notes" },
   ];
 
-  // close actions dropdown on outside click + Escape
+  // Close BULK actions dropdown on outside click + Escape
   useEffect(() => {
     const onDocClick = (e) => {
       if (actionsRef.current && !actionsRef.current.contains(e.target)) {
@@ -59,15 +63,15 @@ function ClientTable({
       }
     };
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') setActionsOpen(false);
+      if (e.key === "Escape") setActionsOpen(false);
     };
-    document.addEventListener('mousedown', onDocClick);
-    document.addEventListener('touchstart', onDocClick);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("touchstart", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onDocClick);
-      document.removeEventListener('touchstart', onDocClick);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("touchstart", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
 
@@ -78,7 +82,7 @@ function ClientTable({
   }, [sortColumn, sortDirection]);
 
   const sortClients = (clientsArr, column, direction) => {
-    return [...clientsArr].sort((a, b) => {
+    return [...(clientsArr || [])].sort((a, b) => {
       const av = a?.data?.[column];
       const bv = b?.data?.[column];
       const valueA = (av ?? "").toString().toLowerCase();
@@ -88,10 +92,6 @@ function ClientTable({
       return 0;
     });
   };
-
-const toggleIndividualActions = (index) => {
-  setIndividualActionsOpen((prev) => (prev !== index ? index : null));
-};
 
   const handleSort = (key) => {
     if (sortColumn === key) {
@@ -141,15 +141,17 @@ const toggleIndividualActions = (index) => {
   const handleSaveChanges = async (key) => {
     try {
       const baseHeaders = await buildHeaders();
-      const headersObj = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      const headersObj =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       const res = await fetch(
-        `https://worker-consolidated.maxli5004.workers.dev/edit-client`,
+        "https://worker-consolidated.maxli5004.workers.dev/edit-client",
         {
-          method: 'POST',
+          method: "POST",
           headers: headersObj,
           body: JSON.stringify({ key, data: editedData }),
         }
       );
+
       if (res.ok) {
         setClients((prev) =>
           prev.map((c) => (c.key === key ? { ...c, data: editedData } : c))
@@ -157,118 +159,15 @@ const toggleIndividualActions = (index) => {
         handleCancelEdit();
       } else {
         const err = await res.json().catch(() => ({}));
-        console.error('Error saving changes:', err);
+        console.error("Error saving changes:", err);
       }
     } catch (err) {
-      console.error('Error saving changes:', err);
+      console.error("Error saving changes:", err);
     }
   };
 
-
-  const requestDelete = (keyOrKeys) => {
-  const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
-  if (!keys.length) return;
-  setPendingDeleteKeys(keys);
-  setDeleteOpen(true);
-};
-
-const onCancelDelete = () => {
-  if (loading) return;
-  setDeleteOpen(false);
-  setPendingDeleteKeys([]);
-};
-
-const confirmDelete = async (saveAsLead = false) => {
-  const keys = pendingDeleteKeys;
-  setDeleteOpen(false);
-  setPendingDeleteKeys([]);
-
-  await performDelete({ keys, saveAsLead });
-};
-
-
-
-
-
-  // --- unified delete handler (single or multiple) ---
-    const performDelete = async ({ keys, saveAsLead }) => {
-      if (!keys.length) return;
-
-      setLoading(true);
-      try {
-        const baseHeaders = await buildHeaders();
-        const headersObj =
-          baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-        headersObj.set("Content-Type", "application/json");
-
-        const res = await fetch(
-          "https://worker-consolidated.maxli5004.workers.dev/delete-client",
-          {
-            method: "DELETE",
-            headers: headersObj,
-            body: JSON.stringify({ keys, saveAsLead }), // ✅ only change
-          }
-        );
-
-        if (res.ok) {
-          const keySet = new Set(keys);
-
-          setClients((prev) => prev.filter((c) => !keySet.has(c.key)));
-
-          setSelected((prev) => {
-            const next = new Set(prev);
-            keys.forEach((k) => next.delete(k));
-            return next;
-          });
-
-          setActionsOpen(false);
-        } else {
-          const errText = await res.text().catch(() => "");
-          console.error("Delete failed:", res.status, errText);
-          alert("Delete failed — check console for details.");
-        }
-      } catch (err) {
-        console.error("Network error during delete:", err);
-        alert("Network error during delete. See console.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-
-  const handleNoEmail = async (key, type) => {
-    try {
-      const baseHeaders = await buildHeaders();
-      const headersObj = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      const res = await fetch(
-        `https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list`,
-        {
-          method: 'POST',
-          headers: headersObj,
-          body: JSON.stringify({ key, type }),
-        }
-      );
-      if (res.ok) {
-        setClients((prev) =>
-          prev.map((c) =>
-            c.key === key
-              ? { ...c, data: { ...c.data, doNotMail: !c.data.doNotMail } }
-              : c
-          )
-        );
-      } else {
-        const err = await res.json().catch(() => ({}));
-        console.error('Error updating do-not-mail list:', err);
-      }
-    } catch (err) {
-      console.error('Error updating do-not-mail list:', err);
-    }
-  };
-
-  // --- selection helpers (same pattern as LeadsTable) ---
-
-  // only adult/teen clients in this table
-  const adultClients = clients.filter(
+  // --- selection helpers ---
+  const adultClients = (clients || []).filter(
     (client) => client?.data && !client.data.kidsMembership
   );
 
@@ -285,224 +184,287 @@ const confirmDelete = async (saveAsLead = false) => {
     setSelected((prev) => {
       const allKeys = new Set(adultClients.map((c) => c.key));
       const hasUnselected = [...allKeys].some((key) => !prev.has(key));
-      if (hasUnselected) return allKeys; // select all
-      return new Set();                  // deselect all
+      return hasUnselected ? allKeys : new Set();
     });
   };
 
-  const clearSelection = () => setSelected(new Set());
+  // --- delete modal flow ---
+  const requestDelete = (keyOrKeys) => {
+    const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+    if (!keys.length) return;
+    setPendingDeleteKeys(keys);
+    setDeleteOpen(true);
+  };
 
-  // --- text/email actions (same endpoints as LeadsTable) ---
-
-  const handleSendText = (key) => {
-  const keys = Array.from(selected);
-
-  if (key != null) setIndividualSelection(key);
-
-  if (!keys.length && key == null) {
-    alert('Select at least one client to text.');
-    return;
-  }
-
-  setTextOpen(true);
-};
-
- const handleSendEmail = (key) => {
-  if (key != null) {
-    setIndividualSelection(key);
-    setEmailOpen(true);
-    return;
-  }
-
-  if (!selected.size) {
-    alert('Select at least one client to email.');
-    return;
-  }
-
-  setIndividualSelection(null);
-  setEmailOpen(true);
-};
-
- const submitText = async (e) => {
-  if (e && e.preventDefault) e.preventDefault();
-
-  const allRecipients = individualSelection != null ? [individualSelection] : Array.from(selected);
-  console.log(individualSelection)
-  if (!allRecipients.length) {
-    alert('No recipients selected.');
-    setTextOpen(false);
-    return;
-  }
-  if (!textBody || !textBody.trim()) {
-    alert('Please enter a message.');
-    return;
-  }
-
-  // 🔹 Batch into smaller groups
-  const BATCH_SIZE = 25;
-  const batches = [];
-  for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
-    batches.push(allRecipients.slice(i, i + BATCH_SIZE));
-  }
-
-  setTextSending(true);
-  try {
-    const baseHeaders = await buildHeaders();
-    const headersObj =
-      baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-    headersObj.set('Content-Type', 'application/json');
-
-    for (const recipients of batches) {
-      const payload = {
-        message: textBody,
-        recipients,
-        listType: "clients",
-      };
-
-      console.log('[ClientTable submitText] batch payload ->', payload);
-
-      const res = await fetch(
-        'https://worker-consolidated.maxli5004.workers.dev/text',
-        {
-          method: 'POST',
-          headers: headersObj,
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const responseText = await res.text().catch(() => '');
-      let responseJson = null;
-      try { responseJson = JSON.parse(responseText); } catch (_) {}
-
-      if (!res.ok) {
-        console.error('Text API error status:', res.status, 'body:', responseText);
-        alert('Some text batches failed — check console for details.');
-        break; // or continue if you want to keep trying
-      } else {
-        console.log('[ClientTable submitText] batch response:', responseJson || responseText);
-      }
-    }
-
-    alert('Texts queued/sent (batched).');
-    setTextBody('');
-    setIndividualSelection(null);   // ✅ HERE
-    setTextOpen(false);
-  } catch (err) {
-    console.error('Network error sending text:', err);
-    alert('Network error sending text — see console.');
-  } finally {
-    setTextSending(false);
-  }
-};
-
-
-  const submitEmail = async (e) => {
-  if (e && e.preventDefault) e.preventDefault();
-
-const allRecipients =individualSelection != null ? [individualSelection] : Array.from(selected);  console.log(individualSelection)
-  console.log(allRecipients)
-
-  if (!allRecipients.length) {
-    alert('No recipients selected.');
-    setEmailOpen(false);
-    return;
-  }
-  if (!emailSubject.trim()) {
-    alert('Please enter a subject.');
-    return;
-  }
-  if (!emailBody.trim()) {
-    alert('Please enter a message.');
-    return;
-  }
-
-  const BATCH_SIZE = 25;
-  const batches = [];
-  for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
-    batches.push(allRecipients.slice(i, i + BATCH_SIZE));
-  }
-
-  setEmailSending(true);
-  try {
-    const baseHeaders = await buildHeaders();
-    const headersObj =
-      baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-    headersObj.set('Content-Type', 'application/json');
-
-    for (const recipients of batches) {
-      const payload = {
-        subject: emailSubject,
-        body: emailBody,
-        message: emailBody,
-        recipients,
-        listType: "clients", // or "leads"/"kids" in other tables
-      };
-
-      console.log('[submitEmail] batch payload ->', payload);
-
-      const res = await fetch(
-        'https://worker-consolidated.maxli5004.workers.dev/email',
-        {
-          method: 'POST',
-          headers: headersObj,
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const responseText = await res.text().catch(() => '');
-      let responseJson = null;
-      try { responseJson = JSON.parse(responseText); } catch (_) {}
-
-      if (!res.ok) {
-        console.error('Email API error status:', res.status, 'body:', responseText);
-        alert('Some batches failed — check console for details.');
-        break; // or continue if you want to keep trying
-      } else {
-        console.log('Email API batch response:', responseJson || responseText);
-      }
-    }
-
-    alert('Emails queued/sent (batched).');
-    setEmailSubject('');
-    setEmailBody('');
-    setIndividualSelection(null);   // ✅ HERE
-    setEmailOpen(false);
-  } catch (err) {
-    console.error('Network error sending email:', err);
-    alert('Network error sending email — see console.');
-  } finally {
-    setEmailSending(false);
-  }
-};
-
-
-  return (
-    <div className="ct-client-table-container">
-
-      <DeleteOptionsModal
-  open={deleteOpen}
-  loading={loading}
-  count={pendingDeleteKeys.length}
-  onCancel={() => {
+  const cancelDelete = () => {
     if (loading) return;
     setDeleteOpen(false);
     setPendingDeleteKeys([]);
-  }}
-  onDelete={() => confirmDelete(false)}
-  onDeleteAndSaveAsLead={() => confirmDelete(true)}
-/>
+  };
 
+  const confirmDelete = async (saveAsLead = false) => {
+    const keys = pendingDeleteKeys;
+    setDeleteOpen(false);
+    setPendingDeleteKeys([]);
+    await performDelete({ keys, saveAsLead });
+  };
 
+  const performDelete = async ({ keys, saveAsLead }) => {
+    if (!keys.length) return;
 
+    setLoading(true);
+    try {
+      const baseHeaders = await buildHeaders();
+      const headersObj =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      headersObj.set("Content-Type", "application/json");
 
-      {/* Email + Text modals */}
+      const res = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/delete-client",
+        {
+          method: "DELETE",
+          headers: headersObj,
+          body: JSON.stringify({ keys, saveAsLead }),
+        }
+      );
+
+      if (res.ok) {
+        const keySet = new Set(keys);
+
+        setClients((prev) => prev.filter((c) => !keySet.has(c.key)));
+
+        setSelected((prev) => {
+          const next = new Set(prev);
+          keys.forEach((k) => next.delete(k));
+          return next;
+        });
+
+        setActionsOpen(false);
+        setIndividualActionsOpen(null);
+      } else {
+        const errText = await res.text().catch(() => "");
+        console.error("Delete failed:", res.status, errText);
+        alert("Delete failed — check console for details.");
+      }
+    } catch (err) {
+      console.error("Network error during delete:", err);
+      alert("Network error during delete. See console.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- text/email actions (bulk or single) ---
+  const handleSendText = (key) => {
+    const keys = Array.from(selected);
+
+    if (key != null) setIndividualSelection(key);
+
+    if (!keys.length && key == null) {
+      alert("Select at least one client to text.");
+      return;
+    }
+
+    setActionsOpen(false);
+    setIndividualActionsOpen(null);
+    setTextOpen(true);
+  };
+
+  const handleSendEmail = (key) => {
+    if (key != null) {
+      setIndividualSelection(key);
+      setActionsOpen(false);
+      setIndividualActionsOpen(null);
+      setEmailOpen(true);
+      return;
+    }
+
+    if (!selected.size) {
+      alert("Select at least one client to email.");
+      return;
+    }
+
+    setIndividualSelection(null);
+    setActionsOpen(false);
+    setIndividualActionsOpen(null);
+    setEmailOpen(true);
+  };
+
+  const submitText = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const allRecipients =
+      individualSelection != null ? [individualSelection] : Array.from(selected);
+
+    if (!allRecipients.length) {
+      alert("No recipients selected.");
+      setTextOpen(false);
+      return;
+    }
+    if (!textBody || !textBody.trim()) {
+      alert("Please enter a message.");
+      return;
+    }
+
+    const BATCH_SIZE = 25;
+    const batches = [];
+    for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
+      batches.push(allRecipients.slice(i, i + BATCH_SIZE));
+    }
+
+    setTextSending(true);
+    try {
+      const baseHeaders = await buildHeaders();
+      const headersObj =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      headersObj.set("Content-Type", "application/json");
+
+      for (const recipients of batches) {
+        const payload = {
+          message: textBody,
+          recipients,
+          listType: "clients",
+        };
+
+        const res = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/text",
+          {
+            method: "POST",
+            headers: headersObj,
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const responseText = await res.text().catch(() => "");
+        if (!res.ok) {
+          console.error("Text API error status:", res.status, "body:", responseText);
+          alert("Some text batches failed — check console for details.");
+          break;
+        }
+      }
+
+      alert("Texts queued/sent (batched).");
+      setTextBody("");
+      setIndividualSelection(null);
+      setTextOpen(false);
+    } catch (err) {
+      console.error("Network error sending text:", err);
+      alert("Network error sending text — see console.");
+    } finally {
+      setTextSending(false);
+    }
+  };
+
+  const submitEmail = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const allRecipients =
+      individualSelection != null ? [individualSelection] : Array.from(selected);
+
+    if (!allRecipients.length) {
+      alert("No recipients selected.");
+      setEmailOpen(false);
+      return;
+    }
+    if (!emailSubject.trim()) {
+      alert("Please enter a subject.");
+      return;
+    }
+    if (!emailBody.trim()) {
+      alert("Please enter a message.");
+      return;
+    }
+
+    const BATCH_SIZE = 25;
+    const batches = [];
+    for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
+      batches.push(allRecipients.slice(i, i + BATCH_SIZE));
+    }
+
+    setEmailSending(true);
+    try {
+      const baseHeaders = await buildHeaders();
+      const headersObj =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      headersObj.set("Content-Type", "application/json");
+
+      for (const recipients of batches) {
+        const payload = {
+          subject: emailSubject,
+          body: emailBody,
+          message: emailBody,
+          recipients,
+          listType: "clients",
+        };
+
+        const res = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/email",
+          {
+            method: "POST",
+            headers: headersObj,
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const responseText = await res.text().catch(() => "");
+        if (!res.ok) {
+          console.error("Email API error status:", res.status, "body:", responseText);
+          alert("Some batches failed — check console for details.");
+          break;
+        }
+      }
+
+      alert("Emails queued/sent (batched).");
+      setEmailSubject("");
+      setEmailBody("");
+      setIndividualSelection(null);
+      setEmailOpen(false);
+    } catch (err) {
+      console.error("Network error sending email:", err);
+      alert("Network error sending email — see console.");
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  // Convenience: bulk dropdown items (Option A)
+  const bulkItems = [
+    {
+      label: "Send Email",
+      onClick: () => handleSendEmail(null),
+      disabled: selected.size === 0,
+    },
+    {
+      label: "Send Text",
+      onClick: () => handleSendText(null),
+      disabled: selected.size === 0,
+    },
+    {
+      label: "Delete",
+      onClick: () => requestDelete(Array.from(selected)),
+      disabled: selected.size === 0,
+    },
+  ];
+
+  return (
+    <div className="ct-client-table-container">
+      <DeleteOptionsModal
+        open={deleteOpen}
+        loading={loading}
+        count={pendingDeleteKeys.length}
+        onCancel={cancelDelete}
+        onDelete={() => confirmDelete(false)}
+        onDeleteAndSaveAsLead={() => confirmDelete(true)}
+      />
+
+      {/* Modals */}
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
-          onClose={() => {setEmailOpen(false)
-              setIndividualSelection(null);
-            }
-          }
+          onClose={() => {
+            setEmailOpen(false);
+            setIndividualSelection(null);
+          }}
           onSend={submitEmail}
           sending={emailSending}
           subject={emailSubject}
@@ -516,9 +478,10 @@ const allRecipients =individualSelection != null ? [individualSelection] : Array
       {textOpen && (
         <TextComposer
           open={textOpen}
-          onClose={() => {setTextOpen(false)
-              setIndividualSelection(null);}
-           }
+          onClose={() => {
+            setTextOpen(false);
+            setIndividualSelection(null);
+          }}
           onSend={submitText}
           sending={textSending}
           message={textBody}
@@ -529,110 +492,57 @@ const allRecipients =individualSelection != null ? [individualSelection] : Array
 
       <h1>{adultClients.length} Adult & Teen Students</h1>
 
-      {/* Toolbar with Actions dropdown + selection count */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
-        <div ref={actionsRef} style={{ position: 'relative' }}>
-          <button
-            className="mass-actions-btn"
-            onClick={() => setActionsOpen((s) => !s)}
-            title={
-              selected.size === 0
-                ? 'Select rows to enable actions'
-                : `${selected.size} selected`
-            }
-            disabled={loading}
-            aria-expanded={actionsOpen}
-            aria-haspopup="menu"
-          >
-            Actions ▾
-          </button>
+      {/* Bulk actions toolbar */}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+        <BulkActionsDropdown
+          actionsRef={actionsRef}
+          open={actionsOpen}
+          setOpen={setActionsOpen}
+          loading={loading}
+          selectedCount={selected.size}
+          items={bulkItems}
+        />
 
-          {actionsOpen && (
-            <div className="actions-dropdown" role="menu">
-              <button
-                className="dropdown-item"
-                 onClick={() => handleSendEmail(null)}
-                disabled={loading || selected.size === 0}
-                aria-disabled={selected.size === 0}
-              >
-                Send Email
-              </button>
-
-              <button
-                className="dropdown-item"
-             onClick={() => handleSendText(null)}
-                disabled={loading || selected.size === 0}
-                aria-disabled={selected.size === 0}
-              >
-                Send Text
-              </button>
-
-              <button
-                className="dropdown-item"
-                onClick={() => requestDelete(Array.from(selected))}
-
-                disabled={loading || selected.size === 0}
-                aria-disabled={selected.size === 0}
-              >
-                Delete
-              </button>
-
-              <div style={{ padding: '6px 12px', fontSize: 12, color: '#666' }}>
-                {selected.size === 0
-                  ? 'No rows selected'
-                  : `${selected.size} selected`}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {selected.size > 0 && (
-          <div style={{ fontSize: 14 }}>{selected.size} selected</div>
-        )}
+        {selected.size > 0 && <div style={{ fontSize: 14 }}>{selected.size} selected</div>}
       </div>
 
       <table className="ct-client-table">
         <thead>
           <tr>
-            {/* Select-all column */}
             <th className="ct-small">
-              <button
-                className="select-all-button"
-                onClick={selectAll}
-              >
+              <button className="select-all-button" onClick={selectAll}>
                 Select<br />All
               </button>
             </th>
-            {/* existing edit / no-email column */}
+
             <th className="ct-small"></th>
-            {headers.map((header) => (
-              <th
-                key={header.key}
-                onClick={() => handleSort(header.key)}
-                className={`ct-th-${header.key}`}
-              >
-                <div className="ct-header">
-                  <div className="ct-table-header">{header.label}</div>
-                  <div className="ct-header-arrow">
-                    {sortColumn === header.key && (sortDirection === "asc" ? "↓" : "↑")}
-                  </div>
-                </div>
-              </th>
+
+            {headers.map((h) => (
+              <SortableTh
+                key={h.key}
+                label={h.label}
+                sortKey={h.key}
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                className={`ct-th-${h.key}`}
+              />
             ))}
-            <th className="ct-small"> </th>
+
+            <th className="ct-small"></th>
           </tr>
         </thead>
+
         <tbody>
           {adultClients.map((client, index) => (
             <tr
               key={client.key ?? index}
               className={
-                client.data.endDate && new Date() > new Date(client.data.endDate)
+                client.data?.endDate && new Date() > new Date(client.data.endDate)
                   ? "ct-red"
                   : "ct-regular"
               }
             >
-              {/* checkbox column */}
               <td className="ct-small">
                 <input
                   type="checkbox"
@@ -641,17 +551,18 @@ const allRecipients =individualSelection != null ? [individualSelection] : Array
                 />
               </td>
 
-              {/* edit / do-not-mail column */}
               <td className="ct-small">
                 {editingRow === index ? (
                   <>
                     <button
+                      type="button"
                       className="ct-save-btn"
                       onClick={() => handleSaveChanges(client.key)}
                     >
                       ✅
                     </button>
                     <button
+                      type="button"
                       className="ct-cancel-btn"
                       onClick={handleCancelEdit}
                     >
@@ -659,22 +570,18 @@ const allRecipients =individualSelection != null ? [individualSelection] : Array
                     </button>
                   </>
                 ) : (
-                  <>
-                    <div className="ct-button-flex">
-                      <button
-                        className="ct-edit-btn"
-                        onClick={() => handleEditClick(index, client.data)}
-                      >
-                        ✏️
-                      </button>
-                   
-          
-                     </div>
-                  </>
+                  <div className="ct-button-flex">
+                    <button
+                      type="button"
+                      id="ct-edit-btn"
+                      onClick={() => handleEditClick(index, client.data)}
+                    >
+                      ✏️
+                    </button>
+                  </div>
                 )}
               </td>
 
-              {/* data columns */}
               {editingRow === index ? (
                 <>
                   {headers.map((header) => (
@@ -705,77 +612,41 @@ const allRecipients =individualSelection != null ? [individualSelection] : Array
               ) : (
                 <>
                   {headers.map((header) => (
-                    <td className='ct-content' key={header.key}>{client.data[header.key]}</td>
+                    <td className="ct-content" key={header.key}>
+                      {client.data?.[header.key]}
+                    </td>
                   ))}
                 </>
               )}
 
-              {/* delete column */}
               <td className="ct-small">
-                <button
-                  className=" "
-                  onClick={() => toggleIndividualActions(index)}
-                >
-              ⋮
-                </button>
-
-                 {individualActionsOpen === index && <div className="individual-actions-dropdown" role="menu">
-
-
-              <button
-                className="dropdown-item"
-                  onClick={() => {
-                 handleEditClick(index, client.data);
-                setIndividualActionsOpen(null);
-                }}
-                  disabled={loading}
-      
-              >
-               Edit
-              </button>
-
-              <button
-                className="dropdown-item"
-                onClick={() => {
-    handleSendEmail(client.key);
-    setIndividualActionsOpen(null);
-  }}
-                disabled={loading}
-              
-              >
-                Send Email
-              </button>
-
-              <button
-                className="dropdown-item"
-                  onClick={() => {
-    handleSendText(client.key);
-    setIndividualActionsOpen(null);
-  }}
-                disabled={loading}
-    
-              >
-                Send Text
-              </button>
-
-              <button
-                className="dropdown-item"
-                  onClick={() => {
-    requestDelete(client.key);
-    setIndividualActionsOpen(null);
-  }}
-
-                disabled={loading }
-
-              >
-                Delete
-              </button>
-
-         
-            </div> }
+                <RowActionsDropdown
+                  open={individualActionsOpen === index}
+                  onToggle={() =>
+                    setIndividualActionsOpen((prev) => (prev === index ? null : index))
+                  }
+                  onClose={() => setIndividualActionsOpen(null)}
+                  loading={loading}
+                  items={[
+                    {
+                      label: "Edit",
+                      onClick: () => handleEditClick(index, client.data),
+                    },
+                    {
+                      label: "Send Email",
+                      onClick: () => handleSendEmail(client.key),
+                    },
+                    {
+                      label: "Send Text",
+                      onClick: () => handleSendText(client.key),
+                    },
+                    {
+                      label: "Delete",
+                      onClick: () => requestDelete(client.key),
+                    },
+                  ]}
+                />
               </td>
-
-             
             </tr>
           ))}
         </tbody>
