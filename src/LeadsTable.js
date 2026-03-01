@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './Stylesheets/ClientTable.css';
-import AddLead from './AddLead';
-import EmailComposer from './Components/EmailComposer';
-import TextComposer from './Components/TextComposer';
+import React, { useState, useEffect, useRef } from "react";
+import "./Stylesheets/ClientTable.css";
+import AddLead from "./AddLead";
+import EmailComposer from "./Components/EmailComposer";
+import TextComposer from "./Components/TextComposer";
+
+// ✅ outsourced component
+import RowActionsDropdown from "./Components/RowActionsDropdown";
 
 function LeadsTable({
   setConvertToClientData,
@@ -17,7 +20,7 @@ function LeadsTable({
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
 
-  // ✅ SORTING (same pattern as ClientTable / KidsTable)
+  // ✅ SORTING
   const [sortColumn, setSortColumn] = useState("firstName");
   const [sortDirection, setSortDirection] = useState("asc");
 
@@ -47,22 +50,28 @@ function LeadsTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortColumn, sortDirection]);
 
-  // initialize
+  // selection + bulk actions state
   const [selected, setSelected] = useState(() => new Set());
   const [actionsOpen, setActionsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const actionsRef = useRef(null);
-  // email modal state
+
+  // ✅ per-row actions dropdown state
+  const [rowActionsOpen, setRowActionsOpen] = useState(null);
+
+  // ✅ single-recipient selection for individual dropdown actions
+  const [individualSelection, setIndividualSelection] = useState(null);
+
+  // email/text modals
   const [textOpen, setTextOpen] = useState(false);
-  const [textBody, setTextBody] = useState('');
+  const [textBody, setTextBody] = useState("");
   const [emailOpen, setEmailOpen] = useState(false);
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
   const [emailSending, setEmailSending] = useState(false);
   const [textSending, setTextSending] = useState(false);
-  const emailRef = useRef(null);
 
-  // Close dropdown when clicking outside + handle Escape key
+  // Close BULK dropdown when clicking outside + handle Escape
   useEffect(() => {
     const onDocClick = (e) => {
       if (actionsRef.current && !actionsRef.current.contains(e.target)) {
@@ -70,22 +79,25 @@ function LeadsTable({
       }
     };
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') setActionsOpen(false);
+      if (e.key === "Escape") {
+        setActionsOpen(false);
+        setRowActionsOpen(null);
+      }
     };
-    document.addEventListener('mousedown', onDocClick);
-    document.addEventListener('touchstart', onDocClick);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("touchstart", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onDocClick);
-      document.removeEventListener('touchstart', onDocClick);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("touchstart", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
 
-  // toggle one key
+  // selection helpers
   const toggleSelect = (key) => {
-    setSelected(prev => {
-      const next = new Set(prev); // copy so we don't mutate prev
+    setSelected((prev) => {
+      const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
@@ -93,66 +105,68 @@ function LeadsTable({
   };
 
   const selectAll = () => {
-    setSelected(prev => {
-      // Create a set of all lead keys
-      const allKeys = new Set(leads.map(lead => lead.key));
-
-      // Check if there is at least one key not selected
-      const hasUnselected = [...allKeys].some(key => !prev.has(key));
-
-      if (hasUnselected) {
-        // Select all
-        return allKeys;
-      } else {
-        // All were already selected, so deselect all
-        return new Set();
-      }
+    setSelected((prev) => {
+      const allKeys = new Set((leads || []).map((lead) => lead.key));
+      const hasUnselected = [...allKeys].some((key) => !prev.has(key));
+      return hasUnselected ? allKeys : new Set();
     });
   };
 
-  // check if selected
-  const isSelected = (key) => selected.has(key);
-
-  // clear
   const clearSelection = () => setSelected(new Set());
 
-  // get array of keys
-  const selectedKeys = () => Array.from(selected);
-
-  const handleSendText = async () => {
+  // --- bulk send actions ---
+  const handleSendText = () => {
     const keys = Array.from(selected);
     if (!keys.length) {
-      alert('Select at least one lead to text.');
+      alert("Select at least one lead to text.");
       return;
     }
-
-    // open the compose modal if not already open
+    setIndividualSelection(null);
+    setActionsOpen(false);
+    setRowActionsOpen(null);
     setTextOpen(true);
   };
 
-  const handleSendEmail = async () => {
+  const handleSendEmail = () => {
     const keys = Array.from(selected);
     if (!keys.length) {
-      alert('Select at least one lead to email.');
+      alert("Select at least one lead to email.");
       return;
     }
+    setIndividualSelection(null);
+    setActionsOpen(false);
+    setRowActionsOpen(null);
+    setEmailOpen(true);
+  };
 
-    // open the compose modal if not already open
+  // --- individual (row) send actions ---
+  const handleRowSendText = (key) => {
+    setIndividualSelection(key);
+    setActionsOpen(false);
+    setRowActionsOpen(null);
+    setTextOpen(true);
+  };
+
+  const handleRowSendEmail = (key) => {
+    setIndividualSelection(key);
+    setActionsOpen(false);
+    setRowActionsOpen(null);
     setEmailOpen(true);
   };
 
   const submitText = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
-    const allRecipients = Array.from(selected);
+    const allRecipients =
+      individualSelection != null ? [individualSelection] : Array.from(selected);
+
     if (!allRecipients.length) {
-      alert('No recipients selected.');
+      alert("No recipients selected.");
       setTextOpen(false);
       return;
     }
-
     if (!textBody || !textBody.trim()) {
-      alert('Please enter a message.');
+      alert("Please enter a message.");
       return;
     }
 
@@ -167,45 +181,32 @@ function LeadsTable({
       const baseHeaders = await buildHeaders();
       const headers =
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      headers.set('Content-Type', 'application/json');
+      headers.set("Content-Type", "application/json");
 
       for (const recipients of batches) {
-        const payload = {
-          message: textBody,      // worker expects `message`
-          recipients,
-          listType: "leads",
-        };
+        const payload = { message: textBody, recipients, listType: "leads" };
 
-        console.log('[LeadsTable submitText] batch payload ->', payload);
+        const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/text", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        });
 
-        const res = await fetch(
-          'https://worker-consolidated.maxli5004.workers.dev/text',
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload),
-          }
-        );
-
-        const responseText = await res.text().catch(() => '');
-        let responseJson = null;
-        try { responseJson = JSON.parse(responseText); } catch (_) {}
-
+        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error('Text API error (leads batch):', res.status, 'body:', responseText);
-          alert('Some text batches failed — check console for details.');
+          console.error("Text API error (leads batch):", res.status, "body:", responseText);
+          alert("Some text batches failed — check console for details.");
           break;
-        } else {
-          console.log('[LeadsTable submitText] batch response:', responseJson || responseText);
         }
       }
 
-      alert('Texts queued/sent (batched).');
-      setTextBody('');
+      alert("Texts queued/sent (batched).");
+      setTextBody("");
+      setIndividualSelection(null);
       setTextOpen(false);
     } catch (err) {
-      console.error('Network error sending text:', err);
-      alert('Network error sending text — see console.');
+      console.error("Network error sending text:", err);
+      alert("Network error sending text — see console.");
     } finally {
       setTextSending(false);
     }
@@ -214,18 +215,20 @@ function LeadsTable({
   const submitEmail = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
-    const allRecipients = Array.from(selected);
+    const allRecipients =
+      individualSelection != null ? [individualSelection] : Array.from(selected);
+
     if (!allRecipients.length) {
-      alert('No recipients selected.');
+      alert("No recipients selected.");
       setEmailOpen(false);
       return;
     }
     if (!emailSubject.trim()) {
-      alert('Please enter a subject.');
+      alert("Please enter a subject.");
       return;
     }
     if (!emailBody.trim()) {
-      alert('Please enter a message.');
+      alert("Please enter a message.");
       return;
     }
 
@@ -240,53 +243,45 @@ function LeadsTable({
       const baseHeaders = await buildHeaders();
       const headers =
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      headers.set('Content-Type', 'application/json');
+      headers.set("Content-Type", "application/json");
 
       for (const recipients of batches) {
         const payload = {
           subject: emailSubject,
-          body: emailBody,      // required by worker
-          message: emailBody,   // backwards compatibility
+          body: emailBody,
+          message: emailBody,
           recipients,
           listType: "leads",
         };
 
-        console.log('[LeadsTable submitEmail] batch payload ->', payload);
+        const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/email", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        });
 
-        const res = await fetch(
-          'https://worker-consolidated.maxli5004.workers.dev/email',
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload),
-          }
-        );
-
-        const responseText = await res.text().catch(() => '');
-        let responseJson = null;
-        try { responseJson = JSON.parse(responseText); } catch (_) {}
-
+        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error('Email API error (leads batch):', res.status, 'body:', responseText);
-          alert('Some email batches failed — check console for details.');
+          console.error("Email API error (leads batch):", res.status, "body:", responseText);
+          alert("Some email batches failed — check console for details.");
           break;
-        } else {
-          console.log('[LeadsTable submitEmail] batch response:', responseJson || responseText);
         }
       }
 
-      alert('Emails queued/sent (batched).');
-      setEmailSubject('');
-      setEmailBody('');
+      alert("Emails queued/sent (batched).");
+      setEmailSubject("");
+      setEmailBody("");
+      setIndividualSelection(null);
       setEmailOpen(false);
     } catch (err) {
-      console.error('Network error sending email:', err);
-      alert('Network error sending email — see console.');
+      console.error("Network error sending email:", err);
+      alert("Network error sending email — see console.");
     } finally {
       setEmailSending(false);
     }
   };
 
+  // edit/save
   const handleEditClick = (index, leadData) => {
     setEditingRow(index);
     setEditedData(leadData);
@@ -305,41 +300,34 @@ function LeadsTable({
   const handleSaveChanges = async (key) => {
     try {
       const headers = await buildHeaders();
-      const res = await fetch(
-        `https://worker-consolidated.maxli5004.workers.dev/edit-lead`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ key, data: editedData }),
-        }
-      );
+      const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/edit-lead", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ key, data: editedData }),
+      });
 
       if (res.ok) {
         setLeads((prevLeads) =>
-          prevLeads.map((lead) =>
-            lead.key === key ? { ...lead, data: { ...editedData } } : lead
-          )
+          prevLeads.map((lead) => (lead.key === key ? { ...lead, data: { ...editedData } } : lead))
         );
         handleCancelEdit();
       } else {
         const err = await res.json().catch(() => ({}));
-        console.error('Error saving changes', err);
+        console.error("Error saving changes", err);
       }
     } catch (error) {
-      console.error('Error saving changes:', error);
+      console.error("Error saving changes:", error);
     }
   };
 
-  // --- unified delete handler (replace your handleDelete & handleMassDelete) ---
+  // delete (supports single or array)
   const handleDelete = async (keyOrKeys) => {
-    // normalize to array
     const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
     if (!keys.length) return;
 
-    // confirmation message depends on count
     const confirmMsg =
       keys.length === 1
-        ? 'Are you sure you want to delete this record?'
+        ? "Are you sure you want to delete this record?"
         : `Delete ${keys.length} selected lead(s)? This cannot be undone.`;
 
     if (!window.confirm(confirmMsg)) return;
@@ -347,44 +335,38 @@ function LeadsTable({
     setLoading(true);
     try {
       const headers = await buildHeaders();
-      // send array of keys; backend should handle single-or-multiple
-      const res = await fetch(
-        `https://worker-consolidated.maxli5004.workers.dev/delete-lead`, // keep endpoint or change to /delete-leads if you like
-        {
-          method: 'DELETE', // you can also use POST if your worker prefers; keep consistent with backend
-          headers,
-          body: JSON.stringify({ keys }), // always send an array
-        }
-      );
+      const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/delete-lead", {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ keys }),
+      });
 
       if (res.ok) {
-        // remove all deleted keys from local state
         const keySet = new Set(keys);
         setLeads((prevLeads) => prevLeads.filter((lead) => !keySet.has(lead.key)));
 
-        // clear selection if any of the deleted items were selected
         setSelected((prev) => {
           const next = new Set(prev);
           keys.forEach((k) => next.delete(k));
           return next;
         });
 
-        // close actions menu if it was open
         setActionsOpen(false);
+        setRowActionsOpen(null);
       } else {
-        // try to get error message, fallback gracefully
         const err = await res.json().catch(() => ({}));
-        console.error('Error deleting record(s):', err);
-        alert('Delete failed — check console for details.');
+        console.error("Error deleting record(s):", err);
+        alert("Delete failed — check console for details.");
       }
     } catch (error) {
-      console.error('Network error deleting record(s):', error);
-      alert('Network error during delete. See console.');
+      console.error("Network error deleting record(s):", error);
+      alert("Network error during delete. See console.");
     } finally {
       setLoading(false);
     }
   };
 
+  // convert + contacted
   const handleConvertToClient = (lead) => {
     setConvertToClientData(lead.data);
     setShowClientForm(true);
@@ -392,8 +374,10 @@ function LeadsTable({
 
   const handleMarkContacted = () => {
     const keys = Array.from(selected);
-    if (!keys.length) return alert('Select at least one lead to mark.');
-    setLeads((prev) => prev.map((l) => (selected.has(l.key) ? { ...l, data: { ...l.data, contacted: true } } : l)));
+    if (!keys.length) return alert("Select at least one lead to mark.");
+    setLeads((prev) =>
+      prev.map((l) => (selected.has(l.key) ? { ...l, data: { ...l.data, contacted: true } } : l))
+    );
     clearSelection();
     setActionsOpen(false);
   };
@@ -403,38 +387,44 @@ function LeadsTable({
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
-          onClose={() => setEmailOpen(false)}
+          onClose={() => {
+            setEmailOpen(false);
+            setIndividualSelection(null);
+          }}
           onSend={submitEmail}
           sending={emailSending}
           subject={emailSubject}
           setSubject={setEmailSubject}
           body={emailBody}
           setBody={setEmailBody}
-          selectedCount={selected.size}
+          selectedCount={individualSelection != null ? 1 : selected.size}
         />
       )}
 
       {textOpen && (
         <TextComposer
           open={textOpen}
-          onClose={() => setTextOpen(false)}
+          onClose={() => {
+            setTextOpen(false);
+            setIndividualSelection(null);
+          }}
           onSend={submitText}
           sending={textSending}
           message={textBody}
           setMessage={setTextBody}
-          selectedCount={selected.size}
+          selectedCount={individualSelection != null ? 1 : selected.size}
         />
       )}
 
       <h1>Leads</h1>
 
       {/* Toolbar with Actions dropdown */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
-        <div ref={actionsRef} style={{ position: 'relative' }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+        <div ref={actionsRef} style={{ position: "relative" }}>
           <button
             className="mass-actions-btn"
-            onClick={() => setActionsOpen(s => !s)}
-            title={selected.size === 0 ? 'Select rows to enable actions' : `${selected.size} selected`}
+            onClick={() => setActionsOpen((s) => !s)}
+            title={selected.size === 0 ? "Select rows to enable actions" : `${selected.size} selected`}
             disabled={loading}
             aria-expanded={actionsOpen}
             aria-haspopup="menu"
@@ -479,8 +469,8 @@ function LeadsTable({
                 Mark as Contacted
               </button>
 
-              <div style={{ padding: '6px 12px', fontSize: 12, color: '#666' }}>
-                {selected.size === 0 ? 'No rows selected' : `${selected.size} selected`}
+              <div style={{ padding: "6px 12px", fontSize: 12, color: "#666" }}>
+                {selected.size === 0 ? "No rows selected" : `${selected.size} selected`}
               </div>
             </div>
           )}
@@ -493,69 +483,70 @@ function LeadsTable({
         <thead>
           <tr>
             <th className="small">
-              <button className='select-all-button' onClick={() => selectAll()}>
+              <button className="select-all-button" onClick={() => selectAll()}>
                 Select <br /> All
               </button>
             </th>
 
             <th className="small"></th>
 
-            {/* ✅ sortable headers (same look/arrow pattern as your other tables) */}
-            <th onClick={() => handleSort('firstName')}>
+            <th onClick={() => handleSort("firstName")}>
               <div className="ct-header">
-                <div className="ct-table-header"><p>First Name</p></div>
+                <div className="ct-table-header">
+                  <p>First Name</p>
+                </div>
                 <div className="ct-header-arrow">
-                  {sortColumn === 'firstName' && (sortDirection === 'asc' ? '↓' : '↑')}
+                  {sortColumn === "firstName" && (sortDirection === "asc" ? "↓" : "↑")}
                 </div>
               </div>
             </th>
 
-            <th onClick={() => handleSort('lastName')}>
+            <th onClick={() => handleSort("lastName")}>
               <div className="ct-header">
                 <div className="ct-table-header">Last Name</div>
                 <div className="ct-header-arrow">
-                  {sortColumn === 'lastName' && (sortDirection === 'asc' ? '↓' : '↑')}
+                  {sortColumn === "lastName" && (sortDirection === "asc" ? "↓" : "↑")}
                 </div>
               </div>
             </th>
 
-            <th onClick={() => handleSort('email')}>
+            <th onClick={() => handleSort("email")}>
               <div className="ct-header">
                 <div className="ct-table-header">Email</div>
                 <div className="ct-header-arrow">
-                  {sortColumn === 'email' && (sortDirection === 'asc' ? '↓' : '↑')}
+                  {sortColumn === "email" && (sortDirection === "asc" ? "↓" : "↑")}
                 </div>
               </div>
             </th>
 
-            <th onClick={() => handleSort('phone')}>
+            <th onClick={() => handleSort("phone")}>
               <div className="ct-header">
                 <div className="ct-table-header">Phone</div>
                 <div className="ct-header-arrow">
-                  {sortColumn === 'phone' && (sortDirection === 'asc' ? '↓' : '↑')}
+                  {sortColumn === "phone" && (sortDirection === "asc" ? "↓" : "↑")}
                 </div>
               </div>
             </th>
 
-            <th onClick={() => handleSort('notes')}>
+            <th onClick={() => handleSort("notes")}>
               <div className="ct-header">
                 <div className="ct-table-header">Notes</div>
                 <div className="ct-header-arrow">
-                  {sortColumn === 'notes' && (sortDirection === 'asc' ? '↓' : '↑')}
+                  {sortColumn === "notes" && (sortDirection === "asc" ? "↓" : "↑")}
                 </div>
               </div>
             </th>
 
-            <th onClick={() => handleSort('createdAt')}>
+            <th onClick={() => handleSort("createdAt")}>
               <div className="ct-header">
                 <div className="ct-table-header">TimeStamp</div>
                 <div className="ct-header-arrow">
-                  {sortColumn === 'createdAt' && (sortDirection === 'asc' ? '↓' : '↑')}
+                  {sortColumn === "createdAt" && (sortDirection === "asc" ? "↓" : "↑")}
                 </div>
               </div>
             </th>
 
-            <th className="small"></th>
+            {/* single actions column */}
             <th className="small"></th>
           </tr>
         </thead>
@@ -569,14 +560,7 @@ function LeadsTable({
                   <input
                     type="checkbox"
                     checked={selected.has(lead.key)}
-                    onChange={() => {
-                      setSelected(prev => {
-                        const next = new Set(prev);
-                        if (next.has(lead.key)) next.delete(lead.key);
-                        else next.add(lead.key);
-                        return next;
-                      });
-                    }}
+                    onChange={() => toggleSelect(lead.key)}
                   />
                 </td>
 
@@ -602,51 +586,49 @@ function LeadsTable({
                     <td>
                       <input
                         type="text"
-                        value={editedData.firstName || ''}
-                        onChange={(e) => handleInputChange(e, 'firstName')}
+                        value={editedData.firstName || ""}
+                        onChange={(e) => handleInputChange(e, "firstName")}
                       />
                     </td>
                     <td>
                       <input
                         type="text"
-                        value={editedData.lastName || ''}
-                        onChange={(e) => handleInputChange(e, 'lastName')}
+                        value={editedData.lastName || ""}
+                        onChange={(e) => handleInputChange(e, "lastName")}
                       />
                     </td>
                     <td>
                       <input
                         type="email"
-                        value={editedData.email || ''}
-                        onChange={(e) => handleInputChange(e, 'email')}
+                        value={editedData.email || ""}
+                        onChange={(e) => handleInputChange(e, "email")}
                       />
                     </td>
                     <td>
                       <input
                         type="tel"
-                        value={editedData.phone || ''}
-                        onChange={(e) => handleInputChange(e, 'phone')}
+                        value={editedData.phone || ""}
+                        onChange={(e) => handleInputChange(e, "phone")}
                       />
                     </td>
                     <td>
                       <textarea
                         type="text"
-                        value={editedData.notes || ''}
-                        onChange={(e) => handleInputChange(e, 'notes')}
+                        value={editedData.notes || ""}
+                        onChange={(e) => handleInputChange(e, "notes")}
                       />
                     </td>
                     <td>
-                      <td>
-                        {lead.data.createdAt
-                          ? (() => {
-                              const d = new Date(lead.data.createdAt);
-                              if (isNaN(d)) return '';
-                              const month = d.toLocaleString('en-US', { month: 'short' }).toLowerCase();
-                              const day = String(d.getDate()).padStart(2, '0');
-                              const year = d.getFullYear();
-                              return `${month}-${day}-${year}`;
-                            })()
-                          : ''}
-                      </td>
+                      {lead.data.createdAt
+                        ? (() => {
+                            const d = new Date(lead.data.createdAt);
+                            if (isNaN(d)) return "";
+                            const month = d.toLocaleString("en-US", { month: "short" }).toLowerCase();
+                            const day = String(d.getDate()).padStart(2, "0");
+                            const year = d.getFullYear();
+                            return `${month}-${day}-${year}`;
+                          })()
+                        : ""}
                     </td>
                   </>
                 ) : (
@@ -660,38 +642,38 @@ function LeadsTable({
                       {lead.data.createdAt
                         ? (() => {
                             const d = new Date(lead.data.createdAt);
-                            if (isNaN(d)) return '';
-                            const month = d.toLocaleString('en-US', { month: 'short' }).toLowerCase();
-                            const day = String(d.getDate()).padStart(2, '0');
+                            if (isNaN(d)) return "";
+                            const month = d.toLocaleString("en-US", { month: "short" }).toLowerCase();
+                            const day = String(d.getDate()).padStart(2, "0");
                             const year = d.getFullYear();
                             return `${month}-${day}-${year}`;
                           })()
-                        : ''}
+                        : ""}
                     </td>
                   </>
                 )}
 
+                {/* ✅ row dropdown with ALL options incl. email/text */}
                 <td className="small">
-                  <button className="delete-btn" onClick={() => handleDelete(lead.key)}>
-                    🗑️
-                  </button>
-                </td>
-
-                <td className="small">
-                  <button
-                    className="convert-btn"
-                    onClick={() => handleConvertToClient(lead)}
-                    title="Convert to Client"
-                  >
-                    ➡️
-                  </button>
+                  <RowActionsDropdown
+                    open={rowActionsOpen === index}
+                    onToggle={() => setRowActionsOpen((prev) => (prev === index ? null : index))}
+                    onClose={() => setRowActionsOpen(null)}
+                    loading={loading}
+                    items={[
+                      { label: "Edit", onClick: () => handleEditClick(index, lead.data) },
+                      { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
+                      { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
+                      { label: "Convert to Client", onClick: () => handleConvertToClient(lead) },
+                      { label: "Delete", onClick: () => handleDelete(lead.key) },
+                    ]}
+                  />
                 </td>
               </tr>
             ))}
         </tbody>
       </table>
 
-      {/* Add Lead modal/inline form */}
       <AddLead setLeads={setLeads} buildHeaders={buildHeaders} />
     </div>
   );

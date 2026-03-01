@@ -31,8 +31,10 @@ function KidsTable({
   const [sortColumn, setSortColumn] = useState("firstName");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  // ✅ selection + actions state
+  // selection + actions state
+  const [individualSelection, setIndividualSelection] = useState(null); // ✅ matches ClientTable
   const [selected, setSelected] = useState(() => new Set());
+
   const [actionsOpen, setActionsOpen] = useState(false);
   const [individualActionsOpen, setIndividualActionsOpen] = useState(null); // row index or null
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,27 @@ function KidsTable({
     { key: "parentLastName", label: "Parent Last Name" },
   ];
 
-  // ✅ sort when sortColumn / sortDirection changes
+  // close BULK actions dropdown on outside click + Escape
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
+        setActionsOpen(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setActionsOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("touchstart", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("touchstart", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  // --- sorting ---
   useEffect(() => {
     setKids(sortKids(kids, sortColumn, sortDirection));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,29 +109,14 @@ function KidsTable({
     }
   };
 
-  // ✅ bulk actions dropdown: outside click + Esc
-  useEffect(() => {
-    const onDocClick = (e) => {
-      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
-        setActionsOpen(false);
-      }
-    };
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setActionsOpen(false);
-    };
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("touchstart", onDocClick);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("touchstart", onDocClick);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, []);
-
   const handleEditClick = (index, clientData) => {
     setEditingRow(index);
     setEditedData(clientData);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRow(null);
+    setEditedData({});
   };
 
   const updateEndDate = (duration, membershipInfoObj, startDate) => {
@@ -125,22 +132,16 @@ function KidsTable({
     return "";
   };
 
-  const handleCancelEdit = () => {
-    setEditingRow(null);
-    setEditedData({});
-  };
-
   const handleInputChange = (e, field) => {
     const { value } = e.target;
     setEditedData((prevData) => {
       const updatedData = { ...prevData, [field]: value };
       if (field === "membershipDuration" || field === "startDate") {
-        const newEndDate = updateEndDate(
+        updatedData.endDate = updateEndDate(
           field === "membershipDuration" ? value : prevData.membershipDuration,
           membershipInfo,
           field === "startDate" ? value : prevData.startDate
         );
-        updatedData.endDate = newEndDate;
       }
       return updatedData;
     });
@@ -149,12 +150,17 @@ function KidsTable({
   const handleSaveChanges = async (key) => {
     try {
       const baseHeaders = await buildHeaders();
-      const hdrs = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/edit-kid", {
-        method: "POST",
-        headers: hdrs,
-        body: JSON.stringify({ key, data: editedData }),
-      });
+      const hdrs =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+
+      const response = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/edit-kid",
+        {
+          method: "POST",
+          headers: hdrs,
+          body: JSON.stringify({ key, data: editedData }),
+        }
+      );
 
       if (response.ok) {
         setKids((prevKids) =>
@@ -172,7 +178,7 @@ function KidsTable({
     }
   };
 
-  // --- delete modal flow ---
+  // --- delete modal flow (matches ClientTable shape) ---
   const requestDelete = (keyOrKeys) => {
     const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
     if (!keys.length) return;
@@ -186,20 +192,31 @@ function KidsTable({
     setPendingDeleteKeys([]);
   };
 
+  const confirmDelete = async (saveAsLead = false) => {
+    const keys = pendingDeleteKeys;
+    setDeleteOpen(false);
+    setPendingDeleteKeys([]);
+    await performDeleteKids({ keys, saveAsLead });
+  };
+
   const performDeleteKids = async ({ keys, saveAsLead }) => {
     if (!keys.length) return;
 
     setLoading(true);
     try {
       const baseHeaders = await buildHeaders();
-      const hdrs = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      const hdrs =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       hdrs.set("Content-Type", "application/json");
 
-      const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/delete-kid", {
-        method: "DELETE",
-        headers: hdrs,
-        body: JSON.stringify({ keys, saveAsLead }),
-      });
+      const response = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/delete-kid",
+        {
+          method: "DELETE",
+          headers: hdrs,
+          body: JSON.stringify({ keys, saveAsLead }),
+        }
+      );
 
       const data = await response.json().catch(() => ({}));
 
@@ -227,22 +244,21 @@ function KidsTable({
     }
   };
 
-  const confirmDelete = async (saveAsLead = false) => {
-    const keys = pendingDeleteKeys;
-    setDeleteOpen(false);
-    setPendingDeleteKeys([]);
-    await performDeleteKids({ keys, saveAsLead });
-  };
-
+  // --- do-not-email toggle ---
   const handleNoEmail = async (key) => {
     try {
       const baseHeaders = await buildHeaders();
-      const hdrs = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      const response = await fetch("https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list", {
-        method: "POST",
-        headers: hdrs,
-        body: JSON.stringify({ key, type: "kid" }),
-      });
+      const hdrs =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+
+      const response = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list",
+        {
+          method: "POST",
+          headers: hdrs,
+          body: JSON.stringify({ key, type: "kid" }),
+        }
+      );
 
       if (response.ok) {
         setKids((prevKids) =>
@@ -279,24 +295,37 @@ function KidsTable({
     });
   };
 
-  // --- text / email actions (bulk only, same as your original) ---
-  const handleSendText = () => {
+  // --- text/email actions (bulk or single) — matches ClientTable ---
+  const handleSendText = (key) => {
     const keys = Array.from(selected);
-    if (!keys.length) {
+
+    if (key != null) setIndividualSelection(key);
+
+    if (!keys.length && key == null) {
       alert("Select at least one kid to text.");
       return;
     }
+
     setActionsOpen(false);
     setIndividualActionsOpen(null);
     setTextOpen(true);
   };
 
-  const handleSendEmail = () => {
-    const keys = Array.from(selected);
-    if (!keys.length) {
+  const handleSendEmail = (key) => {
+    if (key != null) {
+      setIndividualSelection(key);
+      setActionsOpen(false);
+      setIndividualActionsOpen(null);
+      setEmailOpen(true);
+      return;
+    }
+
+    if (!selected.size) {
       alert("Select at least one kid to email.");
       return;
     }
+
+    setIndividualSelection(null);
     setActionsOpen(false);
     setIndividualActionsOpen(null);
     setEmailOpen(true);
@@ -305,7 +334,9 @@ function KidsTable({
   const submitText = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
-    const allRecipients = Array.from(selected);
+    const allRecipients =
+      individualSelection != null ? [individualSelection] : Array.from(selected);
+
     if (!allRecipients.length) {
       alert("No recipients selected.");
       setTextOpen(false);
@@ -325,16 +356,25 @@ function KidsTable({
     setTextSending(true);
     try {
       const baseHeaders = await buildHeaders();
-      const hdrs = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      const hdrs =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       hdrs.set("Content-Type", "application/json");
 
       for (const recipients of batches) {
-        const payload = { message: textBody, recipients, listType: "kids" };
-        const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/text", {
-          method: "POST",
-          headers: hdrs,
-          body: JSON.stringify(payload),
-        });
+        const payload = {
+          message: textBody,
+          recipients,
+          listType: "kids",
+        };
+
+        const res = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/text",
+          {
+            method: "POST",
+            headers: hdrs,
+            body: JSON.stringify(payload),
+          }
+        );
 
         const responseText = await res.text().catch(() => "");
         if (!res.ok) {
@@ -346,6 +386,7 @@ function KidsTable({
 
       alert("Texts queued/sent (batched).");
       setTextBody("");
+      setIndividualSelection(null);
       setTextOpen(false);
     } catch (err) {
       console.error("Network error sending text:", err);
@@ -358,7 +399,9 @@ function KidsTable({
   const submitEmail = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
-    const allRecipients = Array.from(selected);
+    const allRecipients =
+      individualSelection != null ? [individualSelection] : Array.from(selected);
+
     if (!allRecipients.length) {
       alert("No recipients selected.");
       setEmailOpen(false);
@@ -382,7 +425,8 @@ function KidsTable({
     setEmailSending(true);
     try {
       const baseHeaders = await buildHeaders();
-      const hdrs = baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
+      const hdrs =
+        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       hdrs.set("Content-Type", "application/json");
 
       for (const recipients of batches) {
@@ -394,11 +438,14 @@ function KidsTable({
           listType: "kids",
         };
 
-        const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/email", {
-          method: "POST",
-          headers: hdrs,
-          body: JSON.stringify(payload),
-        });
+        const res = await fetch(
+          "https://worker-consolidated.maxli5004.workers.dev/email",
+          {
+            method: "POST",
+            headers: hdrs,
+            body: JSON.stringify(payload),
+          }
+        );
 
         const responseText = await res.text().catch(() => "");
         if (!res.ok) {
@@ -411,6 +458,7 @@ function KidsTable({
       alert("Emails queued/sent (batched).");
       setEmailSubject("");
       setEmailBody("");
+      setIndividualSelection(null);
       setEmailOpen(false);
     } catch (err) {
       console.error("Network error sending email:", err);
@@ -420,10 +468,18 @@ function KidsTable({
     }
   };
 
-  // ✅ Option A bulk items
+  // Option A: bulk dropdown items
   const bulkItems = [
-    { label: "Send Email", onClick: handleSendEmail, disabled: selected.size === 0 },
-    { label: "Send Text", onClick: handleSendText, disabled: selected.size === 0 },
+    {
+      label: "Send Email",
+      onClick: () => handleSendEmail(null),
+      disabled: selected.size === 0,
+    },
+    {
+      label: "Send Text",
+      onClick: () => handleSendText(null),
+      disabled: selected.size === 0,
+    },
     {
       label: "Delete",
       onClick: () => requestDelete(Array.from(selected)),
@@ -446,26 +502,32 @@ function KidsTable({
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
-          onClose={() => setEmailOpen(false)}
+          onClose={() => {
+            setEmailOpen(false);
+            setIndividualSelection(null);
+          }}
           onSend={submitEmail}
           sending={emailSending}
           subject={emailSubject}
           setSubject={setEmailSubject}
           body={emailBody}
           setBody={setEmailBody}
-          selectedCount={selected.size}
+          selectedCount={individualSelection != null ? 1 : selected.size}
         />
       )}
 
       {textOpen && (
         <TextComposer
           open={textOpen}
-          onClose={() => setTextOpen(false)}
+          onClose={() => {
+            setTextOpen(false);
+            setIndividualSelection(null);
+          }}
           onSend={submitText}
           sending={textSending}
           message={textBody}
           setMessage={setTextBody}
-          selectedCount={selected.size}
+          selectedCount={individualSelection != null ? 1 : selected.size}
         />
       )}
 
@@ -530,24 +592,37 @@ function KidsTable({
                 />
               </td>
 
-              {/* ✅ edit + do-not-mail OR Row actions when not editing */}
+              {/* edit + do-not-mail */}
               <td className="ct-small">
                 {editingRow === index ? (
                   <>
-                    <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>
+                    <button
+                      type="button"
+                      className="ct-save-btn"
+                      onClick={() => handleSaveChanges(client.key)}
+                    >
                       ✅
                     </button>
-                    <button className="ct-cancel-btn" onClick={handleCancelEdit}>
+                    <button
+                      type="button"
+                      className="ct-cancel-btn"
+                      onClick={handleCancelEdit}
+                    >
                       ❌
                     </button>
                   </>
                 ) : (
                   <>
-                    <button className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)}>
+                    <button
+                      type="button"
+                      className="ct-edit-btn"
+                      onClick={() => handleEditClick(index, client.data)}
+                    >
                       ✏️
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => handleNoEmail(client.key)}
                       title={client.data?.doNotMail ? "Allow emails" : "Do not email"}
                     >
@@ -619,7 +694,9 @@ function KidsTable({
                       onChange={(e) => handleInputChange(e, "membershipDuration")}
                     >
                       {membershipInfo?.info?.map((membership) =>
-                        !membership.free && membership.description && membership.duration ? (
+                        !membership.free &&
+                        membership.description &&
+                        membership.duration ? (
                           <option key={membership.description} value={membership.description}>
                             {membership.description}
                           </option>
@@ -657,7 +734,7 @@ function KidsTable({
                 </>
               )}
 
-              {/* ✅ row actions dropdown (outsourced) */}
+              {/* ✅ Individual actions dropdown (outsourced) — matches ClientTable */}
               <td className="ct-small">
                 <RowActionsDropdown
                   open={individualActionsOpen === index}
@@ -672,8 +749,13 @@ function KidsTable({
                       onClick: () => handleEditClick(index, client.data),
                     },
                     {
-                      label: "Toggle Do Not Email",
-                      onClick: () => handleNoEmail(client.key),
+                      label: "Send Email",
+                      onClick: () => handleSendEmail(client.key),
+                      disabled: !!client.data?.doNotMail, // optional: disable if doNotMail is true
+                    },
+                    {
+                      label: "Send Text",
+                      onClick: () => handleSendText(client.key),
                     },
                     {
                       label: "Delete",

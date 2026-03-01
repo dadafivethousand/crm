@@ -17,7 +17,7 @@
 .ct-client-table th,
 .ct-client-table td {
   border: 1px solid #000000; 
- padding:0 30px; 
+ padding:0 10px; 
  
   min-width: fit-content;
 }
@@ -126,7 +126,7 @@
   height: 55px;
   text-align: center;
  
-  width:50px;
+ 
  
 }
 
