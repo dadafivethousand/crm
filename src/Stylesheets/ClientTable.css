@@ -141,10 +141,6 @@
   padding: 4px 8px;
   font-size: 12px;
 }
-ct-button
- 
- 
-
 /* Expired Client Highlight */
 .ct-red {
   background-color: rgba(255, 0, 0, 0.904);
