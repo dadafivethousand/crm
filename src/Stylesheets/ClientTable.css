@@ -1,195 +1,262 @@
-/* Container */
+/* ═══════════════════════════════════════════
+   CLIENT TABLE — Premium Data Grid
+   ═══════════════════════════════════════════ */
+
+/* ── Container ── */
 .ct-client-table-container {
-  margin: 20px;
+  margin: var(--space-5);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Table */
+/* ── Table ── */
 .ct-client-table {
- 
   border-collapse: collapse;
-  font-family: Arial, sans-serif;
   text-align: center;
-  margin: 0 auto;
-  overflow:scroll
+  margin: 0;
+  width: 100%;
+  min-width: 800px;
 }
 
 .ct-client-table th,
 .ct-client-table td {
-  border: 1px solid #000000; 
- padding:0 10px; 
- 
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--gray-200);
   min-width: fit-content;
+  vertical-align: middle;
 }
 
+/* ── Header ── */
 .ct-client-table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
- 
+  background: var(--gray-100);
+  font-weight: 600;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-600);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-bottom: 2px solid var(--gray-300);
+  white-space: nowrap;
+  user-select: none;
 }
- 
 
-.ct-client-table tr:hover {
-  background-color: #f1f1f1;
+/* ── Rows ── */
+.ct-client-table tbody tr {
+  transition: background var(--transition-fast);
 }
 
-/* Sortable Table Headers */
-.ct-table-header:hover {
+.ct-client-table tbody tr:nth-child(even) {
+  background: var(--gray-25);
+}
+
+.ct-client-table tbody tr:hover {
+  background: var(--brand-50);
+}
+
+/* ── Sortable Headers ── */
+.ct-table-header {
   cursor: pointer;
-  color: #007bff;
+  transition: color var(--transition-fast);
+}
+
+.ct-table-header:hover {
+  color: var(--brand);
 }
 
 .ct-header-arrow {
-  margin-left: 10px;
+  margin-left: 6px;
+  font-size: 10px;
+  opacity: 0.5;
 }
 
 .ct-header-arrow:hover {
   cursor: pointer;
+  opacity: 1;
 }
 
-/* Buttons */
+/* ═══════════════════════════════════════════
+   ACTION BUTTONS — Refined pill style
+   ═══════════════════════════════════════════ */
 .ct-edit-btn,
 .ct-save-btn,
 .ct-cancel-btn,
 .ct-delete-btn {
-  display: block;
-  margin: 0 auto;
-  padding: 6px 12px;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px auto;
+  padding: 4px 12px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-wide);
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 0.2s ease-in-out;
-
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform 0.1s var(--ease-out);
 }
 
-#ct-edit-btn {
-  background-color: #007bff;
-  color: white;
+.ct-edit-btn:active,
+.ct-save-btn:active,
+.ct-cancel-btn:active,
+.ct-delete-btn:active {
+  transform: scale(0.96);
+}
+
+.ct-edit-btn {
+  background: var(--brand-50);
+  color: var(--brand);
+  border: 1px solid var(--brand-200);
 }
 .ct-edit-btn:hover {
-  background-color: #0056b3;
+  background: var(--brand-100);
+  box-shadow: 0 2px 8px rgba(20, 69, 225, 0.15);
 }
 
 .ct-save-btn {
-  background-color: #28a745;
-  color: white;
+  background: var(--success-50);
+  color: var(--success-700);
+  border: 1px solid var(--success-100);
 }
 .ct-save-btn:hover {
-  background-color: #218838;
+  background: var(--success-100);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
 }
 
 .ct-cancel-btn {
-  background-color: #6c757d;
-  color: white;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
 }
 .ct-cancel-btn:hover {
-  background-color: #5a6268;
+  background: var(--gray-200);
 }
 
 .ct-delete-btn {
-   color: white;
+  background: var(--danger-50);
+  color: var(--danger-600);
+  border: 1px solid var(--danger-100);
 }
 .ct-delete-btn:hover {
-  background-color: #c82333;
+  background: var(--danger-100);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
 }
 
-/* No-Mail Button */
+/* ── No-Mail Button ── */
 .ct-no-mail-button {
-  background-color: white;
-  border: 1px solid red;
-  font-size: 15px;
-  font-family: "Roboto Condensed", sans-serif;
-  color: red;
-  padding: 6px 10px;
-  border-radius: 4px;
+  background: var(--card);
+  border: 1.5px solid var(--danger-border);
+  font-size: var(--font-sm);
+  color: var(--danger-600);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 0.2s ease-in-out;
+  font-weight: 500;
+  transition: all var(--transition-fast);
 }
 
 .ct-no-mail-button:hover {
-  background-color: red;
-  color: white;
+  background: var(--danger-50);
+  border-color: var(--danger-500);
 }
 
-/* Active Status */
+/* ── Active Status Badge ── */
 .active {
-  background-color: rgb(171, 30, 23);
-  border: 1px solid black;
-  color: white;
-  font-weight: bold;
-  padding: 6px 12px;
-  border-radius: 4px;
+  background: var(--danger-50);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-700);
+  font-weight: 600;
+  font-size: var(--font-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
 }
 
-.ct-small{
+/* ── Small column ── */
+.ct-small {
   height: 55px;
   text-align: center;
- 
- 
- 
 }
 
-.ct-content{
-   white-space: nowrap;
+.ct-content {
+  white-space: nowrap;
 }
 
-/* Utility Column + Flex */
 .ct-small button {
- 
   display: block;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: var(--space-1) var(--space-2);
+  font-size: 11px;
 }
-/* Expired Client Highlight */
+
+/* ═══════════════════════════════════════════
+   OVERDUE / EXPIRED ROW — Subtle accent
+   ═══════════════════════════════════════════ */
 .ct-red {
-  background-color: rgba(255, 0, 0, 0.904);
-  width: 100%;
-  padding: 8px;
+  background: var(--danger-50);
+  border-left: 3px solid var(--danger-500);
+  color: var(--danger-800);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
   text-align: center;
-  border-radius: 4px;
-  color: white;
-  font-weight: bold;
+  font-size: var(--font-sm);
 }
 
-  .ct-edit-btn,
-  .ct-no-mail-button {
-    font-size: 13px;
- 
-     width: 35px;
-    display: flex;
-    justify-content: center;
-  }
- 
+/* Override row bg for overdue */
+.ct-client-table tbody tr:has(.ct-red) {
+  background: var(--danger-50) !important;
+}
 
-/* Responsive */
+.ct-client-table tbody tr:has(.ct-red):hover {
+  background: var(--danger-100) !important;
+}
+
+/* ── Edit/no-mail sizing ── */
+.ct-edit-btn,
+.ct-no-mail-button {
+  font-size: var(--font-xs);
+  min-width: 35px;
+  display: inline-flex;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
 @media (max-width: 768px) {
   .ct-client-table-container {
-    margin: 10px;
-    overflow-x: scroll;
+    margin: var(--space-3);
+    border-radius: var(--radius-md);
   }
 
   .ct-client-table th,
   .ct-client-table td {
-    padding: 8px;
-    font-size: 14px;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-sm);
   }
 }
 
-
-
-.ct-regular >* input, .ct-red >* input{
-width:105%;
+/* ═══════════════════════════════════════════
+   TABLE INPUTS
+   ═══════════════════════════════════════════ */
+.ct-regular > * input,
+.ct-red > * input {
+  width: 105%;
 }
 
-
- #no-email{
-  width:25px;
+#no-email {
+  width: 25px;
   display: block;
   margin: 0 auto;
 }
 
-/* Adjusted column widths */
+/* Column Widths */
 .ct-th-firstName,
 .ct-th-lastName {
   width: 120px;
@@ -208,68 +275,202 @@ width:105%;
   width: 40px;
 }
 
-.ct-th-membershipDuration{
- width: 40px;
-  background-color: red;
- 
+.ct-th-membershipDuration {
+  width: 40px;
 }
 
- 
-
- 
- input[type="checkbox"] {
-  transform: scale(1.3); /* easiest cross-browser resize */
-  margin: 4px;
+/* ── Checkbox ── */
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: var(--space-1);
+  accent-color: var(--brand);
+  cursor: pointer;
 }
 
+/* ── Textarea ── */
 .ct-client-table textarea {
-   width: 100%;
-   background-color: rgb(248, 248, 248);
+  width: 100%;
+  background: var(--gray-25);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  font-size: var(--font-sm);
+  font-family: var(--font-family);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  resize: vertical;
 }
 
-
-.ct-client-table input{
-    width: 100%;
-  
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease-in-out;
-    background: #f9f9f9;
+.ct-client-table textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
+  background: #fff;
 }
 
+/* ── Table Inputs ── */
+.ct-client-table input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-family: var(--font-family);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  background: var(--gray-25);
+}
+
+.ct-client-table input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
+  background: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   DROPDOWNS — Floating menus
+   ═══════════════════════════════════════════ */
 .actions-dropdown {
-  position: absolute; /* needed to float below button */
-  top: 100%;          /* just below the button */
+  position: absolute;
+  top: calc(100% + 4px);
   left: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: var(--card);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
   z-index: 100;
-  padding: 8px 0;
+  padding: var(--space-1) 0;
   display: flex;
   flex-direction: column;
-  min-width: 160px;
+  min-width: 180px;
+  animation: dropdownSlide 0.18s var(--ease-out);
+  overflow: hidden;
 }
+
+@keyframes dropdownSlide {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .dropdown-item {
-  padding: 6px 12px;
+  padding: 8px var(--space-4);
   text-align: left;
   background: none;
   border: none;
   cursor: pointer;
-}
-.dropdown-item:hover {
-  background: #f1f1f1;
-}
-.select-all-button{
-  background-color: rgb(156, 155, 155);
-  border:1px solid black
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+    min-width:90px;
+  white-space: nowrap;
 }
 
-.individual-actions-dropdown{
+.dropdown-item:hover {
+  background: var(--brand-50);
+  color: var(--brand);
+}
+
+/* ── Select All Button ── */
+.select-all-button {
+  background: var(--card);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.select-all-button:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-300);
+  color: var(--brand);
+}
+
+/* ── Individual Actions Dropdown ── */
+.individual-actions-dropdown {
   position: absolute;
-  background-color: grey;
-  z-index:2
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--card);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  z-index: 50;
+  padding: var(--space-1) 0;
+  min-width: 150px;
+  animation: dropdownSlide 0.18s var(--ease-out);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+}
+
+/* ═══════════════════════════════════════════
+   BULK "Actions ▾" BUTTON
+   ═══════════════════════════════════════════ */
+.mass-actions-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 8px 16px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--text);
+  background: var(--card);
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+}
+
+.mass-actions-btn:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--brand-300);
+  box-shadow: var(--shadow-md);
+}
+
+.mass-actions-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════
+   ROW "⋮" KEBAB BUTTON
+   ═══════════════════════════════════════════ */
+.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button) {
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button):hover {
+  background: var(--brand-50);
+  border-color: var(--brand-300);
+  color: var(--brand);
 }

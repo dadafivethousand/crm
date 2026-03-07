@@ -1,56 +1,231 @@
-/* Global reset / typography */
-* {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS — Premium SaaS Theme
+   ═══════════════════════════════════════════ */
+:root {
+  /* ── Brand ── */
+  --brand-50: #eef5ff;
+  --brand-100: #d9e8ff;
+  --brand-200: #bcd7ff;
+  --brand-300: #8ebeff;
+  --brand-400: #599bff;
+  --brand-500: #3478ff;
+  --brand-600: #1b58f5;
+  --brand-700: #1445e1;
+  --brand-800: #1738b6;
+  --brand-900: #19338f;
+  --brand: #1445e1;
+  --brand-light: #3478ff;
+  --brand-surface: #eef5ff;
+
+  /* ── Neutral ── */
+  --gray-25: #fafbfc;
+  --gray-50: #f4f6f8;
+  --gray-100: #ebeef2;
+  --gray-200: #d5dae2;
+  --gray-300: #b8c0cc;
+  --gray-400: #8892a2;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* ── Success ── */
+  --success-50: #f0fdf4;
+  --success-100: #dcfce7;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --success-700: #15803d;
+  --success: #16a34a;
+  --success-light: #22c55e;
+  --success-surface: #f0fdf4;
+
+  /* ── Danger ── */
+  --danger-50: #fef2f2;
+  --danger-100: #fee2e2;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+  --danger-800: #991b1b;
+  --danger: #dc2626;
+  --danger-dark: #991b1b;
+  --danger-surface: #fef2f2;
+  --danger-border: rgba(239, 68, 68, 0.18);
+
+  /* ── Warning ── */
+  --warning-50: #fffbeb;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+
+  /* ── Info / Accent ── */
+  --info-50: #eff6ff;
+  --info-500: #3b82f6;
+  --info-600: #2563eb;
+  --info: #2563eb;
+  --info-light: #3b82f6;
+  --info-surface: #eff6ff;
+
+  /* ── Surfaces ── */
+  --bg: #f0f2f5;
+  --bg-subtle: #f8f9fb;
+  --card: #ffffff;
+  --card-elevated: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.12);
+  --card-border-hover: rgba(0, 0, 0, 0.18);
+  --text: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+
+  /* ── Shadows (layered for depth) ── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.14), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.14), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-brand: 0 4px 14px rgba(20, 69, 225, 0.25);
+  --shadow-success: 0 4px 14px rgba(22, 163, 74, 0.25);
+  --shadow-danger: 0 4px 14px rgba(220, 38, 38, 0.2);
+
+  /* ── Radii ── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* ── Typography ── */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-xs: 11px;
+  --font-sm: 13px;
+  --font-base: 14px;
+  --font-md: 15px;
+  --font-lg: 17px;
+  --font-xl: 20px;
+  --font-2xl: 24px;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --letter-tight: -0.02em;
+  --letter-normal: 0;
+  --letter-wide: 0.02em;
+
+  /* ── Transitions ── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.15s var(--ease-in-out);
+  --transition-base: 0.2s var(--ease-in-out);
+  --transition-slow: 0.3s var(--ease-out);
+}
+
+/* ═══════════════════════════════════════════
+   GLOBAL RESET & BASE
+   ═══════════════════════════════════════════ */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Roboto Condensed", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", system-ui, sans-serif;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
+  font-family: var(--font-family);
+  font-size: var(--font-base);
+  line-height: var(--line-height-normal);
+  color: var(--text);
   background:
-    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.12), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.12), transparent 55%),
-    #f3f4f6;
-  color: #111827;
+    radial-gradient(ellipse 80% 60% at 10% 5%, rgba(20, 69, 225, 0.06), transparent),
+    radial-gradient(ellipse 70% 50% at 90% 90%, rgba(59, 130, 246, 0.05), transparent),
+    var(--bg);
+  min-height: 100vh;
 }
 
-/* Headings */
 h1 {
   text-align: center;
+  font-weight: 700;
+  letter-spacing: var(--letter-tight);
 }
 
-/* MAIN CRM SHELL */
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Focus ring utility */
+:focus-visible {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CRM SHELL
+   ═══════════════════════════════════════════ */
 .crm-container {
- width: fit-content;
-  margin: 32px auto 48px;
-  padding: 24px 16px 32px;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.9), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.9), transparent 55%),
-    #ffffff;
-  box-shadow:
-    0 16px 30px rgba(15, 23, 42, 0.12),
-    0 0 0 1px rgba(209, 213, 219, 0.9);
-    overflow:scroll;
+  height: 100vh;
+  width: 100vw;
+  margin: var(--space-10) auto 60px;
+  padding: var(--space-8) var(--space-6) var(--space-10);
+  border-radius: var(--radius-xl);
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-xl);
+  overflow: auto;
 }
 
-/* LOGO STYLING (top logos & standalone RH logo) */
+/* Logo styling */
 .crm-container img {
   width: 190px;
   max-width: 60vw;
   display: block;
-  margin: 16px auto 12px;
+  margin: var(--space-4) auto var(--space-3);
   object-fit: contain;
 }
 
-/* UTILITIES */
+/* ═══════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════ */
 .flex {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .center {
@@ -58,161 +233,165 @@ h1 {
   text-align: center;
 }
 
-/* --- GYM TOGGLE (RH vs MAPLE) --- */
-
+/* ═══════════════════════════════════════════
+   GYM TOGGLE (RH vs MAPLE)
+   ═══════════════════════════════════════════ */
 .toggle-table-display {
   margin: 0 auto;
   display: block;
   min-width: 160px;
-  padding: 6px 10px;
-
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.9);
-  background: rgba(119, 153, 221, 0.9);
-  color: #111827;
-
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--gray-300);
+  background: var(--card);
+  color: var(--text);
   cursor: pointer;
   transition:
-    transform 0.18s ease-out,
-    box-shadow 0.18s ease-out,
-    background 0.18s ease-out,
-    border-color 0.18s ease-out,
-    opacity 0.18s ease-out;
+    transform 0.25s var(--ease-out),
+    box-shadow 0.25s var(--ease-out),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    opacity 0.3s var(--ease-in-out);
 }
 
-/* top toggle logos inside buttons */
 .toggle-table-display img {
   width: 150px;
   max-width: 42vw;
-  margin: 4px auto;
+  margin: var(--space-1) auto;
 }
 
-/* active gym */
+/* Active gym — premium glow */
 .bright-and-center {
   opacity: 1;
-  transform: scale(1.05);
-  background: linear-gradient(145deg, #e2edfa, #81b0e2);
-  border-color: rgba(59, 130, 246, 0.9);
+  transform: scale(1.06);
+  background: linear-gradient(135deg, var(--brand-50), #fff);
+  border-color: var(--brand-300);
   box-shadow:
-    0 8px 18px rgba(148, 163, 184, 0.45),
-    0 0 0 1px rgba(191, 219, 254, 0.9);
+    0 0 0 3px rgba(52, 120, 255, 0.12),
+    0 6px 20px rgba(20, 69, 225, 0.15);
 }
 
-/* inactive gym */
+/* Inactive gym */
 .not-dim {
-  opacity: 0.35;
+  opacity: 0.32;
+  filter: grayscale(0.15);
 }
 
-/* --- ADD CLIENT BUTTONS --- */
+.not-dim:hover {
+  opacity: 0.55;
+}
 
+/* ═══════════════════════════════════════════
+   ADD CLIENT BUTTONS
+   ═══════════════════════════════════════════ */
 .adding-client-buttons {
-  margin: 20px auto 24px;
+  margin: var(--space-5) auto var(--space-6);
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: center;
 }
 
-/* assuming .plus is only used here */
 .plus {
   min-width: 150px;
-  padding: 10px 16px;
-  border-radius: 999px;
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
   border: none;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #ecfdf3;
-  font-size: 14px;
+  background: linear-gradient(135deg, var(--success-500), var(--success-600));
+  color: #fff;
+  font-size: var(--font-base);
   font-weight: 600;
-  text-transform: none;
+  letter-spacing: var(--letter-wide);
   cursor: pointer;
-  box-shadow:
-    0 3px 0 #166534,
-    0 10px 24px rgba(22, 163, 74, 0.4);
+  box-shadow: var(--shadow-success);
   transition:
-    transform 0.15s ease-out,
-    box-shadow 0.15s ease-out,
-    filter 0.15s ease-out;
+    transform 0.2s var(--ease-out),
+    box-shadow 0.2s var(--ease-out),
+    filter var(--transition-fast);
 }
 
 .plus:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 4px 0 #166534,
-    0 12px 28px rgba(22, 163, 74, 0.5);
-  filter: brightness(1.03);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(22, 163, 74, 0.35);
+  filter: brightness(1.06);
 }
 
-/* --- SECTION TOGGLE BUTTONS (Teens & Adults / Kids / Leads) --- */
+.plus:active {
+  transform: translateY(0);
+}
 
-/* these buttons are direct children of .crm-container (not inside the logo flex) */
+/* ═══════════════════════════════════════════
+   SECTION TOGGLE BUTTONS
+   ═══════════════════════════════════════════ */
 .crm-container > .toggle-table-display {
-  margin-top: 10px;
-  margin-bottom: 4px;
-  padding: 8px 16px;
-  font-size: 14px;
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-1);
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--font-base);
   font-weight: 600;
   text-align: center;
-  background: #f3f4f6;
+  background: var(--gray-50);
+  border-color: var(--gray-200);
 }
 
-/* subtle hover for section toggles */
 .crm-container > .toggle-table-display:hover:not(:disabled) {
-  background: #e5edff;
-  border-color: rgba(59, 130, 246, 0.9);
-  box-shadow:
-    0 8px 18px rgba(148, 163, 184, 0.35),
-    0 0 0 1px rgba(191, 219, 254, 0.95);
+  background: var(--brand-50);
+  border-color: var(--brand-300);
+  box-shadow: 0 4px 12px rgba(20, 69, 225, 0.1);
+  transform: translateY(-1px);
 }
 
-/* loading text */
+/* Loading text */
 .crm-container p {
-  margin: 8px 0;
+  margin: var(--space-2) 0;
   text-align: center;
-  font-size: 14px;
-  color: #4b5563;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
 }
 
-/* --- LOGOUT BUTTON --- */
-
+/* ═══════════════════════════════════════════
+   LOGOUT BUTTON
+   ═══════════════════════════════════════════ */
 .logout-button {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #fef2f2;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
+  background: var(--gray-100);
+  color: var(--danger-600);
+  padding: 10px var(--space-5);
+  border: 1.5px solid var(--danger-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-sm);
   font-weight: 600;
-  margin: 32px auto 0;
+  margin: var(--space-10) auto 0;
   cursor: pointer;
-  width: min(260px, 70%);
+  width: min(220px, 60%);
   display: block;
-  box-shadow:
-    0 3px 0 #b91c1c,
-    0 10px 24px rgba(239, 68, 68, 0.4);
   transition:
-    transform 0.15s ease-out,
-    box-shadow 0.15s ease-out,
-    filter 0.15s ease-out;
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform 0.15s var(--ease-out);
 }
 
 .logout-button:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: var(--danger-50);
+  border-color: var(--danger-500);
+  color: var(--danger-700);
   transform: translateY(-1px);
-  box-shadow:
-    0 4px 0 #991b1b,
-    0 12px 28px rgba(239, 68, 68, 0.55);
-  filter: brightness(1.02);
+  box-shadow: var(--shadow-danger);
 }
 
-/* small-screen tweaks */
+/* ═══════════════════════════════════════════
+   MOBILE
+   ═══════════════════════════════════════════ */
 @media (max-width: 480px) {
   .crm-container {
-    margin: 16px auto 32px;
-    padding: 18px 10px 24px;
+    margin: var(--space-4) 8px var(--space-8);
+    padding: var(--space-5) var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
   }
 
   .toggle-table-display img {
-    width: 130px;
+    width: 120px;
   }
 
   .plus {
@@ -220,9 +399,6 @@ h1 {
   }
 
   .logout-button {
-    width: 80%;
+    width: 70%;
   }
 }
-
-
-

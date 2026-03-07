@@ -1,148 +1,150 @@
-/* LoginForm.css */
+/* ═══════════════════════════════════════════
+   LOGIN — Premium Auth Page
+   ═══════════════════════════════════════════ */
 
-:root{
-  --bg: #f4f6fb;
-  --card: #ffffff;
-  --text: #0f172a;
-  --muted: rgba(15, 23, 42, 0.62);
-  --border: rgba(15, 23, 42, 0.12);
-  --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
-
-  --brand: #1c274c;
-  --brand2: #2c3a72;
-
-  --danger: #b42318;
-  --dangerBg: rgba(180, 35, 24, 0.08);
-  --dangerBorder: rgba(180, 35, 24, 0.20);
-}
-
-/* Full-screen, no-scroll layout */
-.login-form-container{
-  /* 100dvh fixes mobile browser UI; 100vh fallback */
+.login-form-container {
   min-height: 100vh;
   min-height: 100dvh;
-
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(900px 600px at 15% 20%, rgba(28, 39, 76, 0.08), transparent 60%),
-              radial-gradient(800px 500px at 85% 80%, rgba(28, 39, 76, 0.06), transparent 60%),
-              var(--bg);
-
-  /* prevent “mystery” scrollbars caused by parent layouts */
+  background:
+    radial-gradient(ellipse 900px 600px at 15% 20%, rgba(20, 69, 225, 0.07), transparent),
+    radial-gradient(ellipse 800px 500px at 85% 80%, rgba(59, 130, 246, 0.05), transparent),
+    linear-gradient(160deg, #f0f2f5 0%, #e8ecf4 100%);
   overflow: hidden;
+  padding: var(--space-4);
 }
 
 /* Card */
-.login-form{
+.login-form {
   width: 100%;
-  max-width: 420px;
-
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-
-  padding: 22px 22px 20px;
-
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  padding: 32px 28px 28px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-
-  /* keeps it safely within the viewport even on tiny screens */
+  gap: var(--space-3);
   max-height: calc(100dvh - 48px);
+  animation: loginSlideUp 0.4s var(--ease-out);
+}
+
+@keyframes loginSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Logo */
-.login-logo{
-  width: 190px;
+.login-logo {
+  width: 180px;
   height: auto;
-  margin: 0 auto 2px;
+  margin: 0 auto 4px;
   display: block;
 }
 
 /* Titles */
-.login-title{
-  margin: 2px 0 0;
+.login-title {
+  margin: 4px 0 0;
   text-align: center;
-  font-size: 22px;
-  letter-spacing: -0.02em;
+  font-size: var(--font-xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-tight);
   color: var(--text);
 }
 
-.login-subtitle{
-  margin: 0 0 6px;
+.login-subtitle {
+  margin: 0 0 8px;
   text-align: center;
-  font-size: 13px;
-  color: var(--muted);
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  line-height: var(--line-height-normal);
 }
 
 /* Inputs */
-.login-form input{
+.login-form input {
   width: 100%;
-  padding: 12px 12px;
-  font-size: 15px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
+  padding: 11px 14px;
+  font-size: var(--font-md);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-25);
   color: var(--text);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
-.login-form input:focus{
-  border-color: rgba(28, 39, 76, 0.45);
-  box-shadow: 0 0 0 4px rgba(28, 39, 76, 0.12);
+.login-form input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.1);
+  background: #fff;
 }
 
-.login-form input:disabled{
-  opacity: 0.7;
+.login-form input::placeholder {
+  color: var(--text-faint);
+}
+
+.login-form input:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 /* Error */
-.login-error{
-  font-size: 13px;
-  color: var(--danger);
-  background: var(--dangerBg);
-  border: 1px solid var(--dangerBorder);
-  border-radius: 12px;
-  padding: 10px 12px;
+.login-error {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--danger-700);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  line-height: var(--line-height-normal);
 }
 
 /* Button */
-.login-form button{
+.login-form button {
   width: 100%;
-  margin-top: 4px;
+  margin-top: var(--space-2);
   border: none;
-  border-radius: 12px;
-  padding: 12px 14px;
-
-  background: linear-gradient(180deg, var(--brand), var(--brand2));
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-700));
   color: white;
-
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 700;
+  letter-spacing: var(--letter-wide);
   cursor: pointer;
-
-  transition: transform 0.05s ease, filter 0.15s ease;
+  box-shadow: var(--shadow-brand);
+  transition:
+    transform 0.1s var(--ease-out),
+    box-shadow var(--transition-fast),
+    filter var(--transition-fast);
 }
 
-.login-form button:hover{
-  filter: brightness(1.04);
+.login-form button:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px rgba(20, 69, 225, 0.35);
+  transform: translateY(-1px);
 }
 
-.login-form button:active{
+.login-form button:active {
   transform: translateY(1px);
+  box-shadow: var(--shadow-sm);
 }
 
-.login-form button:disabled{
-  opacity: 0.72;
+.login-form button:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
+  filter: none;
+  transform: none;
 }
 
 /* a11y */
-.sr-only{
+.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -155,12 +157,12 @@
 }
 
 /* Small screens */
-@media (max-width: 420px){
-  .login-form{
-    padding: 18px 16px 16px;
-    border-radius: 16px;
+@media (max-width: 420px) {
+  .login-form {
+    padding: 24px 20px 20px;
+    border-radius: var(--radius-lg);
   }
-  .login-logo{
-    width: 170px;
+  .login-logo {
+    width: 160px;
   }
 }

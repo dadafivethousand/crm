@@ -1,40 +1,47 @@
-/* Kids Form Container */
+/* ═══════════════════════════════════════════
+   KIDS FORM — Premium Modal
+   ═══════════════════════════════════════════ */
+
 .kids-form-container {
-   padding: 25px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
-  max-height: 75vh;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  max-height: 70vh;
+  max-height: 70dvh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 450px;
-  animation: fadeIn 0.3s ease-in-out;
-  margin-bottom:30px;
+  /* Viewport-relative sizing, never parent-dependent */
+  width: min(460px, 90vw);
+  animation: kidsSlideUp 0.3s var(--ease-out);
+  margin-bottom: var(--space-8);
 }
 
-/* Fade-in animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes kidsSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Form Title */
+/* Title */
 .kids-form-container h3 {
-  font-size: 22px;
-  font-weight: 600;
-  color: #222;
-  margin-bottom: 10px;
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-2);
+  letter-spacing: var(--letter-tight);
 }
 
 /* Subtitle */
 .kids-form-title {
-  font-size: 16px;
+  font-size: var(--font-base);
   font-weight: 500;
-  color: #555;
-  margin-bottom: 20px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-5);
 }
 
 /* Form Layout */
@@ -42,11 +49,10 @@
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 10px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 15px;
-  margin-bottom: 15px;
-  
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--gray-100);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 /* Input Groups */
@@ -61,133 +67,156 @@
 .input-container {
   width: 100%;
   display: flex;
-   gap: 10px;
+  gap: var(--space-3);
 }
 
 /* Input Fields */
 .kids-form-input {
   width: 45%;
-  padding: 12px;
-  font-size: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #f9f9f9;
-  transition: border 0.2s ease-in-out;
+  padding: 10px 12px;
+  font-size: var(--font-base);
+  font-family: var(--font-family);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--gray-25);
+  color: var(--text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
-/* Input Focus */
 .kids-form-input:focus {
-  border-color: #007bff;
+  border-color: var(--brand);
   outline: none;
-  box-shadow: 0 0 6px rgba(0, 123, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
+  background: #fff;
+}
+
+.kids-form-input::placeholder {
+  color: var(--text-faint);
 }
 
 /* DOB Section */
 .kids-form-dob {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   width: 100%;
 }
 
 .kids-form-dob p {
-  font-size: 14px;
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: #666;
-  margin-bottom: 5px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
 }
 
-/* Buttons */
-button {
-  font-size: 15px;
-  font-weight: bold;
-  padding: 12px 18px;
-  border-radius: 8px;
+/* ── Buttons (scoped) ── */
+.kids-form-container button {
+  font-size: var(--font-base);
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform 0.1s var(--ease-out);
 }
 
-/* Submit Button */
+.kids-form-container button:active {
+  transform: scale(0.97);
+}
+
+/* Submit */
 .kids-form-submit-button {
-  background-color: black;
+  background: linear-gradient(135deg, var(--brand), var(--brand-700));
   color: white;
   width: 100%;
+  box-shadow: var(--shadow-brand);
 }
 
 .kids-form-submit-button:hover {
-  background-color: #333;
-  transform: scale(1.03);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(20, 69, 225, 0.3);
 }
 
-/* Add Kid Button */
+/* Add Kid */
 #kids-form-add-button {
-  background-color: #007bff;
-  color: white;
+  background: var(--brand-50);
+  color: var(--brand);
+  border: 1.5px solid var(--brand-200);
   width: 120px;
 }
 
 #kids-form-add-button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
+  background: var(--brand-100);
+  box-shadow: 0 2px 10px rgba(20, 69, 225, 0.12);
+  transform: translateY(-1px);
 }
 
-/* Remove Kid Button */
+/* Remove Kid */
 #kids-form-remove-button {
-  background-color: #d9534f;
-  color: white;
+  background: var(--danger-50);
+  color: var(--danger-600);
+  border: 1.5px solid var(--danger-border);
   width: 100px;
 }
 
 #kids-form-remove-button:hover {
-  background-color: #b52b27;
-  transform: scale(1.05);
+  background: var(--danger-100);
+  border-color: var(--danger-500);
+  transform: translateY(-1px);
 }
 
 /* Close Button */
 .kids-form-close {
-  font-size: 26px;
+  font-size: 24px;
   cursor: pointer;
-  color: #444;
+  color: var(--gray-400);
+  transition: color var(--transition-fast), transform 0.1s var(--ease-out);
+  line-height: 1;
 }
 
 .kids-form-close:hover {
-  color: #000;
+  color: var(--text);
+  transform: scale(1.1);
 }
 
-/* Image Styling */
+/* Image */
 .pic {
   height: 150px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
 }
 
 /* Parent Email Container */
 .parent-email-container {
-  margin-top: 20px;
+  margin-top: var(--space-5);
 }
 
-/* Remove Calendar Icon for Date Inputs */
+/* Date Inputs */
 .kids-form-input[type="date"] {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: textfield;
-  padding: 12px;
-  font-size: 14px;
-  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: var(--font-sm);
+  border-radius: var(--radius-sm);
 }
 
-/* Mobile Responsiveness */
+/* ── Mobile ── */
 @media (max-width: 768px) {
   .kids-form-container {
-    width: 90%;
-    padding: 20px;
+    width: min(440px, 92vw);
+    padding: 22px 18px;
   }
 
   .kids-form {
     flex-direction: column;
   }
 
-  button {
+  .kids-form-container button {
     width: 100%;
   }
 

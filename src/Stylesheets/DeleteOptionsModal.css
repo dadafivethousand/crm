@@ -1,4 +1,6 @@
-/* ./Components/DeleteOptionsModal.css */
+/* ═══════════════════════════════════════════
+   DELETE OPTIONS — Premium Confirmation Modal
+   ═══════════════════════════════════════════ */
 
 .dom-overlay {
   position: fixed;
@@ -7,25 +9,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.52);
-  backdrop-filter: blur(3px);
+  padding: var(--space-4);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: domOverlayIn 0.15s var(--ease-in-out);
+}
+
+@keyframes domOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .dom-card {
-  width: min(520px, 100%);
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
-  padding: 18px 18px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  animation: dom-pop 120ms ease-out;
+  width: min(480px, 100%);
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  padding: var(--space-6);
+  border: 1px solid var(--gray-200);
+  animation: dom-pop 0.25s var(--ease-out);
 }
 
 @keyframes dom-pop {
   from {
-    transform: translateY(6px) scale(0.985);
-    opacity: 0.6;
+    transform: translateY(12px) scale(0.96);
+    opacity: 0;
   }
   to {
     transform: translateY(0) scale(1);
@@ -34,76 +45,90 @@
 }
 
 .dom-title {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.2px;
-  margin-bottom: 8px;
-  color: #111;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  letter-spacing: var(--letter-tight);
+  margin-bottom: var(--space-2);
+  color: var(--text);
 }
 
 .dom-message {
-  font-size: 14px;
-  line-height: 1.35;
-  color: #333;
-  margin-bottom: 14px;
+  font-size: var(--font-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-5);
 }
 
 .dom-actions {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   justify-content: flex-end;
   flex-wrap: wrap;
 }
 
 .dom-btn {
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-weight: 800;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 9px 16px;
+  font-weight: 600;
+  font-size: var(--font-sm);
+  border: 1.5px solid var(--gray-200);
+  background: var(--card);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: transform 0.06s ease, opacity 0.12s ease,
-    background 0.12s ease, border-color 0.12s ease;
+  transition:
+    transform 0.08s var(--ease-out),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   user-select: none;
 }
 
 .dom-btn:active {
-  transform: translateY(1px);
+  transform: scale(0.97);
 }
 
 .dom-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .dom-secondary {
-  background: #f4f4f4;
+  background: var(--gray-50);
+}
+
+.dom-secondary:hover:not(:disabled) {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
 }
 
 .dom-primary {
-  background: #111;
+  background: linear-gradient(135deg, var(--brand), var(--brand-700));
   color: #fff;
-  border-color: #111;
+  border-color: transparent;
+  box-shadow: var(--shadow-brand);
 }
 
 .dom-primary:hover:not(:disabled) {
-  background: #000;
-  border-color: #000;
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(20, 69, 225, 0.3);
+  transform: translateY(-1px);
 }
 
 .dom-danger {
-  background: #b00020;
+  background: linear-gradient(135deg, var(--danger-500), var(--danger-600));
   color: #fff;
-  border-color: #b00020;
+  border-color: transparent;
+  box-shadow: var(--shadow-danger);
 }
 
 .dom-danger:hover:not(:disabled) {
-  background: #98001b;
-  border-color: #98001b;
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
 }
 
 .dom-loading {
-  margin-top: 12px;
-  font-size: 12px;
-  color: #666;
+  margin-top: var(--space-3);
+  font-size: var(--font-xs);
+  color: var(--text-faint);
 }
