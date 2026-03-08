@@ -254,6 +254,12 @@ function ClientTable({
     }
   };
 
+  // --- do-not-email toggle ---
+  // Commented out: doNotMail is set automatically by the webhook for subscriptions
+  // (subscriptions auto-renew via Stripe so no reminder needed). Only relevant
+  // for term memberships where automated renewal reminders are sent.
+  // const handleNoEmail = async (key) => { ... };
+
   // --- text/email actions (bulk or single) ---
   const handleSendText = (key) => {
     const keys = Array.from(selected);

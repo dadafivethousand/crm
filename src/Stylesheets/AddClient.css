@@ -15,7 +15,6 @@
   -webkit-backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
-  align-items: center;
   overflow: auto;
   z-index: 9999;
   padding: var(--space-6);
@@ -41,6 +40,7 @@
   gap: var(--space-3);
   animation: modalSlideUp 0.3s var(--ease-out);
   align-items: stretch;
+  margin: auto;
 }
 
 @keyframes modalSlideUp {

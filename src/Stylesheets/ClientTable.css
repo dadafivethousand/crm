@@ -332,43 +332,74 @@ input[type="checkbox"] {
    ═══════════════════════════════════════════ */
 .actions-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 0;
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xl);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 6px -2px rgba(0, 0, 0, 0.06),
+    0 12px 32px -4px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
   z-index: 100;
-  padding: var(--space-1) 0;
+  padding: 6px 0;
   display: flex;
   flex-direction: column;
-  min-width: 180px;
-  animation: dropdownSlide 0.18s var(--ease-out);
+  min-width: 190px;
+  animation: dropdownSlide 0.2s var(--ease-out);
   overflow: hidden;
 }
 
 @keyframes dropdownSlide {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
 .dropdown-item {
-  padding: 8px var(--space-4);
+  position: relative;
+  padding: 10px 20px 10px 14px;
   text-align: left;
   background: none;
   border: none;
+  border-left: 3px solid transparent;
   cursor: pointer;
   font-size: var(--font-sm);
+  font-family: var(--font-family);
   font-weight: 500;
-  color: var(--text-secondary);
-  transition: background var(--transition-fast), color var(--transition-fast);
-    min-width:90px;
-  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1.45;
+  color: var(--gray-700);
+  white-space: normal;
+  word-break: break-word;
+  width: 100%;
+  transition:
+    background 0.13s ease,
+    color 0.13s ease,
+    border-left-color 0.13s ease,
+    transform 0.12s ease;
 }
 
-.dropdown-item:hover {
+.dropdown-item:hover:not(:disabled) {
   background: var(--brand-50);
   color: var(--brand);
+  border-left-color: var(--brand);
+  transform: translateX(2px);
+}
+
+.dropdown-item:active:not(:disabled) {
+  transform: translateX(2px) scale(0.98);
+  background: var(--brand-100);
+}
+
+.dropdown-item:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.dropdown-item + .dropdown-item {
+  border-top: 1px solid var(--gray-100);
 }
 
 /* ── Select All Button ── */
@@ -394,21 +425,23 @@ input[type="checkbox"] {
 .individual-actions-dropdown {
   position: absolute;
   right: 0;
-  top: calc(100% + 4px);
-  background: var(--card);
+  top: calc(100% + 6px);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xl);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 6px -2px rgba(0, 0, 0, 0.06),
+    0 12px 32px -4px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
   z-index: 50;
-  padding: var(--space-1) 0;
-  min-width: 150px;
-  animation: dropdownSlide 0.18s var(--ease-out);
+  padding: 6px 0;
+  min-width: 200px;
+  animation: dropdownSlide 0.2s var(--ease-out);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
 }
 
 /* ═══════════════════════════════════════════
@@ -449,7 +482,7 @@ input[type="checkbox"] {
 /* ═══════════════════════════════════════════
    ROW "⋮" KEBAB BUTTON
    ═══════════════════════════════════════════ */
-.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button) {
+.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button):not(.dropdown-item) {
   background: var(--gray-50);
   border: 1.5px solid var(--gray-300);
   border-radius: var(--radius-sm);
@@ -469,7 +502,7 @@ input[type="checkbox"] {
     color var(--transition-fast);
 }
 
-.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button):hover {
+.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button):not(.dropdown-item):hover {
   background: var(--brand-50);
   border-color: var(--brand-300);
   color: var(--brand);

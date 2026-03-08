@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Stylesheets/ClientTable.css";
 
-import noemailimg from "./Images/noemail.avif";
-import sendemail from "./Images/sendemail.png";
 
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
@@ -245,37 +243,10 @@ function KidsTable({
   };
 
   // --- do-not-email toggle ---
-  const handleNoEmail = async (key) => {
-    try {
-      const baseHeaders = await buildHeaders();
-      const hdrs =
-        baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-
-      const response = await fetch(
-        "https://worker-consolidated.maxli5004.workers.dev/do-not-mail-list",
-        {
-          method: "POST",
-          headers: hdrs,
-          body: JSON.stringify({ key, type: "kid" }),
-        }
-      );
-
-      if (response.ok) {
-        setKids((prevKids) =>
-          prevKids.map((kid) =>
-            kid.key === key
-              ? { ...kid, data: { ...kid.data, doNotMail: !kid.data.doNotMail } }
-              : kid
-          )
-        );
-      } else {
-        const err = await response.json().catch(() => ({}));
-        console.error("Error updating do-not-mail list", err);
-      }
-    } catch (error) {
-      console.error("Error updating do-not-mail list:", error);
-    }
-  };
+  // Commented out: doNotMail is set automatically by the webhook for subscriptions
+  // (subscriptions auto-renew via Stripe so no reminder needed). Only relevant
+  // for term memberships where automated renewal reminders are sent.
+  // const handleNoEmail = async (key) => { ... };
 
   // --- selection helpers ---
   const toggleSelect = (key) => {
@@ -620,18 +591,6 @@ function KidsTable({
                     >
                       ✏️
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleNoEmail(client.key)}
-                      title={client.data?.doNotMail ? "Allow emails" : "Do not email"}
-                    >
-                      {client.data?.doNotMail ? (
-                        <img id="no-email" src={noemailimg} alt="No email" />
-                      ) : (
-                        <img id="no-email" src={sendemail} alt="Send email" />
-                      )}
-                    </button>
                   </>
                 )}
               </td>
@@ -751,7 +710,6 @@ function KidsTable({
                     {
                       label: "Send Email",
                       onClick: () => handleSendEmail(client.key),
-                      disabled: !!client.data?.doNotMail, // optional: disable if doNotMail is true
                     },
                     {
                       label: "Send Text",
