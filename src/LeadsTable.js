@@ -3,9 +3,17 @@ import "./Stylesheets/ClientTable.css";
 import AddLead from "./AddLead";
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
+import NotesModal from "./Components/NotesModal";
 
 // ✅ outsourced component
 import RowActionsDropdown from "./Components/RowActionsDropdown";
+
+function parseNotes(raw) {
+  if (!raw) return [];
+  if (typeof raw === "string") return raw.trim() ? [{ text: raw.trim(), timestamp: null, author: "legacy" }] : [];
+  if (Array.isArray(raw)) return raw;
+  return [];
+}
 
 function LeadsTable({
   setConvertToClientData,
@@ -19,6 +27,24 @@ function LeadsTable({
 }) {
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
+
+  // notes modal state
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesKey, setNotesKey] = useState(null);
+  const [notesRaw, setNotesRaw] = useState(null);
+
+  const openNotes = (key, raw) => {
+    setNotesKey(key);
+    setNotesRaw(raw);
+    setNotesOpen(true);
+  };
+
+  const handleNotesUpdated = (key, updatedNotes) => {
+    setNotesRaw(updatedNotes);
+    setLeads((prev) =>
+      prev.map((l) => (l.key === key ? { ...l, data: { ...l.data, notes: updatedNotes } } : l))
+    );
+  };
 
   // ✅ SORTING
   const [sortColumn, setSortColumn] = useState("firstName");
@@ -384,6 +410,18 @@ function LeadsTable({
 
   return (
     <div className="ct-client-table-container">
+      {notesOpen && (
+        <NotesModal
+          open={notesOpen}
+          onClose={() => setNotesOpen(false)}
+          recordKey={notesKey}
+          recordType="lead"
+          rawNotes={notesRaw}
+          onNotesUpdated={handleNotesUpdated}
+          buildHeaders={buildHeaders}
+        />
+      )}
+
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
@@ -612,11 +650,9 @@ function LeadsTable({
                       />
                     </td>
                     <td>
-                      <textarea
-                        type="text"
-                        value={editedData.notes || ""}
-                        onChange={(e) => handleInputChange(e, "notes")}
-                      />
+                      <button className="nm-notes-btn" onClick={() => openNotes(lead.key, lead.data.notes)}>
+                        {(() => { const n = parseNotes(lead.data.notes); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
+                      </button>
                     </td>
                     <td>
                       {lead.data.createdAt
@@ -637,7 +673,11 @@ function LeadsTable({
                     <td>{lead.data.lastName}</td>
                     <td>{lead.data.email}</td>
                     <td>{lead.data.phone}</td>
-                    <td>{lead.data.notes}</td>
+                    <td>
+                      <button className="nm-notes-btn" onClick={() => openNotes(lead.key, lead.data.notes)}>
+                        {(() => { const n = parseNotes(lead.data.notes); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
+                      </button>
+                    </td>
                     <td>
                       {lead.data.createdAt
                         ? (() => {

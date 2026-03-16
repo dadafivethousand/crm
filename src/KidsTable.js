@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Stylesheets/ClientTable.css";
 
-
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
 import DeleteOptionsModal from "./Components/DeleteOptionsModal";
+import NotesModal from "./Components/NotesModal";
 
 // ✅ outsourced components (Option A: items-driven)
 import BulkActionsDropdown from "./Components/BulkActionsDropdown";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
 import SortableTh from "./Components/SortableTh";
+
+function parseNotes(raw) {
+  if (!raw) return [];
+  if (typeof raw === "string") return raw.trim() ? [{ text: raw.trim(), timestamp: null, author: "legacy" }] : [];
+  if (Array.isArray(raw)) return raw;
+  return [];
+}
 
 function KidsTable({
   membershipInfo,
@@ -23,6 +30,24 @@ function KidsTable({
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
+
+  // notes modal state
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesKey, setNotesKey] = useState(null);
+  const [notesRaw, setNotesRaw] = useState(null);
+
+  const openNotes = (key, raw) => {
+    setNotesKey(key);
+    setNotesRaw(raw);
+    setNotesOpen(true);
+  };
+
+  const handleNotesUpdated = (key, updatedNotes) => {
+    setNotesRaw(updatedNotes);
+    setKids((prev) =>
+      prev.map((k) => (k.key === key ? { ...k, data: { ...k.data, paymentStatus: updatedNotes } } : k))
+    );
+  };
 
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
@@ -460,6 +485,18 @@ function KidsTable({
 
   return (
     <div className="ct-client-table-container">
+      {notesOpen && (
+        <NotesModal
+          open={notesOpen}
+          onClose={() => setNotesOpen(false)}
+          recordKey={notesKey}
+          recordType="kid"
+          rawNotes={notesRaw}
+          onNotesUpdated={handleNotesUpdated}
+          buildHeaders={buildHeaders}
+        />
+      )}
+
       <DeleteOptionsModal
         open={deleteOpen}
         loading={loading}
@@ -641,11 +678,9 @@ function KidsTable({
                     />
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      value={editedData.paymentStatus || ""}
-                      onChange={(e) => handleInputChange(e, "paymentStatus")}
-                    />
+                    <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                      {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
+                    </button>
                   </td>
                   <td>
                     <select
@@ -686,7 +721,11 @@ function KidsTable({
                   <td>{client.data?.phone}</td>
                   <td>{client.data?.startDate}</td>
                   <td>{client.data?.endDate}</td>
-                  <td>{client.data?.paymentStatus}</td>
+                  <td>
+                    <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                      {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
+                    </button>
+                  </td>
                   <td>{client.data?.membershipDuration}</td>
                   <td>{client.data?.parentFirstName}</td>
                   <td>{client.data?.parentLastName}</td>

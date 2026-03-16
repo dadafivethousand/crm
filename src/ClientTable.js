@@ -4,11 +4,19 @@ import "./Stylesheets/ClientTable.css";
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
 import DeleteOptionsModal from "./Components/DeleteOptionsModal";
+import NotesModal from "./Components/NotesModal";
 
 // ✅ outsourced components (Option A: items-driven)
 import BulkActionsDropdown from "./Components/BulkActionsDropdown";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
 import SortableTh from "./Components/SortableTh";
+
+function parseNotes(raw) {
+  if (!raw) return [];
+  if (typeof raw === "string") return raw.trim() ? [{ text: raw.trim(), timestamp: null, author: "legacy" }] : [];
+  if (Array.isArray(raw)) return raw;
+  return [];
+}
 
 function ClientTable({
   membershipInfo,
@@ -22,6 +30,24 @@ function ClientTable({
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  // notes modal state
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesKey, setNotesKey] = useState(null);
+  const [notesRaw, setNotesRaw] = useState(null);
+
+  const openNotes = (key, raw) => {
+    setNotesKey(key);
+    setNotesRaw(raw);
+    setNotesOpen(true);
+  };
+
+  const handleNotesUpdated = (key, updatedNotes) => {
+    setNotesRaw(updatedNotes);
+    setClients((prev) =>
+      prev.map((c) => (c.key === key ? { ...c, data: { ...c.data, paymentStatus: updatedNotes } } : c))
+    );
+  };
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
@@ -454,6 +480,18 @@ function ClientTable({
 
   return (
     <div className="ct-client-table-container">
+      {notesOpen && (
+        <NotesModal
+          open={notesOpen}
+          onClose={() => setNotesOpen(false)}
+          recordKey={notesKey}
+          recordType="client"
+          rawNotes={notesRaw}
+          onNotesUpdated={handleNotesUpdated}
+          buildHeaders={buildHeaders}
+        />
+      )}
+
       <DeleteOptionsModal
         open={deleteOpen}
         loading={loading}
@@ -592,7 +630,11 @@ function ClientTable({
                 <>
                   {headers.map((header) => (
                     <td key={header.key}>
-                      {header.key === "membershipDuration" ? (
+                      {header.key === "paymentStatus" ? (
+                        <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                          {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
+                        </button>
+                      ) : header.key === "membershipDuration" ? (
                         <select
                           value={editedData[header.key] || ""}
                           onChange={(e) => handleInputChange(e, header.key)}
@@ -619,7 +661,13 @@ function ClientTable({
                 <>
                   {headers.map((header) => (
                     <td className="ct-content" key={header.key}>
-                      {client.data?.[header.key]}
+                      {header.key === "paymentStatus" ? (
+                        <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                          {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
+                        </button>
+                      ) : (
+                        client.data?.[header.key]
+                      )}
                     </td>
                   ))}
                 </>
