@@ -4,6 +4,7 @@ import AddLead from "./AddLead";
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
 import NotesModal from "./Components/NotesModal";
+import DeleteOptionsModal from "./Components/DeleteOptionsModal";
 
 // ✅ outsourced component
 import RowActionsDropdown from "./Components/RowActionsDropdown";
@@ -75,6 +76,10 @@ function LeadsTable({
     setLeads(sortLeads(leads, sortColumn, sortDirection));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortColumn, sortDirection]);
+
+  // delete modal state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
 
   // selection + bulk actions state
   const [selected, setSelected] = useState(() => new Set());
@@ -347,17 +352,28 @@ function LeadsTable({
   };
 
   // delete (supports single or array)
-  const handleDelete = async (keyOrKeys) => {
+  const requestDelete = (keyOrKeys) => {
     const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
     if (!keys.length) return;
+    setPendingDeleteKeys(keys);
+    setDeleteOpen(true);
+  };
 
-    const confirmMsg =
-      keys.length === 1
-        ? "Are you sure you want to delete this record?"
-        : `Delete ${keys.length} selected lead(s)? This cannot be undone.`;
+  const cancelDelete = () => {
+    if (loading) return;
+    setDeleteOpen(false);
+    setPendingDeleteKeys([]);
+  };
 
-    if (!window.confirm(confirmMsg)) return;
+  const confirmDelete = async () => {
+    const keys = pendingDeleteKeys;
+    setDeleteOpen(false);
+    setPendingDeleteKeys([]);
+    await performDelete(keys);
+  };
 
+  const performDelete = async (keys) => {
+    if (!keys.length) return;
     setLoading(true);
     try {
       const headers = await buildHeaders();
@@ -454,10 +470,17 @@ function LeadsTable({
         />
       )}
 
-      <h1>Leads</h1>
+      <DeleteOptionsModal
+        open={deleteOpen}
+        loading={loading}
+        count={pendingDeleteKeys.length}
+        onCancel={cancelDelete}
+        onDelete={confirmDelete}
+        showConvert={false}
+      />
 
       {/* Toolbar with Actions dropdown */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+      <div className="ct-toolbar">
         <div ref={actionsRef} style={{ position: "relative" }}>
           <button
             className="mass-actions-btn"
@@ -492,7 +515,7 @@ function LeadsTable({
 
               <button
                 className="dropdown-item"
-                onClick={() => handleDelete(Array.from(selected))}
+                onClick={() => requestDelete(Array.from(selected))}
                 disabled={loading || selected.size === 0}
                 aria-disabled={selected.size === 0}
               >
@@ -507,22 +530,26 @@ function LeadsTable({
                 Mark as Contacted
               </button>
 
-              <div style={{ padding: "6px 12px", fontSize: 12, color: "#666" }}>
-                {selected.size === 0 ? "No rows selected" : `${selected.size} selected`}
-              </div>
+              {selected.size > 0 && (
+                <div className="dropdown-item" style={{ pointerEvents: "none", opacity: 0.6 }}>
+                  {selected.size} selected
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {selected.size > 0 && <div style={{ fontSize: 14 }}>{selected.size} selected</div>}
+        {selected.size > 0 && (
+          <span className="ct-selected-count">{selected.size} selected</span>
+        )}
       </div>
 
       <table className="ct-client-table">
         <thead>
           <tr>
-            <th className="small">
+            <th className="ct-small">
               <button className="select-all-button" onClick={() => selectAll()}>
-                Select <br /> All
+                Select All
               </button>
             </th>
 
@@ -705,7 +732,7 @@ function LeadsTable({
                       { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
                       { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
                       { label: "Convert to Client", onClick: () => handleConvertToClient(lead) },
-                      { label: "Delete", onClick: () => handleDelete(lead.key) },
+                      { label: "Delete", onClick: () => requestDelete(lead.key) },
                     ]}
                   />
                 </td>

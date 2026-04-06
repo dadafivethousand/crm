@@ -229,16 +229,99 @@
 /* ═══════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════ */
-@media (max-width: 768px) {
+
+/* ── Tablet ── */
+@media (max-width: 900px) {
   .ct-client-table-container {
     margin: var(--space-3);
-    border-radius: var(--radius-md);
   }
 
   .ct-client-table th,
   .ct-client-table td {
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-sm);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  /* Table card: flush, no rounded card on mobile */
+  .ct-client-table-container {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+
+  /* Toolbar stacks */
+  .ct-toolbar {
+    padding: var(--space-2) var(--space-3);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .ct-search-wrap {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Tighter cells */
+  .ct-client-table th,
+  .ct-client-table td {
+    padding: 8px 10px;
+    font-size: var(--font-xs);
+  }
+
+  /* Reduce small column width */
+  .ct-small {
+    height: 44px;
+  }
+
+  /* Column widths loosen up — let the table scroll */
+  .ct-th-firstName,
+  .ct-th-lastName {
+    width: 90px;
+    min-width: 90px;
+  }
+
+  .ct-th-email {
+    width: 160px;
+    min-width: 160px;
+  }
+
+  .ct-th-phone {
+    width: 110px;
+    min-width: 110px;
+  }
+
+  .ct-th-startDate,
+  .ct-th-endDate {
+    width: 90px;
+    min-width: 90px;
+  }
+
+  .ct-th-membershipDuration {
+    width: 90px;
+    min-width: 90px;
+  }
+
+  /* Dropdowns don't overflow screen */
+  .actions-dropdown,
+  .individual-actions-dropdown {
+    min-width: 160px;
+    max-width: calc(100vw - 32px);
+  }
+
+  /* Status badge slightly smaller */
+  .status-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  /* Notes button narrower */
+  .nm-notes-btn {
+    width: 160px;
   }
 }
 
@@ -400,6 +483,67 @@ input[type="checkbox"] {
 
 .dropdown-item + .dropdown-item {
   border-top: 1px solid var(--gray-100);
+}
+
+/* ── Table Toolbar ── */
+.ct-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+}
+
+.ct-selected-count {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ── Search ── */
+.ct-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+}
+
+.ct-search-input {
+  width: 100%;
+  padding: 7px 12px 7px 32px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-sm);
+  font-family: var(--font-family);
+  background: var(--gray-50);
+  color: var(--text);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.ct-search-input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
+  background: #fff;
+}
+
+.ct-search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.ct-search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  font-size: 14px;
+  pointer-events: none;
+  line-height: 1;
 }
 
 /* ── Select All Button ── */

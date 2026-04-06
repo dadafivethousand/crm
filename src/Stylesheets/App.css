@@ -1,9 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
 /* ═══════════════════════════════════════════
    DESIGN TOKENS — Premium SaaS Theme
    ═══════════════════════════════════════════ */
@@ -199,27 +195,371 @@ h1 {
 }
 
 /* ═══════════════════════════════════════════
-   MAIN CRM SHELL
+   APP SHELL
    ═══════════════════════════════════════════ */
 .crm-container {
-  height: 100vh;
-  width: 100vw;
-  margin: var(--space-10) auto 60px;
-  padding: var(--space-8) var(--space-6) var(--space-10);
+  width: min(1520px, calc(100vw - 48px));
+  height: calc(100vh - 80px);
+  margin: 40px auto;
   border-radius: var(--radius-xl);
   background: #fff;
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-xl);
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Logo styling */
-.crm-container img {
-  width: 190px;
-  max-width: 60vw;
-  display: block;
-  margin: var(--space-4) auto var(--space-3);
+/* ── Header ── */
+.crm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  height: 56px;
+  border-bottom: 1px solid var(--gray-100);
+  flex-shrink: 0;
+  background: #fff;
+  gap: var(--space-4);
+}
+
+.crm-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.crm-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.crm-logo {
+  height: 28px;
+  width: auto;
   object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ── Gym segmented toggle ── */
+.crm-gym-toggle {
+  display: flex;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+  align-items: center;
+}
+
+.crm-gym-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  height: 30px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  opacity: 0.38;
+  filter: grayscale(0.3);
+}
+
+.crm-gym-btn:disabled {
+  cursor: default;
+}
+
+.crm-gym-btn--active {
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  opacity: 1;
+  filter: none;
+}
+
+.crm-gym-btn img {
+  height: 20px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Logout ── */
+.logout-button {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.logout-button:hover {
+  background: var(--danger-50);
+  border-color: var(--danger-300);
+  color: var(--danger-600);
+}
+
+/* ── Nav bar (tabs + actions) ── */
+.crm-nav-bar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  border-bottom: 1px solid var(--gray-100);
+  flex-shrink: 0;
+  background: #fff;
+  min-height: 44px;
+}
+
+.crm-nav-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.crm-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: none;
+  background: transparent;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.crm-nav-tab:hover {
+  color: var(--text);
+}
+
+.crm-nav-tab--active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+.crm-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 1px 6px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  line-height: 1.5;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.crm-nav-tab--active .crm-nav-badge {
+  background: var(--brand-50);
+  color: var(--brand);
+}
+
+.crm-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+/* ── Content area (scrollable) ── */
+.crm-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Loading text ── */
+.crm-loading {
+  margin: var(--space-6) 0;
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--text-faint);
+}
+
+/* ── Add client buttons ── */
+.plus {
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: linear-gradient(135deg, var(--success-500), var(--success-600));
+  color: #fff;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  font-family: var(--font-family);
+  letter-spacing: var(--letter-wide);
+  cursor: pointer;
+  box-shadow: var(--shadow-success);
+  transition:
+    transform 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out),
+    filter var(--transition-fast);
+  white-space: nowrap;
+}
+
+.plus:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.32);
+  filter: brightness(1.05);
+}
+
+.plus:active {
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   STATUS BADGES
+   ═══════════════════════════════════════════ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.status-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-active {
+  background: var(--success-50);
+  color: var(--success-700);
+}
+
+.status-active::before {
+  background: var(--success-500);
+}
+
+.status-expired {
+  background: var(--danger-50);
+  color: var(--danger-700);
+}
+
+.status-expired::before {
+  background: var(--danger-500);
+}
+
+.status-expiring {
+  background: var(--warning-50);
+  color: var(--warning-600);
+}
+
+.status-expiring::before {
+  background: var(--warning-500);
+}
+
+/* ═══════════════════════════════════════════
+   SKELETON LOADER
+   ═══════════════════════════════════════════ */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton-row td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.skeleton-line {
+  height: 13px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--gray-100) 25%,
+    var(--gray-50)  50%,
+    var(--gray-100) 75%
+  );
+  background-size: 600px 100%;
+  animation: skeleton-shimmer 1.4s infinite linear;
+}
+
+.skeleton-line--xs  { width: 30%; }
+.skeleton-line--sm  { width: 50%; }
+.skeleton-line--md  { width: 70%; }
+.skeleton-line--lg  { width: 90%; }
+
+/* ── Avatar initials ── */
+.ct-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ── Empty state ── */
+.ct-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-6);
+  color: var(--text-faint);
+}
+
+.ct-empty-icon {
+  font-size: 36px;
+  opacity: 0.35;
+}
+
+.ct-empty-text {
+  font-size: var(--font-sm);
+  font-weight: 500;
+}
+
+/* ── Date cell ── */
+.ct-date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
 }
 
 /* ═══════════════════════════════════════════
@@ -232,177 +572,106 @@ h1 {
   gap: var(--space-3);
 }
 
-.center {
-  margin: 0 auto;
-  text-align: center;
-}
-
 /* ═══════════════════════════════════════════
-   GYM TOGGLE (RH vs MAPLE)
+   TABLET  (≤ 900px)
    ═══════════════════════════════════════════ */
-.toggle-table-display {
-  margin: 0 auto;
-  display: block;
-  min-width: 160px;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-pill);
-  border: 1.5px solid var(--gray-300);
-  background: var(--card);
-  color: var(--text);
-  cursor: pointer;
-  transition:
-    transform 0.25s var(--ease-out),
-    box-shadow 0.25s var(--ease-out),
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    opacity 0.3s var(--ease-in-out);
-}
-
-.toggle-table-display img {
-  width: 150px;
-  max-width: 42vw;
-  margin: var(--space-1) auto;
-}
-
-/* Active gym — premium glow */
-.bright-and-center {
-  opacity: 1;
-  transform: scale(1.06);
-  background: linear-gradient(135deg, var(--brand-50), #fff);
-  border-color: var(--brand-300);
-  box-shadow:
-    0 0 0 3px rgba(52, 120, 255, 0.12),
-    0 6px 20px rgba(20, 69, 225, 0.15);
-}
-
-/* Inactive gym */
-.not-dim {
-  opacity: 0.32;
-  filter: grayscale(0.15);
-}
-
-.not-dim:hover {
-  opacity: 0.55;
-}
-
-/* ═══════════════════════════════════════════
-   ADD CLIENT BUTTONS
-   ═══════════════════════════════════════════ */
-.adding-client-buttons {
-  margin: var(--space-5) auto var(--space-6);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  justify-content: center;
-}
-
-.plus {
-  min-width: 150px;
-  padding: 10px 20px;
-  border-radius: var(--radius-pill);
-  border: none;
-  background: linear-gradient(135deg, var(--success-500), var(--success-600));
-  color: #fff;
-  font-size: var(--font-base);
-  font-weight: 600;
-  letter-spacing: var(--letter-wide);
-  cursor: pointer;
-  box-shadow: var(--shadow-success);
-  transition:
-    transform 0.2s var(--ease-out),
-    box-shadow 0.2s var(--ease-out),
-    filter var(--transition-fast);
-}
-
-.plus:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(22, 163, 74, 0.35);
-  filter: brightness(1.06);
-}
-
-.plus:active {
-  transform: translateY(0);
-}
-
-/* ═══════════════════════════════════════════
-   SECTION TOGGLE BUTTONS
-   ═══════════════════════════════════════════ */
-.crm-container > .toggle-table-display {
-  margin-top: var(--space-3);
-  margin-bottom: var(--space-1);
-  padding: var(--space-2) var(--space-5);
-  font-size: var(--font-base);
-  font-weight: 600;
-  text-align: center;
-  background: var(--gray-50);
-  border-color: var(--gray-200);
-}
-
-.crm-container > .toggle-table-display:hover:not(:disabled) {
-  background: var(--brand-50);
-  border-color: var(--brand-300);
-  box-shadow: 0 4px 12px rgba(20, 69, 225, 0.1);
-  transform: translateY(-1px);
-}
-
-/* Loading text */
-.crm-container p {
-  margin: var(--space-2) 0;
-  text-align: center;
-  font-size: var(--font-sm);
-  color: var(--text-muted);
-}
-
-/* ═══════════════════════════════════════════
-   LOGOUT BUTTON
-   ═══════════════════════════════════════════ */
-.logout-button {
-  background: var(--gray-100);
-  color: var(--danger-600);
-  padding: 10px var(--space-5);
-  border: 1.5px solid var(--danger-border);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-sm);
-  font-weight: 600;
-  margin: var(--space-10) auto 0;
-  cursor: pointer;
-  width: min(220px, 60%);
-  display: block;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform 0.15s var(--ease-out);
-}
-
-.logout-button:hover {
-  background: var(--danger-50);
-  border-color: var(--danger-500);
-  color: var(--danger-700);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-danger);
-}
-
-/* ═══════════════════════════════════════════
-   MOBILE
-   ═══════════════════════════════════════════ */
-@media (max-width: 480px) {
+@media (max-width: 900px) {
   .crm-container {
-    margin: var(--space-4) 8px var(--space-8);
-    padding: var(--space-5) var(--space-3) var(--space-6);
-    border-radius: var(--radius-lg);
+    width: calc(100vw - 32px);
+    height: calc(100vh - 48px);
+    margin: 24px auto;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE  (≤ 600px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 600px) {
+  /* ── Body ── */
+  body {
+    background: #fff;
   }
 
-  .toggle-table-display img {
-    width: 120px;
+  /* ── Shell ── */
+  .crm-container {
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
   }
 
-  .plus {
-    width: 100%;
+  /* ── Header ── */
+  .crm-header {
+    padding: 0 var(--space-3);
+    height: 48px;
+    gap: var(--space-2);
+  }
+
+  .crm-gym-toggle {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .crm-gym-btn {
+    padding: 3px 8px;
+    height: 26px;
+  }
+
+  .crm-gym-btn img {
+    height: 16px;
   }
 
   .logout-button {
-    width: 70%;
+    padding: 5px 10px;
+    font-size: var(--font-xs);
+  }
+
+  /* ── Nav bar ── */
+  .crm-nav-bar {
+    padding: 0 var(--space-3);
+    flex-wrap: wrap;
+    gap: 0;
+    min-height: unset;
+  }
+
+  /* Tabs row: horizontally scrollable, no wrap */
+  .crm-nav-tabs {
+    flex: 0 0 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .crm-nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .crm-nav-tab {
+    padding: 0 var(--space-3);
+    font-size: var(--font-xs);
+    min-height: 40px;
+    flex-shrink: 0;
+  }
+
+  /* Actions row: full-width, stacks below tabs */
+  .crm-nav-actions {
+    flex: 0 0 100%;
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--gray-100);
+    gap: var(--space-2);
+  }
+
+  .plus {
+    flex: 1;
+    text-align: center;
+    font-size: var(--font-xs);
+    padding: 6px 10px;
+  }
+
+  /* ── Loading ── */
+  .crm-loading {
+    margin: var(--space-4) 0;
   }
 }

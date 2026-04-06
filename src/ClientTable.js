@@ -11,6 +11,16 @@ import BulkActionsDropdown from "./Components/BulkActionsDropdown";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
 import SortableTh from "./Components/SortableTh";
 
+function getMembershipStatus(endDate) {
+  if (!endDate) return null;
+  const end = new Date(endDate);
+  const now = new Date();
+  const diffDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return "expired";
+  if (diffDays <= 14) return "expiring";
+  return "active";
+}
+
 function parseNotes(raw) {
   if (!raw) return [];
   if (typeof raw === "string") return raw.trim() ? [{ text: raw.trim(), timestamp: null, author: "legacy" }] : [];
@@ -26,6 +36,7 @@ function ClientTable({
   user,  // still accepted if used elsewhere
   buildHeaders,
 }) {
+  const [search, setSearch] = useState("");
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState("firstName");
@@ -196,6 +207,18 @@ function ClientTable({
   const adultClients = (clients || []).filter(
     (client) => client?.data && !client.data.kidsMembership
   );
+
+  const filteredClients = search.trim()
+    ? adultClients.filter((c) => {
+        const q = search.toLowerCase();
+        return (
+          c.data?.firstName?.toLowerCase().includes(q) ||
+          c.data?.lastName?.toLowerCase().includes(q) ||
+          c.data?.email?.toLowerCase().includes(q) ||
+          c.data?.phone?.toLowerCase().includes(q)
+        );
+      })
+    : adultClients;
 
   const toggleSelect = (key) => {
     setSelected((prev) => {
@@ -534,10 +557,18 @@ function ClientTable({
         />
       )}
 
-      <h1>{adultClients.length} Adult & Teen Students</h1>
-
-      {/* Bulk actions toolbar */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+      {/* Toolbar: search + bulk actions */}
+      <div className="ct-toolbar">
+        <div className="ct-search-wrap">
+          <span className="ct-search-icon">🔍</span>
+          <input
+            className="ct-search-input"
+            type="text"
+            placeholder="Search clients…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <BulkActionsDropdown
           actionsRef={actionsRef}
           open={actionsOpen}
@@ -546,8 +577,9 @@ function ClientTable({
           selectedCount={selected.size}
           items={bulkItems}
         />
-
-        {selected.size > 0 && <div style={{ fontSize: 14 }}>{selected.size} selected</div>}
+        {selected.size > 0 && (
+          <span className="ct-selected-count">{selected.size} selected</span>
+        )}
       </div>
 
       <table className="ct-client-table">
@@ -555,7 +587,7 @@ function ClientTable({
           <tr>
             <th className="ct-small">
               <button className="select-all-button" onClick={selectAll}>
-                Select<br />All
+                Select All
               </button>
             </th>
 
@@ -578,7 +610,19 @@ function ClientTable({
         </thead>
 
         <tbody>
-          {adultClients.map((client, index) => (
+          {filteredClients.length === 0 && (
+            <tr>
+              <td colSpan={headers.length + 3}>
+                <div className="ct-empty-state">
+                  <span className="ct-empty-icon">🥋</span>
+                  <p className="ct-empty-text">
+                    {search.trim() ? "No clients match your search" : "No clients yet"}
+                  </p>
+                </div>
+              </td>
+            </tr>
+          )}
+          {filteredClients.map((client, index) => (
             <tr
               key={client.key ?? index}
               className={
@@ -665,6 +709,13 @@ function ClientTable({
                         <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
                           {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
                         </button>
+                      ) : header.key === "endDate" ? (
+                        <div className="ct-date-cell">
+                          <span>{client.data?.[header.key]}</span>
+                          {getMembershipStatus(client.data?.endDate) === "expired" && (
+                            <span className="status-badge status-expired">Expired</span>
+                          )}
+                        </div>
                       ) : (
                         client.data?.[header.key]
                       )}

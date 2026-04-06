@@ -12,6 +12,7 @@ export default function DeleteOptionsModal({
   onCancel,
   onDelete,
   onDeleteAndSaveAsLead,
+  showConvert = true,
 }) {
   const cardRef = useRef(null);
   const cancelRef = useRef(null);
@@ -50,7 +51,7 @@ export default function DeleteOptionsModal({
 
   return createPortal(
     <div
-      className="dom-overlay"
+      className="modal-overlay dom-overlay"
       role="dialog"
       aria-modal="true"
       onMouseDown={() => {
@@ -76,15 +77,17 @@ export default function DeleteOptionsModal({
             Cancel
           </button>
 
-          <button
-            className="dom-btn dom-primary"
-            onClick={onDeleteAndSaveAsLead}
-            disabled={loading}
-            type="button"
-            title="Save as lead first, then delete"
-          >
-            Delete &amp; Save as Lead
-          </button>
+          {showConvert && (
+            <button
+              className="dom-btn dom-primary"
+              onClick={onDeleteAndSaveAsLead}
+              disabled={loading}
+              type="button"
+              title="Save as lead first, then delete"
+            >
+              Delete &amp; Save as Lead
+            </button>
+          )}
 
           <button
             className="dom-btn dom-danger"

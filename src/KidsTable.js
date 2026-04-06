@@ -539,10 +539,8 @@ function KidsTable({
         />
       )}
 
-      <h1>{(kids || []).length} Kid Students</h1>
-
-      {/* ✅ Bulk actions toolbar (outsourced) */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+      {/* Bulk actions toolbar */}
+      <div className="ct-toolbar">
         <BulkActionsDropdown
           actionsRef={actionsRef}
           open={actionsOpen}
@@ -551,8 +549,9 @@ function KidsTable({
           selectedCount={selected.size}
           items={bulkItems}
         />
-
-        {selected.size > 0 && <div style={{ fontSize: 14 }}>{selected.size} selected</div>}
+        {selected.size > 0 && (
+          <span className="ct-selected-count">{selected.size} selected</span>
+        )}
       </div>
 
       <table className="ct-client-table">
@@ -560,7 +559,7 @@ function KidsTable({
           <tr>
             <th className="ct-small">
               <button className="select-all-button" onClick={selectAll}>
-                Select<br />All
+                Select All
               </button>
             </th>
 
