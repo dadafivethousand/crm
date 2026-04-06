@@ -5,10 +5,13 @@
 /* ── Container ── */
 .ct-client-table-container {
   margin: var(--space-5);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  box-shadow:
+    0 12px 32px rgba(15, 23, 42, 0.06),
+    0 2px 8px rgba(15, 23, 42, 0.04);
   overflow: hidden;
 }
 
@@ -20,8 +23,9 @@
   align-items: center;
   gap: var(--space-3);
   padding: 10px var(--space-5);
-  border-bottom: 1px solid var(--gray-100);
-  background: var(--gray-25);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 0.85));
 }
 
 .ct-stat {
@@ -61,9 +65,9 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   flex-wrap: wrap;
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .ct-selected-count {
@@ -85,9 +89,9 @@
 
 .ct-search-input {
   width: 100%;
-  padding: 7px 12px 7px 34px;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-md);
+  padding: 9px 12px 9px 36px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
   font-size: var(--font-sm);
   font-family: var(--font-family);
   background: var(--gray-50);
@@ -124,6 +128,7 @@
 .ct-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.55), rgba(255, 255, 255, 0));
 }
 
 /* ── Table ── */
@@ -138,7 +143,7 @@
 /* ── Cells ── */
 .ct-client-table th,
 .ct-client-table td {
-  padding: 11px 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--gray-100);
   vertical-align: middle;
 }
@@ -149,7 +154,7 @@
 
 /* ── Column header ── */
 .ct-client-table thead th {
-  background: var(--gray-50);
+  background: rgba(248, 250, 252, 0.96);
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
@@ -199,7 +204,7 @@
 }
 
 .ct-client-table tbody tr:hover {
-  background: #f5f8ff;
+  background: linear-gradient(90deg, rgba(20, 69, 225, 0.035), rgba(20, 69, 225, 0.02));
 }
 
 /* ── Expired row ── */
@@ -234,13 +239,13 @@
 .ct-name-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 
 /* ── Avatar ── */
 .ct-avatar {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
   border-radius: var(--radius-pill);
   background: var(--brand-50);
@@ -299,7 +304,7 @@
   background: transparent;
   border-color: var(--gray-200);
   color: var(--gray-500);
-  padding: 5px 7px;
+  padding: 4px 6px;
 }
 .ct-edit-btn:hover {
   background: var(--brand-50);
@@ -332,8 +337,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: 1.5px solid transparent;
   border-radius: var(--radius-sm);
@@ -516,7 +521,7 @@ input[type="checkbox"] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   font-size: var(--font-xs);
   font-weight: 500;
   color: var(--gray-600);
@@ -578,10 +583,10 @@ input[type="checkbox"] {
 .ct-card-list { display: none; }
 
 .ct-card {
-  padding: 14px 16px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--gray-100);
-  background: #fff;
-  transition: background 0.1s;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  transition: background 0.1s, box-shadow 0.15s;
 }
 
 .ct-card:last-child { border-bottom: none; }
@@ -592,15 +597,23 @@ input[type="checkbox"] {
 }
 
 .ct-card--selected {
-  background: #f5f8ff;
+  background: linear-gradient(180deg, rgba(238, 245, 255, 0.9), rgba(245, 248, 255, 0.96));
 }
 
 /* Card header: checkbox + avatar + name + kebab */
 .ct-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ct-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .ct-card-name-wrap {
@@ -612,10 +625,19 @@ input[type="checkbox"] {
   flex-wrap: wrap;
 }
 
+.ct-card-name,
 .ct-card-fullname {
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ct-card-sub {
+  font-size: 11px;
+  color: var(--text-faint);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -623,7 +645,7 @@ input[type="checkbox"] {
 
 .ct-card-edit-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -632,22 +654,22 @@ input[type="checkbox"] {
 .ct-card-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-left: 40px; /* align with name (avatar width + gap) */
+  gap: 4px;
+  padding-left: 36px;
 }
 
 .ct-card-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: var(--font-sm);
+  gap: 6px;
+  font-size: 12px;
   color: var(--text-secondary);
   text-decoration: none;
-  min-height: 26px;
+  min-height: 20px;
 }
 
 .ct-card-row--notes {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .ct-card-link {
@@ -665,29 +687,39 @@ input[type="checkbox"] {
 }
 
 .ct-card-row-value {
-  font-size: var(--font-sm);
+  font-size: 12px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.ct-card-row-label {
+  width: 66px;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
 /* Dates row: 3 items side by side */
 .ct-card-dates {
   display: flex;
-  gap: 16px;
-  margin-top: 4px;
+  gap: 10px;
+  margin-top: 2px;
   flex-wrap: wrap;
 }
 
 .ct-card-date-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .ct-card-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -698,8 +730,8 @@ input[type="checkbox"] {
 .ct-card-edit-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 4px 0 4px 40px;
+  gap: 8px;
+  padding: 2px 0 2px 36px;
 }
 
 .ct-card-field {
@@ -710,7 +742,7 @@ input[type="checkbox"] {
 
 .ct-card-input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-sm);
   font-size: var(--font-sm);
@@ -728,6 +760,21 @@ input[type="checkbox"] {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
   background: #fff;
+}
+
+.ct-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding-left: 36px;
+}
+
+.ct-avatar--lg {
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
 }
 
 /* ═══════════════════════════════════════════
@@ -758,11 +805,22 @@ input[type="checkbox"] {
   /* Hide table, show cards */
   .ct-table-wrap { display: none; }
   .ct-card-list  { display: block; }
+  .ct-table-wrap--force-mobile { display: block; }
 
   /* Toolbar stacks */
   .ct-toolbar {
-    padding: var(--space-2) var(--space-3);
-    gap: var(--space-2);
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .ct-table-wrap--force-mobile .ct-client-table {
+    min-width: 760px;
+  }
+
+  .ct-table-wrap--force-mobile .ct-client-table th,
+  .ct-table-wrap--force-mobile .ct-client-table td {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 
   .ct-search-wrap {
@@ -772,9 +830,13 @@ input[type="checkbox"] {
 
   /* Stats bar compact */
   .ct-stats-bar {
-    padding: 8px var(--space-3);
-    gap: var(--space-2);
+    padding: 7px 10px;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+
+  .ct-stats-bar::-webkit-scrollbar { display: none; }
 
   .ct-stat { font-size: var(--font-xs); }
 
@@ -789,7 +851,91 @@ input[type="checkbox"] {
   .nm-notes-btn { max-width: 100%; }
 
   .status-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
+  .ct-card {
+    padding: 9px 10px;
+  }
+
+  .ct-card--expired {
+    padding-left: 8px;
+  }
+
+  .ct-card-header {
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .ct-card-name,
+  .ct-card-fullname {
+    font-size: 13px;
+  }
+
+  .ct-card-sub {
     font-size: 10px;
-    padding: 1px 6px;
+  }
+
+  .ct-card-body,
+  .ct-card-edit-body,
+  .ct-card-actions {
+    padding-left: 28px;
+  }
+
+  .ct-card-body {
+    gap: 3px;
+  }
+
+  .ct-card-row {
+    min-height: 18px;
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .ct-card-row-icon svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .ct-card-row-label {
+    width: 56px;
+    font-size: 9px;
+  }
+
+  .ct-card-row-value {
+    font-size: 11px;
+  }
+
+  .ct-card-dates {
+    gap: 8px 10px;
+  }
+
+  .ct-card-date-item {
+    min-width: 58px;
+  }
+
+  .ct-avatar,
+  .ct-avatar--lg {
+    width: 24px;
+    height: 24px;
+    font-size: 9px;
+  }
+
+  .ct-edit-btn,
+  .ct-save-btn,
+  .ct-cancel-btn {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+
+  .ct-kebab-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nm-notes-btn {
+    padding: 2px 7px;
+    font-size: 10px;
   }
 }

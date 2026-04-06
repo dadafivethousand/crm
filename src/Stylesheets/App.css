@@ -159,7 +159,10 @@ body {
   font-size: var(--font-base);
   line-height: var(--line-height-normal);
   color: var(--text);
-  background: #edf0f4;
+  background:
+    radial-gradient(circle at top left, rgba(52, 120, 255, 0.14), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(34, 197, 94, 0.12), transparent 18%),
+    linear-gradient(180deg, #edf2f8 0%, #e7edf5 100%);
   min-height: 100vh;
 }
 
@@ -192,13 +195,19 @@ body {
   width: min(1520px, calc(100vw - 48px));
   height: calc(100vh - 80px);
   margin: 40px auto;
-  border-radius: var(--radius-xl);
-  background: #fff;
-  border: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-xl);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92)),
+    #fff;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.12),
+    0 8px 24px rgba(15, 23, 42, 0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 /* ── Header ── */
@@ -207,10 +216,11 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-6);
-  height: 54px;
-  border-bottom: 1px solid var(--gray-100);
+  height: 60px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   flex-shrink: 0;
-  background: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.92));
   gap: var(--space-4);
 }
 
@@ -239,12 +249,13 @@ body {
 /* ── Gym segmented toggle ── */
 .crm-gym-toggle {
   display: flex;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  padding: 3px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  padding: 4px;
   gap: 3px;
   align-items: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .crm-gym-btn {
@@ -258,7 +269,7 @@ body {
   background: transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
-  opacity: 0.38;
+  opacity: 0.5;
   filter: grayscale(0.3);
 }
 
@@ -267,8 +278,8 @@ body {
 }
 
 .crm-gym-btn--active {
-  background: #fff;
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
   opacity: 1;
   filter: none;
 }
@@ -287,7 +298,7 @@ body {
   background: transparent;
   color: var(--text-muted);
   padding: 6px 14px;
-  border: 1.5px solid var(--gray-200);
+  border: 1px solid rgba(148, 163, 184, 0.26);
   border-radius: var(--radius-pill);
   font-size: var(--font-sm);
   font-weight: 600;
@@ -301,8 +312,30 @@ body {
 
 .logout-button:hover {
   background: var(--danger-50);
-  border-color: var(--danger-300);
+  border-color: rgba(239, 68, 68, 0.3);
   color: var(--danger-600);
+}
+
+.crm-tenant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(20, 69, 225, 0.07);
+  color: var(--brand-800);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.crm-tenant-chip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand-500), #16a34a);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.12);
 }
 
 /* ── Nav bar (tabs + actions) ── */
@@ -310,24 +343,26 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  padding: 0 var(--space-6);
-  border-bottom: 1px solid var(--gray-100);
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   flex-shrink: 0;
-  background: #fff;
-  min-height: 44px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 0.92));
+  min-height: 52px;
 }
 
 .crm-nav-tabs {
   display: flex;
   align-items: stretch;
-  gap: 0;
+  gap: 6px;
+  padding: 8px 0;
 }
 
 .crm-nav-tab {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0 var(--space-4);
+  padding: 0 14px;
   border: none;
   background: transparent;
   font-size: var(--font-sm);
@@ -335,21 +370,23 @@ body {
   font-family: var(--font-family);
   color: var(--text-muted);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border-radius: 12px;
   transition:
     color var(--transition-fast),
-    border-color var(--transition-fast);
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
   white-space: nowrap;
 }
 
 .crm-nav-tab:hover {
   color: var(--text);
+  background: rgba(148, 163, 184, 0.1);
 }
 
 .crm-nav-tab--active {
   color: var(--brand);
-  border-bottom-color: var(--brand);
+  background: linear-gradient(180deg, rgba(20, 69, 225, 0.08), rgba(20, 69, 225, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(20, 69, 225, 0.12);
 }
 
 .crm-nav-badge {
@@ -385,6 +422,8 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.48), rgba(255, 255, 255, 0) 140px);
 }
 
 /* ── Loading text ── */
@@ -397,10 +436,10 @@ body {
 
 /* ── Add client buttons ── */
 .plus {
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
+  padding: 7px 14px;
+  border-radius: 12px;
   border: none;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
   color: #fff;
   font-size: var(--font-sm);
   font-weight: 600;
@@ -415,8 +454,8 @@ body {
 }
 
 .plus:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 4px 16px rgba(20, 69, 225, 0.3);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 24px rgba(20, 69, 225, 0.22);
   transform: translateY(-1px);
 }
 
@@ -594,7 +633,7 @@ body {
   /* ── Header ── */
   .crm-header {
     padding: 0 var(--space-3);
-    height: 50px;
+    height: 52px;
     gap: var(--space-2);
   }
 
@@ -611,8 +650,12 @@ body {
   .crm-gym-btn img { height: 18px; }
 
   .logout-button {
-    padding: 6px 12px;
+    padding: 6px 10px;
     font-size: var(--font-xs);
+  }
+
+  .crm-tenant-chip {
+    display: none;
   }
 
   /* ── Nav bar ── */
@@ -630,15 +673,15 @@ body {
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    padding: 0 var(--space-3);
+    padding: 8px var(--space-3) 6px;
   }
 
   .crm-nav-tabs::-webkit-scrollbar { display: none; }
 
   .crm-nav-tab {
-    padding: 0 var(--space-3);
-    font-size: var(--font-sm);
-    min-height: 44px;       /* 44px min touch target */
+    padding: 0 12px;
+    font-size: 12px;
+    min-height: 38px;
     flex-shrink: 0;
   }
 
@@ -646,17 +689,17 @@ body {
   .crm-nav-actions {
     display: flex;
     width: 100%;
-    padding: var(--space-2) var(--space-3);
+    padding: 8px var(--space-3) 10px;
     gap: var(--space-2);
-    border-top: 1px solid var(--gray-100);
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
   }
 
   .plus {
     flex: 1;
     text-align: center;
-    font-size: var(--font-sm);
-    padding: 9px 12px;      /* generous tap target */
-    border-radius: var(--radius-md);
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
   }
 
   /* ── Back button ── */

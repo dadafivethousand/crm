@@ -6,12 +6,15 @@ import ClientTable from "./ClientTable";
 import AddClient from "./AddClient";
 import LeadsTable from "./LeadsTable";
 import KidsTable from "./KidsTable";
+import SummerCampTable from "./SummerCampTable";
 import LoginForm from "./LoginForm";
 import { ToastProvider } from "./Components/Toast";
 
 import "./Stylesheets/App.css";
 import logo from "./Images/whitelogonobg.png";
 import rhlogo from "./Images/new_logo.png";
+
+const WORKER = "https://worker-consolidated.maxli5004.workers.dev";
 
 function App() {
   const [token, setToken] = useState(null);
@@ -31,6 +34,8 @@ function App() {
   const [showClientForm, setShowClientForm] = useState(false);
   const [convertToClientData, setConvertToClientData] = useState(null);
   const [activeTab, setActiveTab] = useState("adults");
+  const [summerCampRegistrations, setSummerCampRegistrations] = useState([]);
+  const [loadingSummerCamp, setLoadingSummerCamp] = useState(false);
   const [membershipInfo, setMembershipInfo] = useState(null);
   const [clientFormData, setClientFormData] = useState({
     firstName: "",
@@ -175,6 +180,43 @@ function App() {
     fetchLeads();
   }, [user, isMaple, buildHeaders, isLeadsReadOnlyUser]);
 
+  useEffect(() => {
+    if (!user || isLeadsReadOnlyUser || activeTab !== "summerCamp" || summerCampRegistrations.length > 0) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function fetchSummerCampRegistrations() {
+      setLoadingSummerCamp(true);
+      try {
+        const headers = await buildHeaders();
+        const res = await fetch(`${WORKER}/summer-camp-registrations`, { headers });
+        if (!isMounted) return;
+        if (res.ok) {
+          const data = await res.json();
+          setSummerCampRegistrations(data || []);
+        } else {
+          console.error("Failed to fetch summer camp registrations");
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error fetching summer camp registrations:", err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingSummerCamp(false);
+        }
+      }
+    }
+
+    fetchSummerCampRegistrations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, buildHeaders, isLeadsReadOnlyUser, summerCampRegistrations.length, user]);
+
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
   }
@@ -252,9 +294,15 @@ function App() {
     { id: "adults", label: "Teens & Adults", count: clients.length },
     { id: "kids",   label: "Kids",           count: kids.length },
     { id: "leads",  label: "Leads",          count: leads.length },
+    { id: "summerCamp", label: "Summer Camp", count: summerCampRegistrations.length },
   ];
 
-  const isLoading = activeTab === "leads" ? loadingLeads : loadingClients;
+  const isLoading =
+    activeTab === "leads"
+      ? loadingLeads
+      : activeTab === "summerCamp"
+        ? loadingSummerCamp
+        : loadingClients;
 
   return (
     <div className="crm-container">
@@ -262,7 +310,13 @@ function App() {
       {/* ── Top header ── */}
       <header className="crm-header">
         <div className="crm-header-left">{gymToggle}</div>
-        <div className="crm-header-right">{logoutButton}</div>
+        <div className="crm-header-right">
+          <div className="crm-tenant-chip">
+            <span className="crm-tenant-chip__dot" />
+            {isMaple ? "Maple" : "Richmond Hill"}
+          </div>
+          {logoutButton}
+        </div>
       </header>
 
       {/* ── Nav bar ── */}
@@ -283,7 +337,7 @@ function App() {
           ))}
         </div>
 
-        {activeTab !== "leads" && !showClientForm && (
+        {activeTab !== "leads" && activeTab !== "summerCamp" && !showClientForm && (
           <div className="crm-nav-actions">
             <button className="plus" onClick={showAdultForm}>
               + Adult
@@ -329,7 +383,7 @@ function App() {
             buildHeaders={buildHeaders}
           />
         ) : isLoading ? (
-          <p className="crm-loading">Loading…</p>
+          <p className="crm-loading">Loading...</p>
         ) : (
           <>
             {activeTab === "adults" && (
@@ -366,6 +420,13 @@ function App() {
                 token={token}
                 user={user}
                 isMaple={isMaple}
+                buildHeaders={buildHeaders}
+              />
+            )}
+            {activeTab === "summerCamp" && (
+              <SummerCampTable
+                registrations={summerCampRegistrations}
+                setRegistrations={setSummerCampRegistrations}
                 buildHeaders={buildHeaders}
               />
             )}
