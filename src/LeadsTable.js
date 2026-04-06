@@ -553,7 +553,7 @@ function LeadsTable({
               </button>
             </th>
 
-            <th className="small"></th>
+            <th className="ct-small"></th>
 
             <th onClick={() => handleSort("firstName")}>
               <div className="ct-header">
@@ -612,7 +612,7 @@ function LeadsTable({
             </th>
 
             {/* single actions column */}
-            <th className="small"></th>
+            <th className="ct-small"></th>
           </tr>
         </thead>
 
@@ -629,20 +629,21 @@ function LeadsTable({
                   />
                 </td>
 
-                <td className="small">
+                <td className="ct-small">
                   {editingRow === index ? (
-                    <>
-                      <button className="save-btn" onClick={() => handleSaveChanges(lead.key)}>
-                        ✅
-                      </button>
-                      <button className="cancel-btn" onClick={handleCancelEdit}>
-                        ❌
-                      </button>
-                    </>
+                    <div className="ct-button-flex">
+                      <button className="ct-save-btn" onClick={() => handleSaveChanges(lead.key)}>Save</button>
+                      <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+                    </div>
                   ) : (
-                    <button className="edit-btn" onClick={() => handleEditClick(index, lead.data)}>
-                      ✏️
-                    </button>
+                    <div className="ct-button-flex">
+                      <button className="ct-edit-btn" onClick={() => handleEditClick(index, lead.data)} title="Edit">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    </div>
                   )}
                 </td>
 
@@ -677,9 +678,15 @@ function LeadsTable({
                       />
                     </td>
                     <td>
-                      <button className="nm-notes-btn" onClick={() => openNotes(lead.key, lead.data.notes)}>
-                        {(() => { const n = parseNotes(lead.data.notes); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
-                      </button>
+                      {(() => {
+                        const n = parseNotes(lead.data.notes);
+                        const hasNotes = n.length > 0;
+                        return (
+                          <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(lead.key, lead.data.notes)}>
+                            {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                          </button>
+                        );
+                      })()}
                     </td>
                     <td>
                       {lead.data.createdAt
@@ -696,14 +703,28 @@ function LeadsTable({
                   </>
                 ) : (
                   <>
-                    <td><p>{lead.data.firstName}</p></td>
+                    <td>
+                    <div className="ct-name-cell">
+                      <div className="ct-avatar">
+                        {(lead.data?.firstName?.[0] || "").toUpperCase()}
+                        {(lead.data?.lastName?.[0] || "").toUpperCase()}
+                      </div>
+                      <span>{lead.data.firstName}</span>
+                    </div>
+                  </td>
                     <td>{lead.data.lastName}</td>
                     <td>{lead.data.email}</td>
                     <td>{lead.data.phone}</td>
                     <td>
-                      <button className="nm-notes-btn" onClick={() => openNotes(lead.key, lead.data.notes)}>
-                        {(() => { const n = parseNotes(lead.data.notes); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
-                      </button>
+                      {(() => {
+                        const n = parseNotes(lead.data.notes);
+                        const hasNotes = n.length > 0;
+                        return (
+                          <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(lead.key, lead.data.notes)}>
+                            {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                          </button>
+                        );
+                      })()}
                     </td>
                     <td>
                       {lead.data.createdAt
@@ -721,7 +742,7 @@ function LeadsTable({
                 )}
 
                 {/* ✅ row dropdown with ALL options incl. email/text */}
-                <td className="small">
+                <td className="ct-small">
                   <RowActionsDropdown
                     open={rowActionsOpen === index}
                     onToggle={() => setRowActionsOpen((prev) => (prev === index ? null : index))}

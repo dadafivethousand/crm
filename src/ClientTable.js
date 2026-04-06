@@ -560,7 +560,11 @@ function ClientTable({
       {/* Toolbar: search + bulk actions */}
       <div className="ct-toolbar">
         <div className="ct-search-wrap">
-          <span className="ct-search-icon">🔍</span>
+          <span className="ct-search-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </span>
           <input
             className="ct-search-input"
             type="text"
@@ -614,7 +618,12 @@ function ClientTable({
             <tr>
               <td colSpan={headers.length + 3}>
                 <div className="ct-empty-state">
-                  <span className="ct-empty-icon">🥋</span>
+                  <svg className="ct-empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
                   <p className="ct-empty-text">
                     {search.trim() ? "No clients match your search" : "No clients yet"}
                   </p>
@@ -641,30 +650,21 @@ function ClientTable({
 
               <td className="ct-small">
                 {editingRow === index ? (
-                  <>
-                    <button
-                      type="button"
-                      className="ct-save-btn"
-                      onClick={() => handleSaveChanges(client.key)}
-                    >
-                      ✅
+                  <div className="ct-button-flex">
+                    <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>
+                      Save
                     </button>
-                    <button
-                      type="button"
-                      className="ct-cancel-btn"
-                      onClick={handleCancelEdit}
-                    >
-                      ❌
+                    <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>
+                      Cancel
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <div className="ct-button-flex">
-                    <button
-                      type="button"
-                      id="ct-edit-btn"
-                      onClick={() => handleEditClick(index, client.data)}
-                    >
-                      ✏️
+                    <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
                     </button>
                   </div>
                 )}
@@ -674,11 +674,15 @@ function ClientTable({
                 <>
                   {headers.map((header) => (
                     <td key={header.key}>
-                      {header.key === "paymentStatus" ? (
-                        <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                          {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
-                        </button>
-                      ) : header.key === "membershipDuration" ? (
+                      {header.key === "paymentStatus" ? (() => {
+                        const n = parseNotes(client.data?.paymentStatus);
+                        const hasNotes = n.length > 0;
+                        return (
+                          <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                            {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                          </button>
+                        );
+                      })() : header.key === "membershipDuration" ? (
                         <select
                           value={editedData[header.key] || ""}
                           onChange={(e) => handleInputChange(e, header.key)}
@@ -705,10 +709,29 @@ function ClientTable({
                 <>
                   {headers.map((header) => (
                     <td className="ct-content" key={header.key}>
-                      {header.key === "paymentStatus" ? (
-                        <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                          {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
-                        </button>
+                      {header.key === "paymentStatus" ? (() => {
+                        const n = parseNotes(client.data?.paymentStatus);
+                        const hasNotes = n.length > 0;
+                        const label = hasNotes
+                          ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length - 1].text.slice(0, 36)}${n[n.length - 1].text.length > 36 ? "…" : ""}`
+                          : "+ Add note";
+                        return (
+                          <button
+                            className="nm-notes-btn"
+                            data-has-notes={hasNotes}
+                            onClick={() => openNotes(client.key, client.data?.paymentStatus)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })() : header.key === "firstName" ? (
+                        <div className="ct-name-cell">
+                          <div className="ct-avatar">
+                            {(client.data?.firstName?.[0] || "").toUpperCase()}
+                            {(client.data?.lastName?.[0] || "").toUpperCase()}
+                          </div>
+                          <span>{client.data?.firstName}</span>
+                        </div>
                       ) : header.key === "endDate" ? (
                         <div className="ct-date-cell">
                           <span>{client.data?.[header.key]}</span>

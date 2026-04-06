@@ -602,32 +602,19 @@ function KidsTable({
               {/* edit + do-not-mail */}
               <td className="ct-small">
                 {editingRow === index ? (
-                  <>
-                    <button
-                      type="button"
-                      className="ct-save-btn"
-                      onClick={() => handleSaveChanges(client.key)}
-                    >
-                      ✅
-                    </button>
-                    <button
-                      type="button"
-                      className="ct-cancel-btn"
-                      onClick={handleCancelEdit}
-                    >
-                      ❌
-                    </button>
-                  </>
+                  <div className="ct-button-flex">
+                    <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                    <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+                  </div>
                 ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="ct-edit-btn"
-                      onClick={() => handleEditClick(index, client.data)}
-                    >
-                      ✏️
+                  <div className="ct-button-flex">
+                    <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
                     </button>
-                  </>
+                  </div>
                 )}
               </td>
 
@@ -677,9 +664,15 @@ function KidsTable({
                     />
                   </td>
                   <td>
-                    <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                      {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
-                    </button>
+                    {(() => {
+                      const n = parseNotes(client.data?.paymentStatus);
+                      const hasNotes = n.length > 0;
+                      return (
+                        <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                          {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                        </button>
+                      );
+                    })()}
                   </td>
                   <td>
                     <select
@@ -721,9 +714,15 @@ function KidsTable({
                   <td>{client.data?.startDate}</td>
                   <td>{client.data?.endDate}</td>
                   <td>
-                    <button className="nm-notes-btn" onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                      {(() => { const n = parseNotes(client.data?.paymentStatus); return n.length > 0 ? `📝 ${n.length} · ${n[n.length-1].text.slice(0,40)}${n[n.length-1].text.length > 40 ? "…" : ""}` : "+ Add Note"; })()}
-                    </button>
+                    {(() => {
+                      const n = parseNotes(client.data?.paymentStatus);
+                      const hasNotes = n.length > 0;
+                      return (
+                        <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                          {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                        </button>
+                      );
+                    })()}
                   </td>
                   <td>{client.data?.membershipDuration}</td>
                   <td>{client.data?.parentFirstName}</td>

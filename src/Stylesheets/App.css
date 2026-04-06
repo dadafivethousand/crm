@@ -159,17 +159,8 @@ body {
   font-size: var(--font-base);
   line-height: var(--line-height-normal);
   color: var(--text);
-  background:
-    radial-gradient(ellipse 80% 60% at 10% 5%, rgba(20, 69, 225, 0.06), transparent),
-    radial-gradient(ellipse 70% 50% at 90% 90%, rgba(59, 130, 246, 0.05), transparent),
-    var(--bg);
+  background: #edf0f4;
   min-height: 100vh;
-}
-
-h1 {
-  text-align: center;
-  font-weight: 700;
-  letter-spacing: var(--letter-tight);
 }
 
 /* Custom scrollbar */
@@ -216,7 +207,7 @@ h1 {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-6);
-  height: 56px;
+  height: 54px;
   border-bottom: 1px solid var(--gray-100);
   flex-shrink: 0;
   background: #fff;
@@ -406,17 +397,16 @@ h1 {
 
 /* ── Add client buttons ── */
 .plus {
-  padding: 7px 16px;
-  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
   border: none;
-  background: linear-gradient(135deg, var(--success-500), var(--success-600));
+  background: var(--brand);
   color: #fff;
   font-size: var(--font-sm);
   font-weight: 600;
   font-family: var(--font-family);
-  letter-spacing: var(--letter-wide);
   cursor: pointer;
-  box-shadow: var(--shadow-success);
+  box-shadow: var(--shadow-brand);
   transition:
     transform 0.15s var(--ease-out),
     box-shadow 0.15s var(--ease-out),
@@ -425,13 +415,14 @@ h1 {
 }
 
 .plus:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 16px rgba(20, 69, 225, 0.3);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.32);
-  filter: brightness(1.05);
 }
 
 .plus:active {
   transform: translateY(0);
+  filter: brightness(0.97);
 }
 
 /* ═══════════════════════════════════════════

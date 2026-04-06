@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   CLIENT TABLE — Premium Data Grid
+   CLIENT TABLE — Enterprise Data Grid
    ═══════════════════════════════════════════ */
 
 /* ── Container ── */
@@ -16,476 +16,249 @@
 /* ── Table ── */
 .ct-client-table {
   border-collapse: collapse;
-  text-align: center;
+  text-align: left;
   margin: 0;
   width: 100%;
-  min-width: 800px;
+  min-width: 860px;
 }
 
+/* ── Cells ── */
 .ct-client-table th,
 .ct-client-table td {
-  padding: 10px var(--space-4);
-  border-bottom: 1px solid var(--gray-200);
-  min-width: fit-content;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--gray-100);
   vertical-align: middle;
 }
 
-/* ── Header ── */
-.ct-client-table th {
-  background: var(--gray-100);
+/* last row: no border */
+.ct-client-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Column header ── */
+.ct-client-table thead th {
+  background: var(--gray-50);
   font-weight: 600;
-  font-size: var(--font-xs);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--gray-600);
+  letter-spacing: 0.07em;
+  color: var(--gray-500);
   position: sticky;
   top: 0;
   z-index: 3;
-  border-bottom: 2px solid var(--gray-300);
+  border-bottom: 1px solid var(--gray-200);
   white-space: nowrap;
   user-select: none;
 }
 
-/* ── Rows ── */
-.ct-client-table tbody tr {
-  transition: background var(--transition-fast);
+/* Sticky header shadow when scrolled */
+.ct-client-table thead::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -4px;
+  height: 4px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.06), transparent);
+  pointer-events: none;
 }
 
-.ct-client-table tbody tr:nth-child(even) {
-  background: var(--gray-25);
+/* ── Sortable header ── */
+.ct-th-sortable {
+  cursor: pointer;
+}
+
+.ct-th-sortable:hover {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.ct-th-sorted {
+  color: var(--brand);
+  background: var(--brand-50);
+}
+
+.ct-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ct-sort-icon {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--brand);
+}
+
+.ct-sort-idle {
+  color: var(--gray-300);
+  font-size: 10px;
+}
+
+/* ── Rows ── */
+.ct-client-table tbody tr {
+  transition: background 0.1s;
 }
 
 .ct-client-table tbody tr:hover {
-  background: var(--brand-50);
+  background: #f5f8ff;
 }
 
-/* ── Sortable Headers ── */
-.ct-table-header {
-  cursor: pointer;
-  transition: color var(--transition-fast);
+/* ── Expired row ── */
+.ct-client-table tbody tr.ct-red {
+  border-left: 3px solid var(--danger-400);
 }
 
-.ct-table-header:hover {
-  color: var(--brand);
+.ct-client-table tbody tr.ct-red td:first-child {
+  padding-left: 13px; /* compensate for the left border */
 }
 
-.ct-header-arrow {
-  margin-left: 6px;
-  font-size: 10px;
-  opacity: 0.5;
+.ct-client-table tbody tr.ct-red:hover {
+  background: rgba(239, 68, 68, 0.04);
 }
 
-.ct-header-arrow:hover {
-  cursor: pointer;
-  opacity: 1;
-}
-
-/* ═══════════════════════════════════════════
-   ACTION BUTTONS — Refined pill style
-   ═══════════════════════════════════════════ */
-.ct-edit-btn,
-.ct-save-btn,
-.ct-cancel-btn,
-.ct-delete-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2px auto;
-  padding: 4px 12px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  letter-spacing: var(--letter-wide);
-  border: none;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform 0.1s var(--ease-out);
-}
-
-.ct-edit-btn:active,
-.ct-save-btn:active,
-.ct-cancel-btn:active,
-.ct-delete-btn:active {
-  transform: scale(0.96);
-}
-
-.ct-edit-btn {
-  background: var(--brand-50);
-  color: var(--brand);
-  border: 1px solid var(--brand-200);
-}
-.ct-edit-btn:hover {
-  background: var(--brand-100);
-  box-shadow: 0 2px 8px rgba(20, 69, 225, 0.15);
-}
-
-.ct-save-btn {
-  background: var(--success-50);
-  color: var(--success-700);
-  border: 1px solid var(--success-100);
-}
-.ct-save-btn:hover {
-  background: var(--success-100);
-  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
-}
-
-.ct-cancel-btn {
-  background: var(--gray-100);
-  color: var(--gray-600);
-  border: 1px solid var(--gray-200);
-}
-.ct-cancel-btn:hover {
-  background: var(--gray-200);
-}
-
-.ct-delete-btn {
-  background: var(--danger-50);
-  color: var(--danger-600);
-  border: 1px solid var(--danger-100);
-}
-.ct-delete-btn:hover {
-  background: var(--danger-100);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
-}
-
-/* ── No-Mail Button ── */
-.ct-no-mail-button {
-  background: var(--card);
-  border: 1.5px solid var(--danger-border);
-  font-size: var(--font-sm);
-  color: var(--danger-600);
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  font-weight: 500;
-  transition: all var(--transition-fast);
-}
-
-.ct-no-mail-button:hover {
-  background: var(--danger-50);
-  border-color: var(--danger-500);
-}
-
-/* ── Active Status Badge ── */
-.active {
-  background: var(--danger-50);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-700);
-  font-weight: 600;
-  font-size: var(--font-xs);
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-}
-
-/* ── Small column ── */
+/* ── Centered utility columns ── */
 .ct-small {
-  height: 55px;
+  width: 48px;
   text-align: center;
+  padding: 0 8px !important;
 }
 
 .ct-content {
   white-space: nowrap;
 }
 
-.ct-small button {
-  display: block;
-  padding: var(--space-1) var(--space-2);
-  font-size: 11px;
-}
-
-/* ═══════════════════════════════════════════
-   OVERDUE / EXPIRED ROW — Subtle accent
-   ═══════════════════════════════════════════ */
-.ct-red {
-  background: var(--danger-50);
-  border-left: 3px solid var(--danger-500);
-  color: var(--danger-800);
-  font-weight: 600;
-  padding: var(--space-2) var(--space-3);
-  text-align: center;
-  font-size: var(--font-sm);
-}
-
-/* Override row bg for overdue */
-.ct-client-table tbody tr:has(.ct-red) {
-  background: var(--danger-50) !important;
-}
-
-.ct-client-table tbody tr:has(.ct-red):hover {
-  background: var(--danger-100) !important;
-}
-
-/* ── Edit/no-mail sizing ── */
-.ct-edit-btn,
-.ct-no-mail-button {
-  font-size: var(--font-xs);
-  min-width: 35px;
-  display: inline-flex;
-  justify-content: center;
-}
-
-/* ═══════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════ */
-
-/* ── Tablet ── */
-@media (max-width: 900px) {
-  .ct-client-table-container {
-    margin: var(--space-3);
-  }
-
-  .ct-client-table th,
-  .ct-client-table td {
-    padding: var(--space-2) var(--space-3);
-    font-size: var(--font-sm);
-  }
-}
-
-/* ── Mobile ── */
-@media (max-width: 600px) {
-  /* Table card: flush, no rounded card on mobile */
-  .ct-client-table-container {
-    margin: 0;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    box-shadow: none;
-  }
-
-  /* Toolbar stacks */
-  .ct-toolbar {
-    padding: var(--space-2) var(--space-3);
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .ct-search-wrap {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-
-  /* Tighter cells */
-  .ct-client-table th,
-  .ct-client-table td {
-    padding: 8px 10px;
-    font-size: var(--font-xs);
-  }
-
-  /* Reduce small column width */
-  .ct-small {
-    height: 44px;
-  }
-
-  /* Column widths loosen up — let the table scroll */
-  .ct-th-firstName,
-  .ct-th-lastName {
-    width: 90px;
-    min-width: 90px;
-  }
-
-  .ct-th-email {
-    width: 160px;
-    min-width: 160px;
-  }
-
-  .ct-th-phone {
-    width: 110px;
-    min-width: 110px;
-  }
-
-  .ct-th-startDate,
-  .ct-th-endDate {
-    width: 90px;
-    min-width: 90px;
-  }
-
-  .ct-th-membershipDuration {
-    width: 90px;
-    min-width: 90px;
-  }
-
-  /* Dropdowns don't overflow screen */
-  .actions-dropdown,
-  .individual-actions-dropdown {
-    min-width: 160px;
-    max-width: calc(100vw - 32px);
-  }
-
-  /* Status badge slightly smaller */
-  .status-badge {
-    font-size: 10px;
-    padding: 1px 6px;
-  }
-
-  /* Notes button narrower */
-  .nm-notes-btn {
-    width: 160px;
-  }
-}
-
-/* ═══════════════════════════════════════════
-   TABLE INPUTS
-   ═══════════════════════════════════════════ */
-.ct-regular > * input,
-.ct-red > * input {
-  width: 105%;
-}
-
-#no-email {
-  width: 25px;
-  display: block;
-  margin: 0 auto;
-}
-
-/* Column Widths */
-.ct-th-firstName,
-.ct-th-lastName {
-  width: 120px;
-}
-
-.ct-th-email {
-  width: 240px;
-}
-
-.ct-th-phone {
-  width: 130px;
-}
-
-.ct-th-startDate,
-.ct-th-endDate {
-  width: 40px;
-}
-
-.ct-th-membershipDuration {
-  width: 40px;
-}
-
-/* ── Checkbox ── */
-input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin: var(--space-1);
-  accent-color: var(--brand);
-  cursor: pointer;
-}
-
-/* ── Textarea ── */
-.ct-client-table textarea {
-  width: 100%;
-  background: var(--gray-25);
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2);
-  font-size: var(--font-sm);
-  font-family: var(--font-family);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
-  resize: vertical;
-}
-
-.ct-client-table textarea:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
-  background: #fff;
-}
-
-/* ── Table Inputs ── */
-.ct-client-table input {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-sm);
-  font-family: var(--font-family);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
-  background: var(--gray-25);
-}
-
-.ct-client-table input:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
-  background: #fff;
-}
-
-/* ═══════════════════════════════════════════
-   DROPDOWNS — Floating menus
-   ═══════════════════════════════════════════ */
-.actions-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    0 4px 6px -2px rgba(0, 0, 0, 0.06),
-    0 12px 32px -4px rgba(0, 0, 0, 0.14),
-    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
-  z-index: 100;
-  padding: 6px 0;
+/* ── Name cell with avatar ── */
+.ct-name-cell {
   display: flex;
-  flex-direction: column;
-  min-width: 190px;
-  animation: dropdownSlide 0.2s var(--ease-out);
-  overflow: hidden;
+  align-items: center;
+  gap: 10px;
 }
 
-@keyframes dropdownSlide {
-  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-
-.dropdown-item {
-  position: relative;
-  padding: 10px 20px 10px 14px;
-  text-align: left;
-  background: none;
-  border: none;
-  border-left: 3px solid transparent;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: var(--font-family);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.45;
-  color: var(--gray-700);
-  white-space: normal;
-  word-break: break-word;
-  width: 100%;
-  transition:
-    background 0.13s ease,
-    color 0.13s ease,
-    border-left-color 0.13s ease,
-    transform 0.12s ease;
-}
-
-.dropdown-item:hover:not(:disabled) {
+/* ── Avatar ── */
+.ct-avatar {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
   background: var(--brand-50);
   color: var(--brand);
-  border-left-color: var(--brand);
-  transform: translateX(2px);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  user-select: none;
 }
 
-.dropdown-item:active:not(:disabled) {
-  transform: translateX(2px) scale(0.98);
-  background: var(--brand-100);
+/* ── Date cell ── */
+.ct-date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.dropdown-item:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
+/* ═══════════════════════════════════════════
+   ACTION BUTTONS
+   ═══════════════════════════════════════════ */
+.ct-edit-btn,
+.ct-save-btn,
+.ct-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform 0.1s var(--ease-out);
+  white-space: nowrap;
 }
 
-.dropdown-item + .dropdown-item {
-  border-top: 1px solid var(--gray-100);
+.ct-edit-btn:active,
+.ct-save-btn:active,
+.ct-cancel-btn:active {
+  transform: scale(0.96);
 }
 
-/* ── Table Toolbar ── */
+.ct-edit-btn {
+  background: transparent;
+  border-color: var(--gray-200);
+  color: var(--gray-500);
+  padding: 5px 7px;
+}
+
+.ct-edit-btn:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand);
+}
+
+.ct-save-btn {
+  background: var(--success-50);
+  border-color: var(--success-100);
+  color: var(--success-700);
+}
+
+.ct-save-btn:hover {
+  background: var(--success-100);
+  border-color: var(--success-500);
+}
+
+.ct-cancel-btn {
+  background: var(--gray-50);
+  border-color: var(--gray-200);
+  color: var(--gray-500);
+}
+
+.ct-cancel-btn:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+}
+
+/* ── Kebab (⋮) button ── */
+.ct-kebab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.ct-kebab-btn:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+  color: var(--gray-700);
+}
+
+/* ── Inline edit button flex ── */
+.ct-button-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ═══════════════════════════════════════════
+   TOOLBAR
+   ═══════════════════════════════════════════ */
 .ct-toolbar {
   display: flex;
   align-items: center;
@@ -493,27 +266,31 @@ input[type="checkbox"] {
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--gray-100);
   flex-wrap: wrap;
+  background: var(--card);
 }
 
 .ct-selected-count {
   font-size: var(--font-sm);
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--brand);
+  background: var(--brand-50);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
 }
 
 /* ── Search ── */
 .ct-search-wrap {
   position: relative;
   flex: 1;
-  min-width: 160px;
-  max-width: 280px;
+  min-width: 180px;
+  max-width: 300px;
 }
 
 .ct-search-input {
   width: 100%;
-  padding: 7px 12px 7px 32px;
+  padding: 7px 12px 7px 34px;
   border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   font-size: var(--font-sm);
   font-family: var(--font-family);
   background: var(--gray-50);
@@ -537,85 +314,41 @@ input[type="checkbox"] {
 
 .ct-search-icon {
   position: absolute;
-  left: 11px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--gray-400);
-  font-size: 14px;
   pointer-events: none;
-  line-height: 1;
-}
-
-/* ── Select All Button ── */
-.select-all-button {
-  background: var(--card);
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.select-all-button:hover {
-  background: var(--brand-50);
-  border-color: var(--brand-300);
-  color: var(--brand);
-}
-
-/* ── Individual Actions Dropdown ── */
-.individual-actions-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    0 4px 6px -2px rgba(0, 0, 0, 0.06),
-    0 12px 32px -4px rgba(0, 0, 0, 0.14),
-    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
-  z-index: 50;
-  padding: 6px 0;
-  min-width: 200px;
-  animation: dropdownSlide 0.2s var(--ease-out);
-  overflow: hidden;
   display: flex;
-  flex-direction: column;
+  align-items: center;
 }
 
 /* ═══════════════════════════════════════════
-   BULK "Actions ▾" BUTTON
+   BULK ACTIONS BUTTON
    ═══════════════════════════════════════════ */
 .mass-actions-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 8px 16px;
+  padding: 7px 14px;
   font-size: var(--font-sm);
   font-weight: 600;
   font-family: var(--font-family);
-  color: var(--text);
+  color: var(--text-secondary);
   background: var(--card);
-  border: 1.5px solid var(--gray-300);
+  border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-md);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
-
 }
 
 .mass-actions-btn:hover:not(:disabled) {
   background: var(--gray-50);
-  border-color: var(--brand-300);
-  box-shadow: var(--shadow-md);
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-sm);
 }
 
 .mass-actions-btn:disabled {
@@ -623,31 +356,269 @@ input[type="checkbox"] {
   cursor: not-allowed;
 }
 
-/* ═══════════════════════════════════════════
-   ROW "⋮" KEBAB BUTTON
-   ═══════════════════════════════════════════ */
-.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button):not(.dropdown-item) {
-  background: var(--gray-50);
-  border: 1.5px solid var(--gray-300);
-  border-radius: var(--radius-sm);
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  line-height: 1;
-  color: var(--gray-600);
+/* ── Select All ── */
+.select-all-button {
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--gray-400);
   cursor: pointer;
-  padding: 0;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  white-space: nowrap;
 }
 
-.ct-small button:not(.ct-edit-btn):not(.ct-save-btn):not(.ct-cancel-btn):not(.ct-delete-btn):not(.select-all-button):not(.dropdown-item):hover {
-  background: var(--brand-50);
-  border-color: var(--brand-300);
+.select-all-button:hover {
   color: var(--brand);
+  background: var(--brand-50);
+}
+
+/* ═══════════════════════════════════════════
+   DROPDOWNS
+   ═══════════════════════════════════════════ */
+.actions-dropdown,
+.individual-actions-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 6px -2px rgba(0,0,0,0.06),
+    0 12px 32px -4px rgba(0,0,0,0.12);
+  z-index: 200;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  animation: dropdownSlide 0.15s var(--ease-out);
+  overflow: hidden;
+}
+
+.individual-actions-dropdown {
+  left: auto;
+  right: 0;
+  min-width: 170px;
+}
+
+@keyframes dropdownSlide {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 9px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: var(--font-sm);
+  font-family: var(--font-family);
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.dropdown-item:hover:not(:disabled) {
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+.dropdown-item:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.dropdown-footer {
+  padding: 6px 16px;
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  border-top: 1px solid var(--gray-100);
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   FORM INPUTS (inline editing)
+   ═══════════════════════════════════════════ */
+.ct-client-table input[type="text"],
+.ct-client-table input[type="date"],
+.ct-client-table input[type="email"],
+.ct-client-table input[type="tel"],
+.ct-client-table select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-family: var(--font-family);
+  background: var(--gray-25);
+  color: var(--text);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.ct-client-table input:focus,
+.ct-client-table select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
+  background: #fff;
+}
+
+/* ── Checkbox ── */
+input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--brand);
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════
+   NOTES BUTTON (in table cells)
+   ═══════════════════════════════════════════ */
+.nm-notes-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+
+.nm-notes-btn:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand);
+}
+
+/* ── Has notes: subtle indicator ── */
+.nm-notes-btn[data-has-notes="true"] {
+  color: var(--brand);
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+}
+
+/* ═══════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════ */
+.ct-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: 48px var(--space-6);
+  color: var(--text-faint);
+}
+
+.ct-empty-icon {
+  color: var(--gray-300);
+}
+
+.ct-empty-text {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--gray-400);
+}
+
+/* ═══════════════════════════════════════════
+   COLUMN WIDTHS
+   ═══════════════════════════════════════════ */
+.ct-th-firstName { width: 180px; }
+.ct-th-lastName  { width: 140px; }
+.ct-th-email     { width: 220px; }
+.ct-th-phone     { width: 130px; }
+.ct-th-startDate,
+.ct-th-endDate   { width: 110px; }
+.ct-th-membershipDuration { width: 120px; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+
+/* ── Tablet ── */
+@media (max-width: 900px) {
+  .ct-client-table-container {
+    margin: var(--space-3);
+  }
+
+  .ct-client-table th,
+  .ct-client-table td {
+    padding: 9px 12px;
+    font-size: var(--font-sm);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .ct-client-table-container {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+
+  .ct-toolbar {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .ct-search-wrap {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .ct-client-table th,
+  .ct-client-table td {
+    padding: 8px 10px;
+    font-size: var(--font-xs);
+  }
+
+  .ct-small {
+    width: 36px;
+  }
+
+  .ct-th-firstName { width: 120px; }
+  .ct-th-lastName  { width: 100px; }
+  .ct-th-email     { width: 160px; }
+  .ct-th-phone     { width: 110px; }
+  .ct-th-startDate,
+  .ct-th-endDate   { width: 90px;  }
+  .ct-th-membershipDuration { width: 90px; }
+
+  .actions-dropdown,
+  .individual-actions-dropdown {
+    min-width: 150px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .nm-notes-btn {
+    max-width: 160px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
 }
