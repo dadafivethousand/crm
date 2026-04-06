@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./Stylesheets/ClientTable.css";
 import AddLead from "./AddLead";
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
 import NotesModal from "./Components/NotesModal";
 import DeleteOptionsModal from "./Components/DeleteOptionsModal";
-
-// ✅ outsourced component
 import RowActionsDropdown from "./Components/RowActionsDropdown";
+import { useToast } from "./Components/Toast";
+import { formatDateTime } from "./dateUtils";
 
 function parseNotes(raw) {
   if (!raw) return [];
@@ -21,15 +21,18 @@ function LeadsTable({
   leads,
   setLeads,
   setShowClientForm,
-  setClientFormData, // (kept in signature if you need later)
-  token,             // (kept for parity)
-  user,              // (kept for parity)
-  buildHeaders,      // <-- from App
+  setClientFormData,
+  token,
+  user,
+  buildHeaders,
+  readOnly,
 }) {
+  const toast = useToast();
+
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
+  const [search, setSearch] = useState("");
 
-  // notes modal state
   const [notesOpen, setNotesOpen] = useState(false);
   const [notesKey, setNotesKey] = useState(null);
   const [notesRaw, setNotesRaw] = useState(null);
@@ -47,21 +50,8 @@ function LeadsTable({
     );
   };
 
-  // ✅ SORTING
   const [sortColumn, setSortColumn] = useState("firstName");
   const [sortDirection, setSortDirection] = useState("asc");
-
-  const sortLeads = (leadsArr, column, direction) => {
-    return [...(leadsArr || [])].sort((a, b) => {
-      const av = a?.data?.[column];
-      const bv = b?.data?.[column];
-      const valueA = (av ?? "").toString().toLowerCase();
-      const valueB = (bv ?? "").toString().toLowerCase();
-      if (valueA < valueB) return direction === "asc" ? -1 : 1;
-      if (valueA > valueB) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  };
 
   const handleSort = (key) => {
     if (sortColumn === key) {
@@ -72,28 +62,38 @@ function LeadsTable({
     }
   };
 
-  useEffect(() => {
-    setLeads(sortLeads(leads, sortColumn, sortDirection));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortColumn, sortDirection]);
+  const filteredLeads = useMemo(() => {
+    let arr = (leads || []).filter((l) => l && l.data);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      arr = arr.filter(
+        (l) =>
+          l.data?.firstName?.toLowerCase().includes(q) ||
+          l.data?.lastName?.toLowerCase().includes(q) ||
+          l.data?.email?.toLowerCase().includes(q) ||
+          l.data?.phone?.toLowerCase().includes(q)
+      );
+    }
+    return [...arr].sort((a, b) => {
+      const av = (a?.data?.[sortColumn] ?? "").toString().toLowerCase();
+      const bv = (b?.data?.[sortColumn] ?? "").toString().toLowerCase();
+      if (av < bv) return sortDirection === "asc" ? -1 : 1;
+      if (av > bv) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [leads, search, sortColumn, sortDirection]);
 
-  // delete modal state
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
 
-  // selection + bulk actions state
   const [selected, setSelected] = useState(() => new Set());
   const [actionsOpen, setActionsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const actionsRef = useRef(null);
 
-  // ✅ per-row actions dropdown state
   const [rowActionsOpen, setRowActionsOpen] = useState(null);
-
-  // ✅ single-recipient selection for individual dropdown actions
   const [individualSelection, setIndividualSelection] = useState(null);
 
-  // email/text modals
   const [textOpen, setTextOpen] = useState(false);
   const [textBody, setTextBody] = useState("");
   const [emailOpen, setEmailOpen] = useState(false);
@@ -102,7 +102,7 @@ function LeadsTable({
   const [emailSending, setEmailSending] = useState(false);
   const [textSending, setTextSending] = useState(false);
 
-  // Close BULK dropdown when clicking outside + handle Escape
+  // Close dropdowns on outside click + Escape
   useEffect(() => {
     const onDocClick = (e) => {
       if (actionsRef.current && !actionsRef.current.contains(e.target)) {
@@ -125,6 +125,14 @@ function LeadsTable({
     };
   }, []);
 
+  // Escape cancels inline edit
+  useEffect(() => {
+    if (editingRow === null) return;
+    const onKey = (e) => { if (e.key === "Escape") handleCancelEdit(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [editingRow]);
+
   // selection helpers
   const toggleSelect = (key) => {
     setSelected((prev) => {
@@ -137,7 +145,7 @@ function LeadsTable({
 
   const selectAll = () => {
     setSelected((prev) => {
-      const allKeys = new Set((leads || []).map((lead) => lead.key));
+      const allKeys = new Set(filteredLeads.map((l) => l.key));
       const hasUnselected = [...allKeys].some((key) => !prev.has(key));
       return hasUnselected ? allKeys : new Set();
     });
@@ -147,9 +155,8 @@ function LeadsTable({
 
   // --- bulk send actions ---
   const handleSendText = () => {
-    const keys = Array.from(selected);
-    if (!keys.length) {
-      alert("Select at least one lead to text.");
+    if (!selected.size) {
+      toast.error("Select at least one lead first.");
       return;
     }
     setIndividualSelection(null);
@@ -159,9 +166,8 @@ function LeadsTable({
   };
 
   const handleSendEmail = () => {
-    const keys = Array.from(selected);
-    if (!keys.length) {
-      alert("Select at least one lead to email.");
+    if (!selected.size) {
+      toast.error("Select at least one lead first.");
       return;
     }
     setIndividualSelection(null);
@@ -192,12 +198,12 @@ function LeadsTable({
       individualSelection != null ? [individualSelection] : Array.from(selected);
 
     if (!allRecipients.length) {
-      alert("No recipients selected.");
+      toast.error("No recipients selected.");
       setTextOpen(false);
       return;
     }
     if (!textBody || !textBody.trim()) {
-      alert("Please enter a message.");
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -210,34 +216,34 @@ function LeadsTable({
     setTextSending(true);
     try {
       const baseHeaders = await buildHeaders();
-      const headers =
+      const hdrs =
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      headers.set("Content-Type", "application/json");
+      hdrs.set("Content-Type", "application/json");
 
+      let failed = false;
       for (const recipients of batches) {
-        const payload = { message: textBody, recipients, listType: "leads" };
-
         const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/text", {
           method: "POST",
-          headers,
-          body: JSON.stringify(payload),
+          headers: hdrs,
+          body: JSON.stringify({ message: textBody, recipients, listType: "leads" }),
         });
-
-        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error("Text API error (leads batch):", res.status, "body:", responseText);
-          alert("Some text batches failed — check console for details.");
+          console.error("Text API error (leads):", res.status, await res.text().catch(() => ""));
+          toast.error("Some texts failed to send.");
+          failed = true;
           break;
         }
       }
 
-      alert("Texts queued/sent (batched).");
-      setTextBody("");
-      setIndividualSelection(null);
-      setTextOpen(false);
+      if (!failed) {
+        toast.success("Texts sent successfully.");
+        setTextBody("");
+        setIndividualSelection(null);
+        setTextOpen(false);
+      }
     } catch (err) {
       console.error("Network error sending text:", err);
-      alert("Network error sending text — see console.");
+      toast.error("Network error sending texts.");
     } finally {
       setTextSending(false);
     }
@@ -250,16 +256,16 @@ function LeadsTable({
       individualSelection != null ? [individualSelection] : Array.from(selected);
 
     if (!allRecipients.length) {
-      alert("No recipients selected.");
+      toast.error("No recipients selected.");
       setEmailOpen(false);
       return;
     }
     if (!emailSubject.trim()) {
-      alert("Please enter a subject.");
+      toast.error("Please enter a subject.");
       return;
     }
     if (!emailBody.trim()) {
-      alert("Please enter a message.");
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -272,41 +278,41 @@ function LeadsTable({
     setEmailSending(true);
     try {
       const baseHeaders = await buildHeaders();
-      const headers =
+      const hdrs =
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
-      headers.set("Content-Type", "application/json");
+      hdrs.set("Content-Type", "application/json");
 
+      let failed = false;
       for (const recipients of batches) {
-        const payload = {
-          subject: emailSubject,
-          body: emailBody,
-          message: emailBody,
-          recipients,
-          listType: "leads",
-        };
-
         const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/email", {
           method: "POST",
-          headers,
-          body: JSON.stringify(payload),
+          headers: hdrs,
+          body: JSON.stringify({
+            subject: emailSubject,
+            body: emailBody,
+            message: emailBody,
+            recipients,
+            listType: "leads",
+          }),
         });
-
-        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error("Email API error (leads batch):", res.status, "body:", responseText);
-          alert("Some email batches failed — check console for details.");
+          console.error("Email API error (leads):", res.status, await res.text().catch(() => ""));
+          toast.error("Some emails failed to send.");
+          failed = true;
           break;
         }
       }
 
-      alert("Emails queued/sent (batched).");
-      setEmailSubject("");
-      setEmailBody("");
-      setIndividualSelection(null);
-      setEmailOpen(false);
+      if (!failed) {
+        toast.success("Emails sent successfully.");
+        setEmailSubject("");
+        setEmailBody("");
+        setIndividualSelection(null);
+        setEmailOpen(false);
+      }
     } catch (err) {
       console.error("Network error sending email:", err);
-      alert("Network error sending email — see console.");
+      toast.error("Network error sending emails.");
     } finally {
       setEmailSending(false);
     }
@@ -330,10 +336,10 @@ function LeadsTable({
 
   const handleSaveChanges = async (key) => {
     try {
-      const headers = await buildHeaders();
+      const hdrs = await buildHeaders();
       const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/edit-lead", {
         method: "POST",
-        headers,
+        headers: hdrs,
         body: JSON.stringify({ key, data: editedData }),
       });
 
@@ -342,16 +348,19 @@ function LeadsTable({
           prevLeads.map((lead) => (lead.key === key ? { ...lead, data: { ...editedData } } : lead))
         );
         handleCancelEdit();
+        toast.success("Changes saved.");
       } else {
         const err = await res.json().catch(() => ({}));
         console.error("Error saving changes", err);
+        toast.error("Failed to save changes.");
       }
     } catch (error) {
       console.error("Error saving changes:", error);
+      toast.error("Network error saving changes.");
     }
   };
 
-  // delete (supports single or array)
+  // delete
   const requestDelete = (keyOrKeys) => {
     const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
     if (!keys.length) return;
@@ -376,39 +385,36 @@ function LeadsTable({
     if (!keys.length) return;
     setLoading(true);
     try {
-      const headers = await buildHeaders();
+      const hdrs = await buildHeaders();
       const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/delete-lead", {
         method: "DELETE",
-        headers,
+        headers: hdrs,
         body: JSON.stringify({ keys }),
       });
 
       if (res.ok) {
         const keySet = new Set(keys);
         setLeads((prevLeads) => prevLeads.filter((lead) => !keySet.has(lead.key)));
-
         setSelected((prev) => {
           const next = new Set(prev);
           keys.forEach((k) => next.delete(k));
           return next;
         });
-
         setActionsOpen(false);
         setRowActionsOpen(null);
       } else {
         const err = await res.json().catch(() => ({}));
         console.error("Error deleting record(s):", err);
-        alert("Delete failed — check console for details.");
+        toast.error("Delete failed.");
       }
     } catch (error) {
       console.error("Network error deleting record(s):", error);
-      alert("Network error during delete. See console.");
+      toast.error("Network error during delete.");
     } finally {
       setLoading(false);
     }
   };
 
-  // convert + contacted
   const handleConvertToClient = (lead) => {
     setConvertToClientData(lead.data);
     setShowClientForm(true);
@@ -416,13 +422,28 @@ function LeadsTable({
 
   const handleMarkContacted = () => {
     const keys = Array.from(selected);
-    if (!keys.length) return alert("Select at least one lead to mark.");
+    if (!keys.length) {
+      toast.error("Select at least one lead first.");
+      return;
+    }
     setLeads((prev) =>
       prev.map((l) => (selected.has(l.key) ? { ...l, data: { ...l.data, contacted: true } } : l))
     );
     clearSelection();
     setActionsOpen(false);
   };
+
+  // Sortable header helper
+  const SortTh = ({ label, sortKey }) => (
+    <th onClick={() => handleSort(sortKey)} style={{ cursor: "pointer" }}>
+      <div className="ct-header">
+        <div className="ct-table-header">{label}</div>
+        <div className="ct-header-arrow">
+          {sortColumn === sortKey && (sortDirection === "asc" ? "↓" : "↑")}
+        </div>
+      </div>
+    </th>
+  );
 
   return (
     <div className="ct-client-table-container">
@@ -441,10 +462,7 @@ function LeadsTable({
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
-          onClose={() => {
-            setEmailOpen(false);
-            setIndividualSelection(null);
-          }}
+          onClose={() => { setEmailOpen(false); setIndividualSelection(null); }}
           onSend={submitEmail}
           sending={emailSending}
           subject={emailSubject}
@@ -458,10 +476,7 @@ function LeadsTable({
       {textOpen && (
         <TextComposer
           open={textOpen}
-          onClose={() => {
-            setTextOpen(false);
-            setIndividualSelection(null);
-          }}
+          onClose={() => { setTextOpen(false); setIndividualSelection(null); }}
           onSend={submitText}
           sending={textSending}
           message={textBody}
@@ -479,290 +494,267 @@ function LeadsTable({
         showConvert={false}
       />
 
-      {/* Toolbar with Actions dropdown */}
+      {/* Toolbar */}
       <div className="ct-toolbar">
-        <div ref={actionsRef} style={{ position: "relative" }}>
-          <button
-            className="mass-actions-btn"
-            onClick={() => setActionsOpen((s) => !s)}
-            title={selected.size === 0 ? "Select rows to enable actions" : `${selected.size} selected`}
-            disabled={loading}
-            aria-expanded={actionsOpen}
-            aria-haspopup="menu"
-          >
-            Actions ▾
-          </button>
-
-          {actionsOpen && (
-            <div className="actions-dropdown" role="menu">
-              <button
-                className="dropdown-item"
-                onClick={handleSendEmail}
-                disabled={loading || selected.size === 0}
-                aria-disabled={selected.size === 0}
-              >
-                Send Email
-              </button>
-
-              <button
-                className="dropdown-item"
-                onClick={handleSendText}
-                disabled={loading || selected.size === 0}
-                aria-disabled={selected.size === 0}
-              >
-                Send Text
-              </button>
-
-              <button
-                className="dropdown-item"
-                onClick={() => requestDelete(Array.from(selected))}
-                disabled={loading || selected.size === 0}
-                aria-disabled={selected.size === 0}
-              >
-                Delete
-              </button>
-
-              <button
-                className="dropdown-item"
-                onClick={handleMarkContacted}
-                disabled={loading || selected.size === 0}
-              >
-                Mark as Contacted
-              </button>
-
-              {selected.size > 0 && (
-                <div className="dropdown-item" style={{ pointerEvents: "none", opacity: 0.6 }}>
-                  {selected.size} selected
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
+        {!readOnly && (
+          <div ref={actionsRef} style={{ position: "relative" }}>
+            <button
+              className="mass-actions-btn"
+              onClick={() => setActionsOpen((s) => !s)}
+              disabled={loading}
+              aria-expanded={actionsOpen}
+              aria-haspopup="menu"
+            >
+              Actions ▾
+            </button>
+            {actionsOpen && (
+              <div className="actions-dropdown" role="menu">
+                <button className="dropdown-item" onClick={handleSendEmail} disabled={loading || selected.size === 0}>Send Email</button>
+                <button className="dropdown-item" onClick={handleSendText} disabled={loading || selected.size === 0}>Send Text</button>
+                <button className="dropdown-item" onClick={() => requestDelete(Array.from(selected))} disabled={loading || selected.size === 0}>Delete</button>
+                <button className="dropdown-item" onClick={handleMarkContacted} disabled={loading || selected.size === 0}>Mark as Contacted</button>
+                {selected.size > 0 && (
+                  <div className="dropdown-item" style={{ pointerEvents: "none", opacity: 0.6 }}>{selected.size} selected</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {selected.size > 0 && (
           <span className="ct-selected-count">{selected.size} selected</span>
         )}
+        <div className="ct-search-wrap">
+          <svg className="ct-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className="ct-search"
+            type="text"
+            placeholder="Search leads…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className="ct-search-clear" onClick={() => setSearch("")} aria-label="Clear search">×</button>
+          )}
+        </div>
       </div>
 
-      <table className="ct-client-table">
-        <thead>
-          <tr>
-            <th className="ct-small">
-              <button className="select-all-button" onClick={() => selectAll()}>
-                Select All
-              </button>
-            </th>
-
-            <th className="ct-small"></th>
-
-            <th onClick={() => handleSort("firstName")}>
-              <div className="ct-header">
-                <div className="ct-table-header">
-                  <p>First Name</p>
-                </div>
-                <div className="ct-header-arrow">
-                  {sortColumn === "firstName" && (sortDirection === "asc" ? "↓" : "↑")}
-                </div>
-              </div>
-            </th>
-
-            <th onClick={() => handleSort("lastName")}>
-              <div className="ct-header">
-                <div className="ct-table-header">Last Name</div>
-                <div className="ct-header-arrow">
-                  {sortColumn === "lastName" && (sortDirection === "asc" ? "↓" : "↑")}
-                </div>
-              </div>
-            </th>
-
-            <th onClick={() => handleSort("email")}>
-              <div className="ct-header">
-                <div className="ct-table-header">Email</div>
-                <div className="ct-header-arrow">
-                  {sortColumn === "email" && (sortDirection === "asc" ? "↓" : "↑")}
-                </div>
-              </div>
-            </th>
-
-            <th onClick={() => handleSort("phone")}>
-              <div className="ct-header">
-                <div className="ct-table-header">Phone</div>
-                <div className="ct-header-arrow">
-                  {sortColumn === "phone" && (sortDirection === "asc" ? "↓" : "↑")}
-                </div>
-              </div>
-            </th>
-
-            <th onClick={() => handleSort("notes")}>
-              <div className="ct-header">
-                <div className="ct-table-header">Notes</div>
-                <div className="ct-header-arrow">
-                  {sortColumn === "notes" && (sortDirection === "asc" ? "↓" : "↑")}
-                </div>
-              </div>
-            </th>
-
-            <th onClick={() => handleSort("createdAt")}>
-              <div className="ct-header">
-                <div className="ct-table-header">TimeStamp</div>
-                <div className="ct-header-arrow">
-                  {sortColumn === "createdAt" && (sortDirection === "asc" ? "↓" : "↑")}
-                </div>
-              </div>
-            </th>
-
-            {/* single actions column */}
-            <th className="ct-small"></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {leads
-            ?.filter((lead) => lead && lead.data)
-            .map((lead, index) => (
-              <tr key={lead.key ?? index}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(lead.key)}
-                    onChange={() => toggleSelect(lead.key)}
-                  />
+      {/* Desktop table */}
+      <div className="ct-table-wrap">
+        <table className="ct-client-table">
+          <thead>
+            <tr>
+              <th className="ct-small">
+                <button className="select-all-button" onClick={selectAll}>Select All</button>
+              </th>
+              {!readOnly && <th className="ct-small"></th>}
+              <SortTh label="First Name" sortKey="firstName" />
+              <SortTh label="Last Name" sortKey="lastName" />
+              <SortTh label="Email" sortKey="email" />
+              <SortTh label="Phone" sortKey="phone" />
+              <SortTh label="Notes" sortKey="notes" />
+              <SortTh label="Date Added" sortKey="createdAt" />
+              <th className="ct-small"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredLeads.length === 0 ? (
+              <tr>
+                <td colSpan={readOnly ? 8 : 9} className="ct-empty-state">
+                  {search ? `No leads match "${search}"` : "No leads yet"}
                 </td>
-
-                <td className="ct-small">
-                  {editingRow === index ? (
-                    <div className="ct-button-flex">
-                      <button className="ct-save-btn" onClick={() => handleSaveChanges(lead.key)}>Save</button>
-                      <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
-                    </div>
-                  ) : (
-                    <div className="ct-button-flex">
-                      <button className="ct-edit-btn" onClick={() => handleEditClick(index, lead.data)} title="Edit">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </td>
-
-                {editingRow === index ? (
-                  <>
-                    <td>
-                      <input
-                        type="text"
-                        value={editedData.firstName || ""}
-                        onChange={(e) => handleInputChange(e, "firstName")}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={editedData.lastName || ""}
-                        onChange={(e) => handleInputChange(e, "lastName")}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="email"
-                        value={editedData.email || ""}
-                        onChange={(e) => handleInputChange(e, "email")}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="tel"
-                        value={editedData.phone || ""}
-                        onChange={(e) => handleInputChange(e, "phone")}
-                      />
-                    </td>
-                    <td>
-                      {(() => {
-                        const n = parseNotes(lead.data.notes);
-                        const hasNotes = n.length > 0;
-                        return (
-                          <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(lead.key, lead.data.notes)}>
-                            {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
-                          </button>
-                        );
-                      })()}
-                    </td>
-                    <td>
-                      {lead.data.createdAt
-                        ? (() => {
-                            const d = new Date(lead.data.createdAt);
-                            if (isNaN(d)) return "";
-                            const month = d.toLocaleString("en-US", { month: "short" }).toLowerCase();
-                            const day = String(d.getDate()).padStart(2, "0");
-                            const year = d.getFullYear();
-                            return `${month}-${day}-${year}`;
-                          })()
-                        : ""}
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td>
-                    <div className="ct-name-cell">
-                      <div className="ct-avatar">
-                        {(lead.data?.firstName?.[0] || "").toUpperCase()}
-                        {(lead.data?.lastName?.[0] || "").toUpperCase()}
-                      </div>
-                      <span>{lead.data.firstName}</span>
-                    </div>
+              </tr>
+            ) : (
+              filteredLeads.map((lead, index) => (
+                <tr key={lead.key ?? index}>
+                  <td className="ct-small">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(lead.key)}
+                      onChange={() => toggleSelect(lead.key)}
+                    />
                   </td>
-                    <td>{lead.data.lastName}</td>
-                    <td>{lead.data.email}</td>
-                    <td>{lead.data.phone}</td>
-                    <td>
-                      {(() => {
-                        const n = parseNotes(lead.data.notes);
-                        const hasNotes = n.length > 0;
-                        return (
-                          <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(lead.key, lead.data.notes)}>
-                            {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
-                          </button>
-                        );
-                      })()}
-                    </td>
-                    <td>
-                      {lead.data.createdAt
-                        ? (() => {
-                            const d = new Date(lead.data.createdAt);
-                            if (isNaN(d)) return "";
-                            const month = d.toLocaleString("en-US", { month: "short" }).toLowerCase();
-                            const day = String(d.getDate()).padStart(2, "0");
-                            const year = d.getFullYear();
-                            return `${month}-${day}-${year}`;
-                          })()
-                        : ""}
-                    </td>
-                  </>
-                )}
 
-                {/* ✅ row dropdown with ALL options incl. email/text */}
-                <td className="ct-small">
+                  {!readOnly && (
+                    <td className="ct-small">
+                      {editingRow === index ? (
+                        <div className="ct-button-flex">
+                          <button className="ct-save-btn" onClick={() => handleSaveChanges(lead.key)}>Save</button>
+                          <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="ct-button-flex">
+                          <button className="ct-edit-btn" onClick={() => handleEditClick(index, lead.data)} title="Edit">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
+
+                  {editingRow === index ? (
+                    <>
+                      <td><input type="text" value={editedData.firstName || ""} onChange={(e) => handleInputChange(e, "firstName")} /></td>
+                      <td><input type="text" value={editedData.lastName || ""} onChange={(e) => handleInputChange(e, "lastName")} /></td>
+                      <td><input type="email" value={editedData.email || ""} onChange={(e) => handleInputChange(e, "email")} /></td>
+                      <td><input type="tel" value={editedData.phone || ""} onChange={(e) => handleInputChange(e, "phone")} /></td>
+                      <td>
+                        {(() => {
+                          const n = parseNotes(lead.data.notes);
+                          const hasNotes = n.length > 0;
+                          return (
+                            <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(lead.key, lead.data.notes)}>
+                              {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                            </button>
+                          );
+                        })()}
+                      </td>
+                      <td>{formatDateTime(lead.data.createdAt)}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td>
+                        <div className="ct-name-cell">
+                          <div className="ct-avatar">
+                            {(lead.data?.firstName?.[0] || "").toUpperCase()}
+                            {(lead.data?.lastName?.[0] || "").toUpperCase()}
+                          </div>
+                          <span>{lead.data.firstName}</span>
+                        </div>
+                      </td>
+                      <td>{lead.data.lastName}</td>
+                      <td>{lead.data.email}</td>
+                      <td>{lead.data.phone}</td>
+                      <td>
+                        {(() => {
+                          const n = parseNotes(lead.data.notes);
+                          const hasNotes = n.length > 0;
+                          return (
+                            <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(lead.key, lead.data.notes)}>
+                              {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                            </button>
+                          );
+                        })()}
+                      </td>
+                      <td>{formatDateTime(lead.data.createdAt)}</td>
+                    </>
+                  )}
+
+                  <td className="ct-small">
+                    <RowActionsDropdown
+                      open={rowActionsOpen === index}
+                      onToggle={() => setRowActionsOpen((prev) => (prev === index ? null : index))}
+                      onClose={() => setRowActionsOpen(null)}
+                      loading={loading}
+                      items={[
+                        ...(!readOnly ? [
+                          { label: "Edit", onClick: () => handleEditClick(index, lead.data) },
+                          { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
+                          { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
+                          { label: "Convert to Client", onClick: () => handleConvertToClient(lead) },
+                          { label: "Delete", onClick: () => requestDelete(lead.key) },
+                        ] : [
+                          { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
+                          { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
+                        ]),
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card list */}
+      <div className="ct-card-list">
+        {filteredLeads.length === 0 ? (
+          <div className="ct-empty-state">
+            {search ? `No leads match "${search}"` : "No leads yet"}
+          </div>
+        ) : (
+          filteredLeads.map((lead, index) => {
+            const n = parseNotes(lead.data.notes);
+            const hasNotes = n.length > 0;
+            return (
+              <div key={lead.key ?? index} className="ct-card">
+                <div className="ct-card-header">
+                  <div className="ct-card-identity">
+                    <div className="ct-avatar ct-avatar--lg">
+                      {(lead.data?.firstName?.[0] || "").toUpperCase()}
+                      {(lead.data?.lastName?.[0] || "").toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="ct-card-name">{lead.data.firstName} {lead.data.lastName}</div>
+                      <div className="ct-card-sub">{formatDateTime(lead.data.createdAt)}</div>
+                    </div>
+                  </div>
                   <RowActionsDropdown
                     open={rowActionsOpen === index}
                     onToggle={() => setRowActionsOpen((prev) => (prev === index ? null : index))}
                     onClose={() => setRowActionsOpen(null)}
                     loading={loading}
                     items={[
-                      { label: "Edit", onClick: () => handleEditClick(index, lead.data) },
-                      { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
-                      { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
-                      { label: "Convert to Client", onClick: () => handleConvertToClient(lead) },
-                      { label: "Delete", onClick: () => requestDelete(lead.key) },
+                      ...(!readOnly ? [
+                        { label: "Edit", onClick: () => handleEditClick(index, lead.data) },
+                        { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
+                        { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
+                        { label: "Convert to Client", onClick: () => handleConvertToClient(lead) },
+                        { label: "Delete", onClick: () => requestDelete(lead.key) },
+                      ] : [
+                        { label: "Send Email", onClick: () => handleRowSendEmail(lead.key) },
+                        { label: "Send Text", onClick: () => handleRowSendText(lead.key) },
+                      ]),
                     ]}
                   />
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+                </div>
+                <div className="ct-card-body">
+                  {lead.data.email && (
+                    <div className="ct-card-row">
+                      <span className="ct-card-row-label">Email</span>
+                      <span className="ct-card-row-value">{lead.data.email}</span>
+                    </div>
+                  )}
+                  {lead.data.phone && (
+                    <div className="ct-card-row">
+                      <span className="ct-card-row-label">Phone</span>
+                      <span className="ct-card-row-value">{lead.data.phone}</span>
+                    </div>
+                  )}
+                  {hasNotes && (
+                    <div className="ct-card-row">
+                      <span className="ct-card-row-label">Notes</span>
+                      <span className="ct-card-row-value">{n[n.length-1].text.slice(0,60)}{n[n.length-1].text.length > 60 ? "…" : ""}</span>
+                    </div>
+                  )}
+                  <div className="ct-card-actions">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(lead.key)}
+                      onChange={() => toggleSelect(lead.key)}
+                    />
+                    <button
+                      className="nm-notes-btn"
+                      data-has-notes={hasNotes}
+                      onClick={() => openNotes(lead.key, lead.data.notes)}
+                      style={{marginLeft: "auto"}}
+                    >
+                      {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""}` : "+ Note"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
-      <AddLead setLeads={setLeads} buildHeaders={buildHeaders} />
+      {!readOnly && <AddLead setLeads={setLeads} buildHeaders={buildHeaders} />}
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
+import { useToast } from './Components/Toast';
 
 export default function AddLead({ setLeads, buildHeaders }) {
+  const toast = useToast();
   const [showLeadForm, setShowLeadForm] = useState(() => {
     const saved = localStorage.getItem("showLeadForm");
     return saved === "true";
@@ -60,7 +62,7 @@ export default function AddLead({ setLeads, buildHeaders }) {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         console.error("Add lead error:", err);
-        alert("Failed to add lead.");
+        toast.error("Failed to add lead.");
         return;
       }
 
@@ -78,7 +80,7 @@ export default function AddLead({ setLeads, buildHeaders }) {
       localStorage.removeItem("leadFormData");
     } catch (error) {
       console.error("Request failed:", error);
-      alert("An error occurred while adding the lead.");
+      toast.error("An error occurred while adding the lead.");
     }
   };
 

@@ -1,0 +1,105 @@
+/* ═══════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════ */
+
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 400px;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  box-shadow:
+    0 4px 6px -2px rgba(0, 0, 0, 0.06),
+    0 12px 24px -4px rgba(0, 0, 0, 0.12);
+  pointer-events: all;
+  min-width: 260px;
+  animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Left accent */
+.toast--success { border-left: 3px solid var(--success-500); }
+.toast--error   { border-left: 3px solid var(--danger-500);  }
+.toast--info    { border-left: 3px solid var(--brand);       }
+
+/* Icon circle */
+.toast-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.toast--success .toast-icon { background: var(--success-50);  color: var(--success-600); }
+.toast--error   .toast-icon { background: var(--danger-50);   color: var(--danger-600);  }
+.toast--info    .toast-icon { background: var(--brand-50);    color: var(--brand);        }
+
+/* Message */
+.toast-message {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.45;
+  padding-top: 3px;
+}
+
+/* Dismiss button */
+.toast-dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin-top: 1px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--gray-400);
+  transition: color 0.1s, background 0.1s;
+}
+
+.toast-dismiss:hover {
+  color: var(--gray-700);
+  background: var(--gray-100);
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .toast-container {
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .toast {
+    min-width: unset;
+    width: 100%;
+  }
+}

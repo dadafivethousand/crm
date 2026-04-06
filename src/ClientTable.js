@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./Stylesheets/ClientTable.css";
+import { useToast } from "./Components/Toast";
+import { formatDate } from "./dateUtils";
 
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
@@ -36,6 +38,7 @@ function ClientTable({
   user,  // still accepted if used elsewhere
   buildHeaders,
 }) {
+  const toast = useToast();
   const [search, setSearch] = useState("");
   const [editingRow, setEditingRow] = useState(null);
   const [editedData, setEditedData] = useState({});
@@ -111,6 +114,14 @@ function ClientTable({
       document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
+
+  // Escape cancels inline edit
+  useEffect(() => {
+    if (editingRow === null) return;
+    const onKey = (e) => { if (e.key === "Escape") handleCancelEdit(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [editingRow]);
 
   // --- sorting ---
   useEffect(() => {
@@ -208,17 +219,16 @@ function ClientTable({
     (client) => client?.data && !client.data.kidsMembership
   );
 
-  const filteredClients = search.trim()
-    ? adultClients.filter((c) => {
-        const q = search.toLowerCase();
-        return (
-          c.data?.firstName?.toLowerCase().includes(q) ||
-          c.data?.lastName?.toLowerCase().includes(q) ||
-          c.data?.email?.toLowerCase().includes(q) ||
-          c.data?.phone?.toLowerCase().includes(q)
-        );
-      })
-    : adultClients;
+  const filteredClients = useMemo(() => {
+    if (!search.trim()) return adultClients;
+    const q = search.toLowerCase();
+    return adultClients.filter((c) =>
+      c.data?.firstName?.toLowerCase().includes(q) ||
+      c.data?.lastName?.toLowerCase().includes(q) ||
+      c.data?.email?.toLowerCase().includes(q) ||
+      c.data?.phone?.toLowerCase().includes(q)
+    );
+  }, [adultClients, search]);
 
   const toggleSelect = (key) => {
     setSelected((prev) => {
@@ -293,11 +303,11 @@ function ClientTable({
       } else {
         const errText = await res.text().catch(() => "");
         console.error("Delete failed:", res.status, errText);
-        alert("Delete failed — check console for details.");
+        toast.error("Delete failed.");
       }
     } catch (err) {
       console.error("Network error during delete:", err);
-      alert("Network error during delete. See console.");
+      toast.error("Network error during delete.");
     } finally {
       setLoading(false);
     }
@@ -316,7 +326,7 @@ function ClientTable({
     if (key != null) setIndividualSelection(key);
 
     if (!keys.length && key == null) {
-      alert("Select at least one client to text.");
+      toast.error("Select at least one client first.");
       return;
     }
 
@@ -335,7 +345,7 @@ function ClientTable({
     }
 
     if (!selected.size) {
-      alert("Select at least one client to email.");
+      toast.error("Select at least one client first.");
       return;
     }
 
@@ -352,12 +362,12 @@ function ClientTable({
       individualSelection != null ? [individualSelection] : Array.from(selected);
 
     if (!allRecipients.length) {
-      alert("No recipients selected.");
+      toast.error("No recipients selected.");
       setTextOpen(false);
       return;
     }
     if (!textBody || !textBody.trim()) {
-      alert("Please enter a message.");
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -393,18 +403,18 @@ function ClientTable({
         const responseText = await res.text().catch(() => "");
         if (!res.ok) {
           console.error("Text API error status:", res.status, "body:", responseText);
-          alert("Some text batches failed — check console for details.");
+          toast.error("Some texts failed to send.");
           break;
         }
       }
 
-      alert("Texts queued/sent (batched).");
+      toast.success("Texts sent successfully.");
       setTextBody("");
       setIndividualSelection(null);
       setTextOpen(false);
     } catch (err) {
       console.error("Network error sending text:", err);
-      alert("Network error sending text — see console.");
+      toast.error("Network error sending texts.");
     } finally {
       setTextSending(false);
     }
@@ -417,16 +427,16 @@ function ClientTable({
       individualSelection != null ? [individualSelection] : Array.from(selected);
 
     if (!allRecipients.length) {
-      alert("No recipients selected.");
+      toast.error("No recipients selected.");
       setEmailOpen(false);
       return;
     }
     if (!emailSubject.trim()) {
-      alert("Please enter a subject.");
+      toast.error("Please enter a subject.");
       return;
     }
     if (!emailBody.trim()) {
-      alert("Please enter a message.");
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -464,19 +474,19 @@ function ClientTable({
         const responseText = await res.text().catch(() => "");
         if (!res.ok) {
           console.error("Email API error status:", res.status, "body:", responseText);
-          alert("Some batches failed — check console for details.");
+          toast.error("Some emails failed to send.");
           break;
         }
       }
 
-      alert("Emails queued/sent (batched).");
+      toast.success("Emails sent successfully.");
       setEmailSubject("");
       setEmailBody("");
       setIndividualSelection(null);
       setEmailOpen(false);
     } catch (err) {
       console.error("Network error sending email:", err);
-      alert("Network error sending email — see console.");
+      toast.error("Network error sending emails.");
     } finally {
       setEmailSending(false);
     }
@@ -721,9 +731,11 @@ function ClientTable({
                             </div>
                           ) : header.key === "endDate" ? (
                             <div className="ct-date-cell">
-                              <span className={isExpired ? "ct-name-expired" : ""}>{client.data?.[header.key]}</span>
+                              <span className={isExpired ? "ct-name-expired" : ""}>{formatDate(client.data?.[header.key])}</span>
                               {isExpired && <span className="status-badge status-expired">Expired</span>}
                             </div>
+                          ) : header.key === "startDate" ? (
+                            formatDate(client.data?.[header.key])
                           ) : (
                             client.data?.[header.key]
                           )}
@@ -862,11 +874,11 @@ function ClientTable({
                   <div className="ct-card-dates">
                     <div className="ct-card-date-item">
                       <span className="ct-card-label">Start</span>
-                      <span className="ct-card-row-value">{client.data?.startDate || "—"}</span>
+                      <span className="ct-card-row-value">{formatDate(client.data?.startDate)}</span>
                     </div>
                     <div className="ct-card-date-item">
                       <span className="ct-card-label">End</span>
-                      <span className={`ct-card-row-value${isExpired ? " ct-name-expired" : ""}`}>{client.data?.endDate || "—"}</span>
+                      <span className={`ct-card-row-value${isExpired ? " ct-name-expired" : ""}`}>{formatDate(client.data?.endDate)}</span>
                     </div>
                     <div className="ct-card-date-item">
                       <span className="ct-card-label">Plan</span>

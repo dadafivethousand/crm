@@ -1,10 +1,12 @@
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
+import { useToast } from './Components/Toast';
 
 export default function AddKidClient({
   buildHeaders,    // <-- from App; provides Authorization + X-Maple
   setLeads,        // <-- parent setter to append new lead
 }) {
+  const toast = useToast();
   const [showLeadForm, setShowLeadForm] = useState(() => {
     const saved = localStorage.getItem("showLeadForm");
     return saved === "true";
@@ -63,7 +65,7 @@ export default function AddKidClient({
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         console.error("Add lead error:", err);
-        alert("Failed to add lead.");
+        toast.error("Failed to add lead.");
         return;
       }
 
@@ -80,7 +82,7 @@ export default function AddKidClient({
       localStorage.removeItem("kidLeadFormData");
     } catch (error) {
       console.error("Request failed:", error);
-      alert("An error occurred while adding the lead.");
+      toast.error("An error occurred while adding the lead.");
     }
   };
 

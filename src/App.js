@@ -7,6 +7,7 @@ import AddClient from "./AddClient";
 import LeadsTable from "./LeadsTable";
 import KidsTable from "./KidsTable";
 import LoginForm from "./LoginForm";
+import { ToastProvider } from "./Components/Toast";
 
 import "./Stylesheets/App.css";
 import logo from "./Images/whitelogonobg.png";
@@ -375,4 +376,10 @@ function App() {
   );
 }
 
-export default App;
+export default function Root() {
+  return (
+    <ToastProvider>
+      <App />
+    </ToastProvider>
+  );
+}

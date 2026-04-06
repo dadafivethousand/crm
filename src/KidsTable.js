@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./Stylesheets/ClientTable.css";
 
 import EmailComposer from "./Components/EmailComposer";
@@ -6,10 +6,12 @@ import TextComposer from "./Components/TextComposer";
 import DeleteOptionsModal from "./Components/DeleteOptionsModal";
 import NotesModal from "./Components/NotesModal";
 
-// ✅ outsourced components (Option A: items-driven)
 import BulkActionsDropdown from "./Components/BulkActionsDropdown";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
 import SortableTh from "./Components/SortableTh";
+
+import { useToast } from "./Components/Toast";
+import { formatDate } from "./dateUtils";
 
 function parseNotes(raw) {
   if (!raw) return [];
@@ -18,23 +20,35 @@ function parseNotes(raw) {
   return [];
 }
 
+function getMembershipStatus(endDate) {
+  if (!endDate) return null;
+  const end = new Date(endDate);
+  if (isNaN(end)) return null;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return end < now ? "expired" : "active";
+}
+
 function KidsTable({
   membershipInfo,
-  clients, // still accepted for parity
-  setClients, // still accepted for parity
+  clients,
+  setClients,
   kids,
   setKids,
   token,
   user,
   buildHeaders,
 }) {
+  const toast = useToast();
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pendingDeleteKeys, setPendingDeleteKeys] = useState([]);
 
-  // notes modal state
   const [notesOpen, setNotesOpen] = useState(false);
   const [notesKey, setNotesKey] = useState(null);
   const [notesRaw, setNotesRaw] = useState(null);
+
+  const [search, setSearch] = useState("");
 
   const openNotes = (key, raw) => {
     setNotesKey(key);
@@ -54,16 +68,14 @@ function KidsTable({
   const [sortColumn, setSortColumn] = useState("firstName");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  // selection + actions state
-  const [individualSelection, setIndividualSelection] = useState(null); // ✅ matches ClientTable
+  const [individualSelection, setIndividualSelection] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
 
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [individualActionsOpen, setIndividualActionsOpen] = useState(null); // row index or null
+  const [individualActionsOpen, setIndividualActionsOpen] = useState(null);
   const [loading, setLoading] = useState(false);
   const actionsRef = useRef(null);
 
-  // email / text compose state
   const [textOpen, setTextOpen] = useState(false);
   const [textBody, setTextBody] = useState("");
   const [emailOpen, setEmailOpen] = useState(false);
@@ -80,12 +92,12 @@ function KidsTable({
     { key: "startDate", label: "Start Date" },
     { key: "endDate", label: "End Date" },
     { key: "paymentStatus", label: "Notes" },
-    { key: "membershipDuration", label: "Membership Duration" },
-    { key: "parentFirstName", label: "Parent First Name" },
-    { key: "parentLastName", label: "Parent Last Name" },
+    { key: "membershipDuration", label: "Membership" },
+    { key: "parentFirstName", label: "Parent First" },
+    { key: "parentLastName", label: "Parent Last" },
   ];
 
-  // close BULK actions dropdown on outside click + Escape
+  // Close bulk dropdown on outside click + Escape
   useEffect(() => {
     const onDocClick = (e) => {
       if (actionsRef.current && !actionsRef.current.contains(e.target)) {
@@ -105,23 +117,44 @@ function KidsTable({
     };
   }, []);
 
-  // --- sorting ---
+  // Escape cancels inline edit
   useEffect(() => {
-    setKids(sortKids(kids, sortColumn, sortDirection));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortColumn, sortDirection]);
+    if (editingRow === null) return;
+    const onKey = (e) => { if (e.key === "Escape") handleCancelEdit(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [editingRow]);
 
-  const sortKids = (kidsArr, column, direction) => {
-    return [...(kidsArr || [])].sort((a, b) => {
-      const av = a?.data?.[column];
-      const bv = b?.data?.[column];
-      const valueA = (av ?? "").toString().toLowerCase();
-      const valueB = (bv ?? "").toString().toLowerCase();
-      if (valueA < valueB) return direction === "asc" ? -1 : 1;
-      if (valueA > valueB) return direction === "asc" ? 1 : -1;
+  // Stats
+  const stats = useMemo(() => {
+    const all = kids || [];
+    const expired = all.filter((k) => getMembershipStatus(k.data?.endDate) === "expired").length;
+    return { total: all.length, expired, active: all.length - expired };
+  }, [kids]);
+
+  // Filtered + sorted kids
+  const filteredKids = useMemo(() => {
+    let arr = kids || [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      arr = arr.filter(
+        (k) =>
+          k.data?.firstName?.toLowerCase().includes(q) ||
+          k.data?.lastName?.toLowerCase().includes(q) ||
+          k.data?.parentEmail?.toLowerCase().includes(q) ||
+          k.data?.phone?.toLowerCase().includes(q) ||
+          k.data?.parentFirstName?.toLowerCase().includes(q) ||
+          k.data?.parentLastName?.toLowerCase().includes(q)
+      );
+    }
+    return [...arr].sort((a, b) => {
+      const av = (a?.data?.[sortColumn] ?? "").toString().toLowerCase();
+      const bv = (b?.data?.[sortColumn] ?? "").toString().toLowerCase();
+      if (av < bv) return sortDirection === "asc" ? -1 : 1;
+      if (av > bv) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  };
+  }, [kids, search, sortColumn, sortDirection]);
 
   const handleSort = (key) => {
     if (sortColumn === key) {
@@ -187,21 +220,24 @@ function KidsTable({
 
       if (response.ok) {
         setKids((prevKids) =>
-          prevKids.map((client) =>
-            client.key === key ? { ...client, data: { ...editedData } } : client
+          prevKids.map((k) =>
+            k.key === key ? { ...k, data: { ...editedData } } : k
           )
         );
         handleCancelEdit();
+        toast.success("Changes saved.");
       } else {
         const err = await response.json().catch(() => ({}));
         console.error("Error saving changes", err);
+        toast.error("Failed to save changes.");
       }
     } catch (error) {
       console.error("Error saving changes:", error);
+      toast.error("Network error saving changes.");
     }
   };
 
-  // --- delete modal flow (matches ClientTable shape) ---
+  // --- delete modal flow ---
   const requestDelete = (keyOrKeys) => {
     const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
     if (!keys.length) return;
@@ -246,32 +282,24 @@ function KidsTable({
       if (response.ok) {
         const keySet = new Set(keys);
         setKids((prevKids) => prevKids.filter((kid) => !keySet.has(kid.key)));
-
         setSelected((prev) => {
           const next = new Set(prev);
           keys.forEach((k) => next.delete(k));
           return next;
         });
-
         setActionsOpen(false);
         setIndividualActionsOpen(null);
       } else {
         console.error("Error deleting kid(s):", data);
-        alert("Delete failed — check console for details.");
+        toast.error("Delete failed.");
       }
     } catch (error) {
       console.error("Network error during delete-kid:", error);
-      alert("Network error during delete. See console.");
+      toast.error("Network error during delete.");
     } finally {
       setLoading(false);
     }
   };
-
-  // --- do-not-email toggle ---
-  // Commented out: doNotMail is set automatically by the webhook for subscriptions
-  // (subscriptions auto-renew via Stripe so no reminder needed). Only relevant
-  // for term memberships where automated renewal reminders are sent.
-  // const handleNoEmail = async (key) => { ... };
 
   // --- selection helpers ---
   const toggleSelect = (key) => {
@@ -285,23 +313,20 @@ function KidsTable({
 
   const selectAll = () => {
     setSelected((prev) => {
-      const allKeys = new Set((kids || []).map((k) => k.key));
+      const allKeys = new Set((filteredKids || []).map((k) => k.key));
       const hasUnselected = [...allKeys].some((key) => !prev.has(key));
       return hasUnselected ? allKeys : new Set();
     });
   };
 
-  // --- text/email actions (bulk or single) — matches ClientTable ---
+  // --- text/email actions ---
   const handleSendText = (key) => {
-    const keys = Array.from(selected);
-
     if (key != null) setIndividualSelection(key);
 
-    if (!keys.length && key == null) {
-      alert("Select at least one kid to text.");
+    if (!selected.size && key == null) {
+      toast.error("Select at least one kid first.");
       return;
     }
-
     setActionsOpen(false);
     setIndividualActionsOpen(null);
     setTextOpen(true);
@@ -315,12 +340,10 @@ function KidsTable({
       setEmailOpen(true);
       return;
     }
-
     if (!selected.size) {
-      alert("Select at least one kid to email.");
+      toast.error("Select at least one kid first.");
       return;
     }
-
     setIndividualSelection(null);
     setActionsOpen(false);
     setIndividualActionsOpen(null);
@@ -334,12 +357,12 @@ function KidsTable({
       individualSelection != null ? [individualSelection] : Array.from(selected);
 
     if (!allRecipients.length) {
-      alert("No recipients selected.");
+      toast.error("No recipients selected.");
       setTextOpen(false);
       return;
     }
     if (!textBody || !textBody.trim()) {
-      alert("Please enter a message.");
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -356,37 +379,33 @@ function KidsTable({
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       hdrs.set("Content-Type", "application/json");
 
+      let failed = false;
       for (const recipients of batches) {
-        const payload = {
-          message: textBody,
-          recipients,
-          listType: "kids",
-        };
-
         const res = await fetch(
           "https://worker-consolidated.maxli5004.workers.dev/text",
           {
             method: "POST",
             headers: hdrs,
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ message: textBody, recipients, listType: "kids" }),
           }
         );
-
-        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error("Text API error (kids batch):", res.status, "body:", responseText);
-          alert("Some kids text batches failed — check console for details.");
+          console.error("Text API error (kids):", res.status, await res.text().catch(() => ""));
+          toast.error("Some texts failed to send.");
+          failed = true;
           break;
         }
       }
 
-      alert("Texts queued/sent (batched).");
-      setTextBody("");
-      setIndividualSelection(null);
-      setTextOpen(false);
+      if (!failed) {
+        toast.success("Texts sent successfully.");
+        setTextBody("");
+        setIndividualSelection(null);
+        setTextOpen(false);
+      }
     } catch (err) {
       console.error("Network error sending text:", err);
-      alert("Network error sending text — see console.");
+      toast.error("Network error sending texts.");
     } finally {
       setTextSending(false);
     }
@@ -399,16 +418,16 @@ function KidsTable({
       individualSelection != null ? [individualSelection] : Array.from(selected);
 
     if (!allRecipients.length) {
-      alert("No recipients selected.");
+      toast.error("No recipients selected.");
       setEmailOpen(false);
       return;
     }
     if (!emailSubject.trim()) {
-      alert("Please enter a subject.");
+      toast.error("Please enter a subject.");
       return;
     }
     if (!emailBody.trim()) {
-      alert("Please enter a message.");
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -425,46 +444,45 @@ function KidsTable({
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       hdrs.set("Content-Type", "application/json");
 
+      let failed = false;
       for (const recipients of batches) {
-        const payload = {
-          subject: emailSubject,
-          body: emailBody,
-          message: emailBody,
-          recipients,
-          listType: "kids",
-        };
-
         const res = await fetch(
           "https://worker-consolidated.maxli5004.workers.dev/email",
           {
             method: "POST",
             headers: hdrs,
-            body: JSON.stringify(payload),
+            body: JSON.stringify({
+              subject: emailSubject,
+              body: emailBody,
+              message: emailBody,
+              recipients,
+              listType: "kids",
+            }),
           }
         );
-
-        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error("Email API error (kids batch):", res.status, "body:", responseText);
-          alert("Some kids email batches failed — check console for details.");
+          console.error("Email API error (kids):", res.status, await res.text().catch(() => ""));
+          toast.error("Some emails failed to send.");
+          failed = true;
           break;
         }
       }
 
-      alert("Emails queued/sent (batched).");
-      setEmailSubject("");
-      setEmailBody("");
-      setIndividualSelection(null);
-      setEmailOpen(false);
+      if (!failed) {
+        toast.success("Emails sent successfully.");
+        setEmailSubject("");
+        setEmailBody("");
+        setIndividualSelection(null);
+        setEmailOpen(false);
+      }
     } catch (err) {
       console.error("Network error sending email:", err);
-      alert("Network error sending email — see console.");
+      toast.error("Network error sending emails.");
     } finally {
       setEmailSending(false);
     }
   };
 
-  // Option A: bulk dropdown items
   const bulkItems = [
     {
       label: "Send Email",
@@ -506,14 +524,10 @@ function KidsTable({
         onDeleteAndSaveAsLead={() => confirmDelete(true)}
       />
 
-      {/* Email + Text modals */}
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
-          onClose={() => {
-            setEmailOpen(false);
-            setIndividualSelection(null);
-          }}
+          onClose={() => { setEmailOpen(false); setIndividualSelection(null); }}
           onSend={submitEmail}
           sending={emailSending}
           subject={emailSubject}
@@ -527,10 +541,7 @@ function KidsTable({
       {textOpen && (
         <TextComposer
           open={textOpen}
-          onClose={() => {
-            setTextOpen(false);
-            setIndividualSelection(null);
-          }}
+          onClose={() => { setTextOpen(false); setIndividualSelection(null); }}
           onSend={submitText}
           sending={textSending}
           message={textBody}
@@ -539,7 +550,23 @@ function KidsTable({
         />
       )}
 
-      {/* Bulk actions toolbar */}
+      {/* Stats bar */}
+      <div className="ct-stats-bar">
+        <div className="ct-stat">
+          <span className="ct-stat-value">{stats.total}</span>
+          <span className="ct-stat-label">Total</span>
+        </div>
+        <div className="ct-stat">
+          <span className="ct-stat-value ct-stat-value--active">{stats.active}</span>
+          <span className="ct-stat-label">Active</span>
+        </div>
+        <div className="ct-stat">
+          <span className="ct-stat-value ct-stat-value--expired">{stats.expired}</span>
+          <span className="ct-stat-label">Expired</span>
+        </div>
+      </div>
+
+      {/* Toolbar */}
       <div className="ct-toolbar">
         <BulkActionsDropdown
           actionsRef={actionsRef}
@@ -552,217 +579,266 @@ function KidsTable({
         {selected.size > 0 && (
           <span className="ct-selected-count">{selected.size} selected</span>
         )}
+        <div className="ct-search-wrap">
+          <svg className="ct-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className="ct-search"
+            type="text"
+            placeholder="Search kids…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className="ct-search-clear" onClick={() => setSearch("")} aria-label="Clear search">×</button>
+          )}
+        </div>
       </div>
 
-      <table className="ct-client-table">
-        <thead>
-          <tr>
-            <th className="ct-small">
-              <button className="select-all-button" onClick={selectAll}>
-                Select All
-              </button>
-            </th>
-
-            <th className="ct-small"></th>
-
-            {headers.map((h) => (
-              <SortableTh
-                key={h.key}
-                label={h.label}
-                sortKey={h.key}
-                sortColumn={sortColumn}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-              />
-            ))}
-
-            <th className="ct-small"></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {(kids || []).map((client, index) => (
-            <tr
-              key={client.key ?? index}
-              className={
-                client?.data?.endDate && new Date() > new Date(client.data.endDate)
-                  ? "ct-red"
-                  : "ct-regular"
-              }
-            >
-              {/* checkbox */}
-              <td className="ct-small">
-                <input
-                  type="checkbox"
-                  checked={selected.has(client.key)}
-                  onChange={() => toggleSelect(client.key)}
+      {/* Desktop table */}
+      <div className="ct-table-wrap">
+        <table className="ct-client-table">
+          <thead>
+            <tr>
+              <th className="ct-small">
+                <button className="select-all-button" onClick={selectAll}>
+                  Select All
+                </button>
+              </th>
+              <th className="ct-small"></th>
+              {headers.map((h) => (
+                <SortableTh
+                  key={h.key}
+                  label={h.label}
+                  sortKey={h.key}
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
                 />
-              </td>
+              ))}
+              <th className="ct-small"></th>
+            </tr>
+          </thead>
 
-              {/* edit + do-not-mail */}
-              <td className="ct-small">
-                {editingRow === index ? (
-                  <div className="ct-button-flex">
-                    <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
-                    <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+          <tbody>
+            {filteredKids.length === 0 ? (
+              <tr>
+                <td colSpan={headers.length + 3} className="ct-empty-state">
+                  {search ? `No kids match "${search}"` : "No kids yet"}
+                </td>
+              </tr>
+            ) : (
+              filteredKids.map((client, index) => {
+                const isExpired = getMembershipStatus(client.data?.endDate) === "expired";
+                return (
+                  <tr key={client.key ?? index} className={isExpired ? "ct-red" : "ct-regular"}>
+                    <td className="ct-small">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(client.key)}
+                        onChange={() => toggleSelect(client.key)}
+                      />
+                    </td>
+
+                    <td className="ct-small">
+                      {editingRow === index ? (
+                        <div className="ct-button-flex">
+                          <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                          <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="ct-button-flex">
+                          <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+
+                    {editingRow === index ? (
+                      <>
+                        <td><input type="text" value={editedData.firstName || ""} onChange={(e) => handleInputChange(e, "firstName")} /></td>
+                        <td><input type="text" value={editedData.lastName || ""} onChange={(e) => handleInputChange(e, "lastName")} /></td>
+                        <td><input type="email" value={editedData.parentEmail || ""} onChange={(e) => handleInputChange(e, "parentEmail")} /></td>
+                        <td><input type="tel" value={editedData.phone || ""} onChange={(e) => handleInputChange(e, "phone")} /></td>
+                        <td><input type="date" value={editedData.startDate || ""} onChange={(e) => handleInputChange(e, "startDate")} /></td>
+                        <td><input type="date" value={editedData.endDate || ""} onChange={(e) => handleInputChange(e, "endDate")} /></td>
+                        <td>
+                          {(() => {
+                            const n = parseNotes(client.data?.paymentStatus);
+                            const hasNotes = n.length > 0;
+                            return (
+                              <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                                {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                              </button>
+                            );
+                          })()}
+                        </td>
+                        <td>
+                          <select value={editedData.membershipDuration || ""} onChange={(e) => handleInputChange(e, "membershipDuration")}>
+                            {membershipInfo?.info?.map((m) =>
+                              !m.free && m.description && m.duration ? (
+                                <option key={m.description} value={m.description}>{m.description}</option>
+                              ) : null
+                            )}
+                          </select>
+                        </td>
+                        <td><input type="text" value={editedData.parentFirstName || ""} onChange={(e) => handleInputChange(e, "parentFirstName")} /></td>
+                        <td><input type="text" value={editedData.parentLastName || ""} onChange={(e) => handleInputChange(e, "parentLastName")} /></td>
+                      </>
+                    ) : (
+                      <>
+                        <td>
+                          <div className="ct-name-cell">
+                            <div className="ct-avatar">
+                              {(client.data?.firstName?.[0] || "").toUpperCase()}
+                              {(client.data?.lastName?.[0] || "").toUpperCase()}
+                            </div>
+                            <span className={isExpired ? "ct-name-expired" : ""}>{client.data?.firstName}</span>
+                          </div>
+                        </td>
+                        <td className={isExpired ? "ct-name-expired" : ""}>{client.data?.lastName}</td>
+                        <td>{client.data?.parentEmail}</td>
+                        <td>{client.data?.phone}</td>
+                        <td>{formatDate(client.data?.startDate)}</td>
+                        <td className={isExpired ? "ct-name-expired" : ""}>{formatDate(client.data?.endDate)}</td>
+                        <td>
+                          {(() => {
+                            const n = parseNotes(client.data?.paymentStatus);
+                            const hasNotes = n.length > 0;
+                            return (
+                              <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                                {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                              </button>
+                            );
+                          })()}
+                        </td>
+                        <td>{client.data?.membershipDuration}</td>
+                        <td>{client.data?.parentFirstName}</td>
+                        <td>{client.data?.parentLastName}</td>
+                      </>
+                    )}
+
+                    <td className="ct-small">
+                      <RowActionsDropdown
+                        open={individualActionsOpen === index}
+                        onToggle={() =>
+                          setIndividualActionsOpen((prev) => (prev === index ? null : index))
+                        }
+                        onClose={() => setIndividualActionsOpen(null)}
+                        loading={loading}
+                        items={[
+                          { label: "Edit", onClick: () => handleEditClick(index, client.data) },
+                          { label: "Send Email", onClick: () => handleSendEmail(client.key) },
+                          { label: "Send Text", onClick: () => handleSendText(client.key) },
+                          { label: "Delete", onClick: () => requestDelete(client.key) },
+                        ]}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card list */}
+      <div className="ct-card-list">
+        {filteredKids.length === 0 ? (
+          <div className="ct-empty-state">
+            {search ? `No kids match "${search}"` : "No kids yet"}
+          </div>
+        ) : (
+          filteredKids.map((client, index) => {
+            const isExpired = getMembershipStatus(client.data?.endDate) === "expired";
+            const n = parseNotes(client.data?.paymentStatus);
+            const hasNotes = n.length > 0;
+            return (
+              <div key={client.key ?? index} className={`ct-card${isExpired ? " ct-card--expired" : ""}`}>
+                <div className="ct-card-header">
+                  <div className="ct-card-identity">
+                    <div className="ct-avatar ct-avatar--lg">
+                      {(client.data?.firstName?.[0] || "").toUpperCase()}
+                      {(client.data?.lastName?.[0] || "").toUpperCase()}
+                    </div>
+                    <div>
+                      <div className={`ct-card-name${isExpired ? " ct-name-expired" : ""}`}>
+                        {client.data?.firstName} {client.data?.lastName}
+                      </div>
+                      <div className="ct-card-sub">
+                        {client.data?.parentFirstName} {client.data?.parentLastName}
+                        {isExpired && <span className="status-badge status-expired" style={{marginLeft: 6}}>Expired</span>}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="ct-button-flex">
-                    <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
+                  <RowActionsDropdown
+                    open={individualActionsOpen === index}
+                    onToggle={() =>
+                      setIndividualActionsOpen((prev) => (prev === index ? null : index))
+                    }
+                    onClose={() => setIndividualActionsOpen(null)}
+                    loading={loading}
+                    items={[
+                      { label: "Edit", onClick: () => handleEditClick(index, client.data) },
+                      { label: "Send Email", onClick: () => handleSendEmail(client.key) },
+                      { label: "Send Text", onClick: () => handleSendText(client.key) },
+                      { label: "Delete", onClick: () => requestDelete(client.key) },
+                    ]}
+                  />
+                </div>
+                <div className="ct-card-body">
+                  <div className="ct-card-row">
+                    <span className="ct-card-row-label">Email</span>
+                    <span className="ct-card-row-value">{client.data?.parentEmail || "—"}</span>
+                  </div>
+                  <div className="ct-card-row">
+                    <span className="ct-card-row-label">Phone</span>
+                    <span className="ct-card-row-value">{client.data?.phone || "—"}</span>
+                  </div>
+                  <div className="ct-card-row">
+                    <span className="ct-card-row-label">Membership</span>
+                    <span className="ct-card-row-value">{client.data?.membershipDuration || "—"}</span>
+                  </div>
+                  <div className="ct-card-row">
+                    <span className="ct-card-row-label">Start</span>
+                    <span className="ct-card-row-value">{formatDate(client.data?.startDate)}</span>
+                  </div>
+                  <div className="ct-card-row">
+                    <span className="ct-card-row-label">End</span>
+                    <span className={`ct-card-row-value${isExpired ? " ct-name-expired" : ""}`}>{formatDate(client.data?.endDate)}</span>
+                  </div>
+                  {hasNotes && (
+                    <div className="ct-card-row">
+                      <span className="ct-card-row-label">Notes</span>
+                      <span className="ct-card-row-value">{n[n.length-1].text.slice(0,60)}{n[n.length-1].text.length > 60 ? "…" : ""}</span>
+                    </div>
+                  )}
+                  <div className="ct-card-actions">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(client.key)}
+                      onChange={() => toggleSelect(client.key)}
+                    />
+                    <button
+                      className="nm-notes-btn"
+                      data-has-notes={hasNotes}
+                      onClick={() => openNotes(client.key, client.data?.paymentStatus)}
+                      style={{marginLeft: "auto"}}
+                    >
+                      {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""}` : "+ Note"}
                     </button>
                   </div>
-                )}
-              </td>
-
-              {/* data cells */}
-              {editingRow === index ? (
-                <>
-                  <td>
-                    <input
-                      type="text"
-                      value={editedData.firstName || ""}
-                      onChange={(e) => handleInputChange(e, "firstName")}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={editedData.lastName || ""}
-                      onChange={(e) => handleInputChange(e, "lastName")}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="email"
-                      value={editedData.parentEmail || ""}
-                      onChange={(e) => handleInputChange(e, "parentEmail")}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="tel"
-                      value={editedData.phone || ""}
-                      onChange={(e) => handleInputChange(e, "phone")}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="date"
-                      value={editedData.startDate || ""}
-                      onChange={(e) => handleInputChange(e, "startDate")}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="date"
-                      value={editedData.endDate || ""}
-                      onChange={(e) => handleInputChange(e, "endDate")}
-                    />
-                  </td>
-                  <td>
-                    {(() => {
-                      const n = parseNotes(client.data?.paymentStatus);
-                      const hasNotes = n.length > 0;
-                      return (
-                        <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                          {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
-                        </button>
-                      );
-                    })()}
-                  </td>
-                  <td>
-                    <select
-                      value={editedData.membershipDuration || ""}
-                      onChange={(e) => handleInputChange(e, "membershipDuration")}
-                    >
-                      {membershipInfo?.info?.map((membership) =>
-                        !membership.free &&
-                        membership.description &&
-                        membership.duration ? (
-                          <option key={membership.description} value={membership.description}>
-                            {membership.description}
-                          </option>
-                        ) : null
-                      )}
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={editedData.parentFirstName || ""}
-                      onChange={(e) => handleInputChange(e, "parentFirstName")}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={editedData.parentLastName || ""}
-                      onChange={(e) => handleInputChange(e, "parentLastName")}
-                    />
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td><p>{client.data?.firstName}</p></td>
-                  <td>{client.data?.lastName}</td>
-                  <td>{client.data?.parentEmail}</td>
-                  <td>{client.data?.phone}</td>
-                  <td>{client.data?.startDate}</td>
-                  <td>{client.data?.endDate}</td>
-                  <td>
-                    {(() => {
-                      const n = parseNotes(client.data?.paymentStatus);
-                      const hasNotes = n.length > 0;
-                      return (
-                        <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                          {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
-                        </button>
-                      );
-                    })()}
-                  </td>
-                  <td>{client.data?.membershipDuration}</td>
-                  <td>{client.data?.parentFirstName}</td>
-                  <td>{client.data?.parentLastName}</td>
-                </>
-              )}
-
-              {/* ✅ Individual actions dropdown (outsourced) — matches ClientTable */}
-              <td className="ct-small">
-                <RowActionsDropdown
-                  open={individualActionsOpen === index}
-                  onToggle={() =>
-                    setIndividualActionsOpen((prev) => (prev === index ? null : index))
-                  }
-                  onClose={() => setIndividualActionsOpen(null)}
-                  loading={loading}
-                  items={[
-                    {
-                      label: "Edit",
-                      onClick: () => handleEditClick(index, client.data),
-                    },
-                    {
-                      label: "Send Email",
-                      onClick: () => handleSendEmail(client.key),
-                    },
-                    {
-                      label: "Send Text",
-                      onClick: () => handleSendText(client.key),
-                    },
-                    {
-                      label: "Delete",
-                      onClick: () => requestDelete(client.key),
-                    },
-                  ]}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

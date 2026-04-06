@@ -1,6 +1,7 @@
 import KidsForm from './KidsForm';
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
+import { useToast } from './Components/Toast';
 
 export default function AddClient({
    setForChild,
@@ -18,6 +19,7 @@ export default function AddClient({
   isMaple,         // not directly needed here since buildHeaders carries it, but fine to keep
   buildHeaders,    // <-- injected from App; must be passed in
 }) {
+  const toast = useToast();
 
   const [kidsFormData, setKidsFormData] = useState([{ firstName: '', lastName: '' }]);
 
@@ -184,11 +186,11 @@ export default function AddClient({
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error("Error:", errorData);
-        alert("Failed to add client.");
+        toast.error("Failed to add client.");
       }
     } catch (error) {
       console.error("Request failed:", error);
-      alert("An error occurred while adding the client.");
+      toast.error("An error occurred while adding the client.");
     }
   };
 
