@@ -501,6 +501,11 @@ function ClientTable({
     },
   ];
 
+  const expiredCount = adultClients.filter(
+    (c) => getMembershipStatus(c.data?.endDate) === "expired"
+  ).length;
+  const activeCount = adultClients.length - expiredCount;
+
   return (
     <div className="ct-client-table-container">
       {notesOpen && (
@@ -557,6 +562,25 @@ function ClientTable({
         />
       )}
 
+      {/* Stats bar */}
+      <div className="ct-stats-bar">
+        <span className="ct-stat">{adultClients.length} <span className="ct-stat-label">total</span></span>
+        <span className="ct-stat-divider" />
+        <span className="ct-stat ct-stat--active">{activeCount} <span className="ct-stat-label">active</span></span>
+        {expiredCount > 0 && (
+          <>
+            <span className="ct-stat-divider" />
+            <span className="ct-stat ct-stat--expired">{expiredCount} <span className="ct-stat-label">expired</span></span>
+          </>
+        )}
+        {search.trim() && filteredClients.length !== adultClients.length && (
+          <>
+            <span className="ct-stat-divider" />
+            <span className="ct-stat">{filteredClients.length} <span className="ct-stat-label">shown</span></span>
+          </>
+        )}
+      </div>
+
       {/* Toolbar: search + bulk actions */}
       <div className="ct-toolbar">
         <div className="ct-search-wrap">
@@ -568,7 +592,7 @@ function ClientTable({
           <input
             className="ct-search-input"
             type="text"
-            placeholder="Search clients…"
+            placeholder="Search by name, email or phone…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -586,199 +610,280 @@ function ClientTable({
         )}
       </div>
 
-      <table className="ct-client-table">
-        <thead>
-          <tr>
-            <th className="ct-small">
-              <button className="select-all-button" onClick={selectAll}>
-                Select All
-              </button>
-            </th>
-
-            <th className="ct-small"></th>
-
-            {headers.map((h) => (
-              <SortableTh
-                key={h.key}
-                label={h.label}
-                sortKey={h.key}
-                sortColumn={sortColumn}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-                className={`ct-th-${h.key}`}
-              />
-            ))}
-
-            <th className="ct-small"></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredClients.length === 0 && (
+      {/* ── Desktop table ── */}
+      <div className="ct-table-wrap">
+        <table className="ct-client-table">
+          <thead>
             <tr>
-              <td colSpan={headers.length + 3}>
-                <div className="ct-empty-state">
-                  <svg className="ct-empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                  <p className="ct-empty-text">
-                    {search.trim() ? "No clients match your search" : "No clients yet"}
-                  </p>
-                </div>
-              </td>
-            </tr>
-          )}
-          {filteredClients.map((client, index) => (
-            <tr
-              key={client.key ?? index}
-              className={
-                client.data?.endDate && new Date() > new Date(client.data.endDate)
-                  ? "ct-red"
-                  : "ct-regular"
-              }
-            >
-              <td className="ct-small">
-                <input
-                  type="checkbox"
-                  checked={selected.has(client.key)}
-                  onChange={() => toggleSelect(client.key)}
+              <th className="ct-small">
+                <button className="select-all-button" onClick={selectAll}>All</button>
+              </th>
+              <th className="ct-small"></th>
+              {headers.map((h) => (
+                <SortableTh
+                  key={h.key}
+                  label={h.label}
+                  sortKey={h.key}
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                  className={`ct-th-${h.key}`}
                 />
-              </td>
+              ))}
+              <th className="ct-small"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredClients.length === 0 && (
+              <tr>
+                <td colSpan={headers.length + 3}>
+                  <div className="ct-empty-state">
+                    <svg className="ct-empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <p className="ct-empty-text">
+                      {search.trim() ? "No clients match your search" : "No clients yet"}
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            )}
+            {filteredClients.map((client, index) => {
+              const isExpired = getMembershipStatus(client.data?.endDate) === "expired";
+              const notes = parseNotes(client.data?.paymentStatus);
+              const hasNotes = notes.length > 0;
+              return (
+                <tr key={client.key ?? index} className={isExpired ? "ct-red" : "ct-regular"}>
+                  <td className="ct-small">
+                    <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
+                  </td>
+                  <td className="ct-small">
+                    {editingRow === index ? (
+                      <div className="ct-button-flex">
+                        <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                        <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="ct-button-flex">
+                        <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                  {editingRow === index ? (
+                    <>
+                      {headers.map((header) => (
+                        <td key={header.key}>
+                          {header.key === "paymentStatus" ? (
+                            <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                              {hasNotes ? `${notes.length} note${notes.length !== 1 ? "s" : ""} · ${notes[notes.length-1].text.slice(0,36)}${notes[notes.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                            </button>
+                          ) : header.key === "membershipDuration" ? (
+                            <select value={editedData[header.key] || ""} onChange={(e) => handleInputChange(e, header.key)}>
+                              {membershipInfo?.info?.map((m) =>
+                                !m.free && m.description && m.duration ? (
+                                  <option key={m.description} value={m.description}>{m.description}</option>
+                                ) : null
+                              )}
+                            </select>
+                          ) : (
+                            <input
+                              type={header.key.includes("Date") ? "date" : "text"}
+                              value={editedData[header.key] || ""}
+                              onChange={(e) => handleInputChange(e, header.key)}
+                            />
+                          )}
+                        </td>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {headers.map((header) => (
+                        <td className="ct-content" key={header.key}>
+                          {header.key === "paymentStatus" ? (
+                            <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                              {hasNotes ? `${notes.length} note${notes.length !== 1 ? "s" : ""} · ${notes[notes.length-1].text.slice(0,36)}${notes[notes.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                            </button>
+                          ) : header.key === "firstName" ? (
+                            <div className="ct-name-cell">
+                              <div className={`ct-avatar${isExpired ? " ct-avatar--expired" : ""}`}>
+                                {(client.data?.firstName?.[0] || "").toUpperCase()}
+                                {(client.data?.lastName?.[0] || "").toUpperCase()}
+                              </div>
+                              <span className={isExpired ? "ct-name-expired" : ""}>{client.data?.firstName}</span>
+                            </div>
+                          ) : header.key === "endDate" ? (
+                            <div className="ct-date-cell">
+                              <span className={isExpired ? "ct-name-expired" : ""}>{client.data?.[header.key]}</span>
+                              {isExpired && <span className="status-badge status-expired">Expired</span>}
+                            </div>
+                          ) : (
+                            client.data?.[header.key]
+                          )}
+                        </td>
+                      ))}
+                    </>
+                  )}
+                  <td className="ct-small">
+                    <RowActionsDropdown
+                      open={individualActionsOpen === index}
+                      onToggle={() => setIndividualActionsOpen((prev) => (prev === index ? null : index))}
+                      onClose={() => setIndividualActionsOpen(null)}
+                      loading={loading}
+                      items={[
+                        { label: "Edit",       onClick: () => handleEditClick(index, client.data) },
+                        { label: "Send Email", onClick: () => handleSendEmail(client.key) },
+                        { label: "Send Text",  onClick: () => handleSendText(client.key) },
+                        { label: "Delete",     onClick: () => requestDelete(client.key) },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-              <td className="ct-small">
-                {editingRow === index ? (
-                  <div className="ct-button-flex">
-                    <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>
-                      Save
-                    </button>
-                    <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>
-                      Cancel
-                    </button>
+      {/* ── Mobile card list ── */}
+      <div className="ct-card-list">
+        {filteredClients.length === 0 && (
+          <div className="ct-empty-state">
+            <svg className="ct-empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <p className="ct-empty-text">
+              {search.trim() ? "No clients match your search" : "No clients yet"}
+            </p>
+          </div>
+        )}
+        {filteredClients.map((client, index) => {
+          const isExpired = getMembershipStatus(client.data?.endDate) === "expired";
+          const notes = parseNotes(client.data?.paymentStatus);
+          const hasNotes = notes.length > 0;
+          const isEditing = editingRow === index;
+          return (
+            <div key={client.key ?? index} className={`ct-card${isExpired ? " ct-card--expired" : ""}${selected.has(client.key) ? " ct-card--selected" : ""}`}>
+              <div className="ct-card-header">
+                <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
+                <div className={`ct-avatar${isExpired ? " ct-avatar--expired" : ""}`}>
+                  {(client.data?.firstName?.[0] || "").toUpperCase()}
+                  {(client.data?.lastName?.[0] || "").toUpperCase()}
+                </div>
+                <div className="ct-card-name-wrap">
+                  <span className={`ct-card-fullname${isExpired ? " ct-name-expired" : ""}`}>
+                    {client.data?.firstName} {client.data?.lastName}
+                  </span>
+                  {isExpired && <span className="status-badge status-expired">Expired</span>}
+                </div>
+                {isEditing ? (
+                  <div className="ct-card-edit-actions">
+                    <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                    <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
                   </div>
                 ) : (
-                  <div className="ct-button-flex">
-                    <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                  </div>
+                  <RowActionsDropdown
+                    open={individualActionsOpen === index}
+                    onToggle={() => setIndividualActionsOpen((prev) => (prev === index ? null : index))}
+                    onClose={() => setIndividualActionsOpen(null)}
+                    loading={loading}
+                    items={[
+                      { label: "Edit",       onClick: () => handleEditClick(index, client.data) },
+                      { label: "Send Email", onClick: () => handleSendEmail(client.key) },
+                      { label: "Send Text",  onClick: () => handleSendText(client.key) },
+                      { label: "Delete",     onClick: () => requestDelete(client.key) },
+                    ]}
+                  />
                 )}
-              </td>
+              </div>
 
-              {editingRow === index ? (
-                <>
-                  {headers.map((header) => (
-                    <td key={header.key}>
-                      {header.key === "paymentStatus" ? (() => {
-                        const n = parseNotes(client.data?.paymentStatus);
-                        const hasNotes = n.length > 0;
-                        return (
-                          <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
-                            {hasNotes ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length-1].text.slice(0,36)}${n[n.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
-                          </button>
-                        );
-                      })() : header.key === "membershipDuration" ? (
-                        <select
-                          value={editedData[header.key] || ""}
-                          onChange={(e) => handleInputChange(e, header.key)}
-                        >
+              {isEditing ? (
+                <div className="ct-card-edit-body">
+                  {headers.filter(h => h.key !== "paymentStatus").map((header) => (
+                    <div className="ct-card-field" key={header.key}>
+                      <label className="ct-card-label">{header.label}</label>
+                      {header.key === "membershipDuration" ? (
+                        <select className="ct-card-input" value={editedData[header.key] || ""} onChange={(e) => handleInputChange(e, header.key)}>
                           {membershipInfo?.info?.map((m) =>
                             !m.free && m.description && m.duration ? (
-                              <option key={m.description} value={m.description}>
-                                {m.description}
-                              </option>
+                              <option key={m.description} value={m.description}>{m.description}</option>
                             ) : null
                           )}
                         </select>
                       ) : (
                         <input
+                          className="ct-card-input"
                           type={header.key.includes("Date") ? "date" : "text"}
                           value={editedData[header.key] || ""}
                           onChange={(e) => handleInputChange(e, header.key)}
                         />
                       )}
-                    </td>
+                    </div>
                   ))}
-                </>
+                  <div className="ct-card-field">
+                    <label className="ct-card-label">Notes</label>
+                    <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                      {hasNotes ? `${notes.length} note${notes.length !== 1 ? "s" : ""} · ${notes[notes.length-1].text.slice(0,36)}${notes[notes.length-1].text.length > 36 ? "…" : ""}` : "+ Add note"}
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <>
-                  {headers.map((header) => (
-                    <td className="ct-content" key={header.key}>
-                      {header.key === "paymentStatus" ? (() => {
-                        const n = parseNotes(client.data?.paymentStatus);
-                        const hasNotes = n.length > 0;
-                        const label = hasNotes
-                          ? `${n.length} note${n.length !== 1 ? "s" : ""} · ${n[n.length - 1].text.slice(0, 36)}${n[n.length - 1].text.length > 36 ? "…" : ""}`
-                          : "+ Add note";
-                        return (
-                          <button
-                            className="nm-notes-btn"
-                            data-has-notes={hasNotes}
-                            onClick={() => openNotes(client.key, client.data?.paymentStatus)}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })() : header.key === "firstName" ? (
-                        <div className="ct-name-cell">
-                          <div className="ct-avatar">
-                            {(client.data?.firstName?.[0] || "").toUpperCase()}
-                            {(client.data?.lastName?.[0] || "").toUpperCase()}
-                          </div>
-                          <span>{client.data?.firstName}</span>
-                        </div>
-                      ) : header.key === "endDate" ? (
-                        <div className="ct-date-cell">
-                          <span>{client.data?.[header.key]}</span>
-                          {getMembershipStatus(client.data?.endDate) === "expired" && (
-                            <span className="status-badge status-expired">Expired</span>
-                          )}
-                        </div>
-                      ) : (
-                        client.data?.[header.key]
-                      )}
-                    </td>
-                  ))}
-                </>
+                <div className="ct-card-body">
+                  {client.data?.email && (
+                    <a href={`mailto:${client.data.email}`} className="ct-card-row ct-card-link">
+                      <span className="ct-card-row-icon">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                      </span>
+                      <span className="ct-card-row-value">{client.data.email}</span>
+                    </a>
+                  )}
+                  {client.data?.phone && (
+                    <a href={`tel:${client.data.phone}`} className="ct-card-row ct-card-link">
+                      <span className="ct-card-row-icon">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.59a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                      </span>
+                      <span className="ct-card-row-value">{client.data.phone}</span>
+                    </a>
+                  )}
+                  <div className="ct-card-dates">
+                    <div className="ct-card-date-item">
+                      <span className="ct-card-label">Start</span>
+                      <span className="ct-card-row-value">{client.data?.startDate || "—"}</span>
+                    </div>
+                    <div className="ct-card-date-item">
+                      <span className="ct-card-label">End</span>
+                      <span className={`ct-card-row-value${isExpired ? " ct-name-expired" : ""}`}>{client.data?.endDate || "—"}</span>
+                    </div>
+                    <div className="ct-card-date-item">
+                      <span className="ct-card-label">Plan</span>
+                      <span className="ct-card-row-value">{client.data?.membershipDuration || "—"}</span>
+                    </div>
+                  </div>
+                  <div className="ct-card-row ct-card-row--notes">
+                    <button className="nm-notes-btn" data-has-notes={hasNotes} onClick={() => openNotes(client.key, client.data?.paymentStatus)}>
+                      {hasNotes ? `${notes.length} note${notes.length !== 1 ? "s" : ""} · ${notes[notes.length-1].text.slice(0,40)}${notes[notes.length-1].text.length > 40 ? "…" : ""}` : "+ Add note"}
+                    </button>
+                  </div>
+                </div>
               )}
-
-              <td className="ct-small">
-                <RowActionsDropdown
-                  open={individualActionsOpen === index}
-                  onToggle={() =>
-                    setIndividualActionsOpen((prev) => (prev === index ? null : index))
-                  }
-                  onClose={() => setIndividualActionsOpen(null)}
-                  loading={loading}
-                  items={[
-                    {
-                      label: "Edit",
-                      onClick: () => handleEditClick(index, client.data),
-                    },
-                    {
-                      label: "Send Email",
-                      onClick: () => handleSendEmail(client.key),
-                    },
-                    {
-                      label: "Send Text",
-                      onClick: () => handleSendText(client.key),
-                    },
-                    {
-                      label: "Delete",
-                      onClick: () => requestDelete(client.key),
-                    },
-                  ]}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

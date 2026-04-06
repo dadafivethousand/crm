@@ -579,9 +579,7 @@ body {
    ═══════════════════════════════════════════ */
 @media (max-width: 600px) {
   /* ── Body ── */
-  body {
-    background: #fff;
-  }
+  body { background: #edf0f4; }
 
   /* ── Shell ── */
   .crm-container {
@@ -596,7 +594,7 @@ body {
   /* ── Header ── */
   .crm-header {
     padding: 0 var(--space-3);
-    height: 48px;
+    height: 50px;
     gap: var(--space-2);
   }
 
@@ -607,62 +605,65 @@ body {
 
   .crm-gym-btn {
     padding: 3px 8px;
-    height: 26px;
+    height: 28px;
   }
 
-  .crm-gym-btn img {
-    height: 16px;
-  }
+  .crm-gym-btn img { height: 18px; }
 
   .logout-button {
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-size: var(--font-xs);
   }
 
   /* ── Nav bar ── */
   .crm-nav-bar {
-    padding: 0 var(--space-3);
-    flex-wrap: wrap;
-    gap: 0;
+    padding: 0;
+    flex-direction: column;
     min-height: unset;
+    gap: 0;
   }
 
-  /* Tabs row: horizontally scrollable, no wrap */
+  /* Tabs: full width, horizontally scrollable */
   .crm-nav-tabs {
-    flex: 0 0 100%;
+    display: flex;
+    width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    padding: 0 var(--space-3);
   }
 
-  .crm-nav-tabs::-webkit-scrollbar {
-    display: none;
-  }
+  .crm-nav-tabs::-webkit-scrollbar { display: none; }
 
   .crm-nav-tab {
     padding: 0 var(--space-3);
-    font-size: var(--font-xs);
-    min-height: 40px;
+    font-size: var(--font-sm);
+    min-height: 44px;       /* 44px min touch target */
     flex-shrink: 0;
   }
 
-  /* Actions row: full-width, stacks below tabs */
+  /* Actions: full width strip below tabs */
   .crm-nav-actions {
-    flex: 0 0 100%;
-    padding: var(--space-2) 0;
-    border-top: 1px solid var(--gray-100);
+    display: flex;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
     gap: var(--space-2);
+    border-top: 1px solid var(--gray-100);
   }
 
   .plus {
     flex: 1;
     text-align: center;
-    font-size: var(--font-xs);
-    padding: 6px 10px;
+    font-size: var(--font-sm);
+    padding: 9px 12px;      /* generous tap target */
+    border-radius: var(--radius-md);
+  }
+
+  /* ── Back button ── */
+  .logout-button {
+    min-height: 36px;
   }
 
   /* ── Loading ── */
-  .crm-loading {
-    margin: var(--space-4) 0;
-  }
+  .crm-loading { margin: var(--space-4) 0; }
 }
