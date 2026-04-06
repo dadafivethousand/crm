@@ -568,6 +568,20 @@ function KidsTable({
 
       {/* Toolbar */}
       <div className="ct-toolbar">
+        <div className="ct-search-wrap">
+          <span className="ct-search-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </span>
+          <input
+            className="ct-search-input"
+            type="text"
+            placeholder="Search by kid, parent, email or phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <BulkActionsDropdown
           actionsRef={actionsRef}
           open={actionsOpen}
@@ -579,21 +593,6 @@ function KidsTable({
         {selected.size > 0 && (
           <span className="ct-selected-count">{selected.size} selected</span>
         )}
-        <div className="ct-search-wrap">
-          <svg className="ct-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            className="ct-search"
-            type="text"
-            placeholder="Search kids…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button className="ct-search-clear" onClick={() => setSearch("")} aria-label="Clear search">×</button>
-          )}
-        </div>
       </div>
 
       {/* Desktop table */}
