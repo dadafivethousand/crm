@@ -192,17 +192,15 @@ body {
    APP SHELL
    ═══════════════════════════════════════════ */
 .crm-container {
-  width: min(1520px, calc(100vw - 48px));
-  height: calc(100vh - 80px);
-  margin: 40px auto;
-  border-radius: 24px;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  border-radius: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92)),
     #fff;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.12),
-    0 8px 24px rgba(15, 23, 42, 0.08);
+  border: none;
+  box-shadow: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -607,9 +605,9 @@ body {
    ═══════════════════════════════════════════ */
 @media (max-width: 900px) {
   .crm-container {
-    width: calc(100vw - 32px);
-    height: calc(100vh - 48px);
-    margin: 24px auto;
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
   }
 }
 
@@ -620,17 +618,7 @@ body {
   /* ── Body ── */
   body { background: #edf0f4; }
 
-  /* ── Shell ── */
-  .crm-container {
-    width: 100vw;
-    height: 100dvh;
-    margin: 0;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-  }
-
-  /* ── Header ── */
+/* ── Header ── */
   .crm-header {
     padding: 0 var(--space-3);
     height: 52px;
