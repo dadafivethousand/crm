@@ -1,242 +1,116 @@
 /* ═══════════════════════════════════════════
-   ADD CLIENT / ADD LEAD — Modal Forms
+   ADD CLIENT / ADD LEAD FORM
    ═══════════════════════════════════════════ */
+.add-client-container { text-align: center; }
 
-.add-client-container {
-  text-align: center;
-}
-
-/* ── Overlay ── */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  justify-content: center;
-  overflow: auto;
-  z-index: 9999;
-  padding: var(--space-6);
-  animation: overlayFadeIn 0.2s var(--ease-in-out);
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.40);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: flex; justify-content: center; overflow: auto;
+  z-index: 9999; padding: var(--space-6);
+  animation: overlayFadeIn 0.18s var(--ease-in-out);
 }
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes overlayFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ── Form Card ── */
 .user-form {
   background: #fff;
   padding: 36px 32px 28px;
-  border-radius: var(--radius-xl);
-  width: 100%;
-  max-width: 460px;
+  border-radius: 20px;
+  width: 100%; max-width: 460px;
   border: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-2xl);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  animation: modalSlideUp 0.3s var(--ease-out);
-  align-items: stretch;
-  margin: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07);
+  display: flex; flex-direction: column; gap: var(--space-3);
+  animation: modalSlideUp 0.26s var(--ease-out);
+  align-items: stretch; margin: auto;
 }
-
 @keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-/* ── Title ── */
-.new-client-title {
-  margin: 0 0 var(--space-4);
-  font-size: var(--font-xl);
-  font-weight: 700;
-  text-align: center;
-  color: var(--text);
-  letter-spacing: var(--letter-tight);
-}
-
-/* Also style h2 inside .user-form (AddLead uses bare <h2>) */
+.new-client-title,
 .user-form h2 {
   margin: 0 0 var(--space-4);
-  font-size: var(--font-xl);
-  font-weight: 700;
-  text-align: center;
-  color: var(--text);
+  font-size: var(--font-xl); font-weight: 700;
+  text-align: center; color: var(--text);
   letter-spacing: var(--letter-tight);
 }
 
-/* ── Form Rows ── */
-.form-row {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: var(--space-4);
-  width: 100%;
-}
+.form-row { display: flex; flex-direction: column; margin-bottom: var(--space-4); width: 100%; }
 
-/* ── Labels (scoped) ── */
 .user-form label {
-  font-weight: 600;
-  color: var(--text-secondary);
-  display: block;
-  margin-bottom: var(--space-1);
-  margin-top: var(--space-3);
+  font-weight: 600; color: var(--text-secondary);
+  display: block; margin-bottom: var(--space-1); margin-top: var(--space-3);
   font-size: var(--font-sm);
 }
 
-/* ── Inputs & Selects (scoped) ── */
 .user-form input,
 .user-form select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid var(--gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-family: var(--font-family);
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-md);
+  font-size: var(--font-base); font-family: var(--font-family);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
-  background: var(--gray-25);
-  color: var(--text);
+  background: var(--gray-50); color: var(--text);
 }
-
 .user-form input:focus,
 .user-form select:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.1);
-  background: #fff;
+  outline: none; border-color: var(--brand-400);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.10); background: #fff;
 }
+.user-form input::placeholder { color: var(--text-faint); }
 
-.user-form input::placeholder {
-  color: var(--text-faint);
-}
-
-/* ── Radio Button Group ── */
+/* Radio group */
 .membership-type {
   margin-top: var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  justify-content: center;
+  display: flex; align-items: center; gap: var(--space-5); justify-content: center;
 }
-
-.membership-type span {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-}
-
+.membership-type span { font-weight: 600; color: var(--text-secondary); font-size: var(--font-sm); }
 .membership-type label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-weight: 500;
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  margin-top: 0;
+  display: flex; align-items: center; gap: var(--space-1);
+  font-weight: 500; color: var(--text-secondary); font-size: var(--font-sm);
+  cursor: pointer; margin-top: 0;
 }
 
-/* ── Save & Cancel row ── */
+/* Buttons */
 .save-and-submit-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--space-3); margin-top: var(--space-5); width: 100%;
 }
-
-/* ── Buttons (scoped to form) ── */
 .user-form button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-base);
-  font-weight: 600;
+  padding: 10px 20px; border: none; border-radius: var(--radius-md);
+  font-size: var(--font-base); font-weight: 600; font-family: var(--font-family);
   cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform 0.1s var(--ease-out);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform 0.1s var(--ease-out);
 }
+.user-form button:active { transform: scale(0.97); }
 
-.user-form button:active {
-  transform: scale(0.97);
-}
-
-/* Submit / Save */
 .user-form button[type="submit"] {
   flex: 1;
-  background: linear-gradient(135deg, var(--brand), var(--brand-700));
-  color: white;
-  box-shadow: var(--shadow-brand);
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-500));
+  color: #fff; box-shadow: var(--shadow-brand);
 }
+.user-form button[type="submit"]:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99,102,241,0.30); }
 
-.user-form button[type="submit"]:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(20, 69, 225, 0.3);
-}
-
-/* Cancel */
 .user-form button[type="button"] {
-  flex: 1;
-  background: var(--gray-100);
-  color: var(--text-secondary);
-  border: 1.5px solid var(--gray-300);
+  flex: 1; background: var(--gray-100); color: var(--text-secondary);
+  border: 1.5px solid var(--gray-200);
 }
+.user-form button[type="button"]:hover { background: var(--gray-200); border-color: var(--gray-300); }
 
-.user-form button[type="button"]:hover {
-  background: var(--gray-200);
-  border-color: var(--gray-400);
-}
-
-/* ── Welcome email checkbox ── */
-.welcome-email {
-  width: 100%;
-  margin-top: var(--space-2);
-}
-
+/* Welcome email */
+.welcome-email { width: 100%; margin-top: var(--space-2); }
 .welcome-email label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 500;
-  font-size: var(--font-sm);
-  color: var(--text-muted);
-  cursor: pointer;
-  margin-top: 0;
+  display: flex; align-items: center; gap: var(--space-2);
+  font-weight: 500; font-size: var(--font-sm); color: var(--text-muted);
+  cursor: pointer; margin-top: 0;
 }
+#email-checkbox { width: 18px; height: 18px; accent-color: var(--brand); }
+.user-form br { display: none; }
 
-#email-checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--brand);
-}
-
-/* Hide the <br> tags in the form — spacing is handled by gap */
-.user-form br {
-  display: none;
-}
-
-/* ── Mobile ── */
 @media (max-width: 450px) {
-  .overlay {
-    padding: var(--space-4);
-  }
-
-  .user-form {
-    max-width: 100%;
-    padding: 28px 20px 24px;
-  }
-
-  .save-and-submit-buttons {
-    flex-direction: column;
-  }
-
-  .save-and-submit-buttons button {
-    width: 100%;
-  }
+  .overlay { padding: var(--space-4); }
+  .user-form { max-width: 100%; padding: 28px 20px 24px; }
+  .save-and-submit-buttons { flex-direction: column; }
+  .save-and-submit-buttons button { width: 100%; }
 }
