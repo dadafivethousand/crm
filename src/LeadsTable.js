@@ -6,6 +6,7 @@ import TextComposer from "./Components/TextComposer";
 import NotesModal from "./Components/NotesModal";
 import DeleteOptionsModal from "./Components/DeleteOptionsModal";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
+import SortableTh from "./Components/SortableTh";
 import { useToast } from "./Components/Toast";
 import { formatDateTime } from "./dateUtils";
 
@@ -433,18 +434,6 @@ function LeadsTable({
     setActionsOpen(false);
   };
 
-  // Sortable header helper
-  const SortTh = ({ label, sortKey }) => (
-    <th onClick={() => handleSort(sortKey)} style={{ cursor: "pointer" }}>
-      <div className="ct-header">
-        <div className="ct-table-header">{label}</div>
-        <div className="ct-header-arrow">
-          {sortColumn === sortKey && (sortDirection === "asc" ? "↓" : "↑")}
-        </div>
-      </div>
-    </th>
-  );
-
   return (
     <div className="ct-client-table-container">
       {notesOpen && (
@@ -545,15 +534,15 @@ function LeadsTable({
           <thead>
             <tr>
               <th className="ct-small">
-                <button className="select-all-button" onClick={selectAll}>Select All</button>
+                <button className="select-all-button" onClick={selectAll}>All</button>
               </th>
               {!readOnly && <th className="ct-small"></th>}
-              <SortTh label="First Name" sortKey="firstName" />
-              <SortTh label="Last Name" sortKey="lastName" />
-              <SortTh label="Email" sortKey="email" />
-              <SortTh label="Phone" sortKey="phone" />
-              <SortTh label="Notes" sortKey="notes" />
-              <SortTh label="Date Added" sortKey="createdAt" />
+              <SortableTh label="First Name" sortKey="firstName" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortableTh label="Last Name" sortKey="lastName" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortableTh label="Email" sortKey="email" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortableTh label="Phone" sortKey="phone" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortableTh label="Notes" sortKey="notes" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortableTh label="Date Added" sortKey="createdAt" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <th className="ct-small"></th>
             </tr>
           </thead>

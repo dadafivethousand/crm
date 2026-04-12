@@ -601,9 +601,7 @@ function KidsTable({
           <thead>
             <tr>
               <th className="ct-small">
-                <button className="select-all-button" onClick={selectAll}>
-                  Select All
-                </button>
+                <button className="select-all-button" onClick={selectAll}>All</button>
               </th>
               <th className="ct-small"></th>
               {headers.map((h) => (
