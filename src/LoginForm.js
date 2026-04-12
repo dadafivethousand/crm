@@ -42,10 +42,15 @@ export default function LoginForm({ onLogin }) {
   return (
     <div className="login-form-container">
       <form onSubmit={handleLogin} className="login-form" noValidate>
-        <img className="login-logo" src={require("./Images/crmlogo.png")} alt="CRM" />
+        <div className="login-brand">
+          <span className="login-emoji">🔥</span>
+          <span className="login-brand-name">StudioCRM</span>
+        </div>
 
-        <h2 className="login-title">Sign in</h2>
-        <p className="login-subtitle">Use your account to continue.</p>
+        <div className="login-heading">
+          <h2 className="login-title">Welcome back</h2>
+          <p className="login-subtitle">Sign in to your workspace</p>
+        </div>
 
         <label className="sr-only" htmlFor="login-email">Email</label>
         <input
@@ -74,8 +79,11 @@ export default function LoginForm({ onLogin }) {
         {error && <div className="login-error" role="alert">{error}</div>}
 
         <button type="submit" disabled={loading}>
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Signing in…" : "Sign in"}
         </button>
+
+        <div className="login-divider" />
+        <p className="login-footer">Secure access · Studio CRM</p>
       </form>
     </div>
   );
