@@ -37,6 +37,7 @@ function ClientTable({
   token, // still accepted if used elsewhere
   user,  // still accepted if used elsewhere
   buildHeaders,
+  readOnly = false,
 }) {
   const toast = useToast();
   const [search, setSearch] = useState("");
@@ -607,15 +608,17 @@ function ClientTable({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <BulkActionsDropdown
-          actionsRef={actionsRef}
-          open={actionsOpen}
-          setOpen={setActionsOpen}
-          loading={loading}
-          selectedCount={selected.size}
-          items={bulkItems}
-        />
-        {selected.size > 0 && (
+        {!readOnly && (
+          <BulkActionsDropdown
+            actionsRef={actionsRef}
+            open={actionsOpen}
+            setOpen={setActionsOpen}
+            loading={loading}
+            selectedCount={selected.size}
+            items={bulkItems}
+          />
+        )}
+        {!readOnly && selected.size > 0 && (
           <span className="ct-selected-count">{selected.size} selected</span>
         )}
       </div>
@@ -625,10 +628,12 @@ function ClientTable({
         <table className="ct-client-table">
           <thead>
             <tr>
-              <th className="ct-small">
-                <button className="select-all-button" onClick={selectAll}>All</button>
-              </th>
-              <th className="ct-small"></th>
+              {!readOnly && (
+                <th className="ct-small">
+                  <button className="select-all-button" onClick={selectAll}>All</button>
+                </th>
+              )}
+              {!readOnly && <th className="ct-small"></th>}
               {headers.map((h) => (
                 <SortableTh
                   key={h.key}
@@ -640,7 +645,7 @@ function ClientTable({
                   className={`ct-th-${h.key}`}
                 />
               ))}
-              <th className="ct-small"></th>
+              {!readOnly && <th className="ct-small"></th>}
             </tr>
           </thead>
           <tbody>
@@ -667,26 +672,30 @@ function ClientTable({
               const hasNotes = notes.length > 0;
               return (
                 <tr key={client.key ?? index} className={isExpired ? "ct-red" : "ct-regular"}>
-                  <td className="ct-small">
-                    <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
-                  </td>
-                  <td className="ct-small">
-                    {editingRow === index ? (
-                      <div className="ct-button-flex">
-                        <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
-                        <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
-                      </div>
-                    ) : (
-                      <div className="ct-button-flex">
-                        <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                  {!readOnly && (
+                    <td className="ct-small">
+                      <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
+                    </td>
+                  )}
+                  {!readOnly && (
+                    <td className="ct-small">
+                      {editingRow === index ? (
+                        <div className="ct-button-flex">
+                          <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                          <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="ct-button-flex">
+                          <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
                   {editingRow === index ? (
                     <>
                       {headers.map((header) => (
@@ -743,20 +752,22 @@ function ClientTable({
                       ))}
                     </>
                   )}
-                  <td className="ct-small">
-                    <RowActionsDropdown
-                      open={individualActionsOpen === index}
-                      onToggle={() => setIndividualActionsOpen((prev) => (prev === index ? null : index))}
-                      onClose={() => setIndividualActionsOpen(null)}
-                      loading={loading}
-                      items={[
-                        { label: "Edit",       onClick: () => handleEditClick(index, client.data) },
-                        { label: "Send Email", onClick: () => handleSendEmail(client.key) },
-                        { label: "Send Text",  onClick: () => handleSendText(client.key) },
-                        { label: "Delete",     onClick: () => requestDelete(client.key) },
-                      ]}
-                    />
-                  </td>
+                  {!readOnly && (
+                    <td className="ct-small">
+                      <RowActionsDropdown
+                        open={individualActionsOpen === index}
+                        onToggle={() => setIndividualActionsOpen((prev) => (prev === index ? null : index))}
+                        onClose={() => setIndividualActionsOpen(null)}
+                        loading={loading}
+                        items={[
+                          { label: "Edit",       onClick: () => handleEditClick(index, client.data) },
+                          { label: "Send Email", onClick: () => handleSendEmail(client.key) },
+                          { label: "Send Text",  onClick: () => handleSendText(client.key) },
+                          { label: "Delete",     onClick: () => requestDelete(client.key) },
+                        ]}
+                      />
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -787,7 +798,9 @@ function ClientTable({
           return (
             <div key={client.key ?? index} className={`ct-card${isExpired ? " ct-card--expired" : ""}${selected.has(client.key) ? " ct-card--selected" : ""}`}>
               <div className="ct-card-header">
-                <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
+                {!readOnly && (
+                  <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
+                )}
                 <div className={`ct-avatar${isExpired ? " ct-avatar--expired" : ""}`}>
                   {(client.data?.firstName?.[0] || "").toUpperCase()}
                   {(client.data?.lastName?.[0] || "").toUpperCase()}
@@ -798,7 +811,7 @@ function ClientTable({
                   </span>
                   {isExpired && <span className="status-badge status-expired">Expired</span>}
                 </div>
-                {isEditing ? (
+                {!readOnly && (isEditing ? (
                   <div className="ct-card-edit-actions">
                     <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
                     <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
@@ -816,7 +829,7 @@ function ClientTable({
                       { label: "Delete",     onClick: () => requestDelete(client.key) },
                     ]}
                   />
-                )}
+                ))}
               </div>
 
               {isEditing ? (

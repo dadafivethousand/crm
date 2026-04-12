@@ -20,6 +20,7 @@ function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const isLeadsReadOnlyUser = user?.email?.toLowerCase() === "maxli5004@gmail.com";
+  const isArturUser = user?.email?.toLowerCase() === "artur.kaniev24@gmail.com";
 
   const [isMaple, setIsMaple] = useState(() => {
     const saved = localStorage.getItem("isMaple");
@@ -71,6 +72,9 @@ function App() {
     if (user?.email === "richmondhillbjj@gmail.com") {
       if (isMaple) setIsMaple(false);
       localStorage.setItem("isMaple", "false");
+    } else if (user?.email?.toLowerCase() === "artur.kaniev24@gmail.com") {
+      if (!isMaple) setIsMaple(true);
+      localStorage.setItem("isMaple", "true");
     } else {
       localStorage.setItem("isMaple", String(isMaple));
     }
@@ -93,6 +97,8 @@ function App() {
   useEffect(() => {
     if (user?.email === "richmondhillbjj@gmail.com" && isMaple) {
       setIsMaple(false);
+    } else if (user?.email?.toLowerCase() === "artur.kaniev24@gmail.com" && !isMaple) {
+      setIsMaple(true);
     }
   }, [user, isMaple]);
 
@@ -175,13 +181,18 @@ function App() {
       return;
     }
 
+    if (isArturUser) {
+      fetchClients();
+      return;
+    }
+
     fetchMembershipInfo();
     fetchClients();
     fetchLeads();
-  }, [user, isMaple, buildHeaders, isLeadsReadOnlyUser]);
+  }, [user, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser]);
 
   useEffect(() => {
-    if (!user || isLeadsReadOnlyUser || activeTab !== "summerCamp" || summerCampRegistrations.length > 0) {
+    if (!user || isLeadsReadOnlyUser || isArturUser || activeTab !== "summerCamp" || summerCampRegistrations.length > 0) {
       return;
     }
 
@@ -215,7 +226,7 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, [activeTab, buildHeaders, isLeadsReadOnlyUser, summerCampRegistrations.length, user]);
+  }, [activeTab, buildHeaders, isLeadsReadOnlyUser, isArturUser, summerCampRegistrations.length, user]);
 
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
@@ -258,6 +269,36 @@ function App() {
       Logout
     </button>
   );
+
+  /* ── Artur: maple adults/teens read-only view ── */
+  if (isArturUser) {
+    return (
+      <div className="crm-container">
+        <header className="crm-header">
+          <div className="crm-header-left">
+            <img className="crm-logo" src={logo} alt="Maple" />
+          </div>
+          <div className="crm-header-right">{logoutButton}</div>
+        </header>
+        <div className="crm-content">
+          {loadingClients ? (
+            <p className="crm-loading">Loading…</p>
+          ) : (
+            <ClientTable
+              clients={clients}
+              setClients={setClients}
+              membershipInfo={membershipInfo}
+              token={token}
+              user={user}
+              isMaple={true}
+              buildHeaders={buildHeaders}
+              readOnly
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   /* ── Leads-only view ── */
   if (isLeadsReadOnlyUser) {
