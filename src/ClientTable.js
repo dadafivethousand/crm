@@ -681,7 +681,7 @@ function ClientTable({
                     <td className="ct-small">
                       {editingRow === index ? (
                         <div className="ct-button-flex">
-                          <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                          <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>✅</button>
                           <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
                         </div>
                       ) : (
@@ -813,7 +813,7 @@ function ClientTable({
                 </div>
                 {!readOnly && (isEditing ? (
                   <div className="ct-card-edit-actions">
-                    <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
+                    <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>✅</button>
                     <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
                   </div>
                 ) : (
