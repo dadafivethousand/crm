@@ -49,7 +49,7 @@ export default function LoginForm({ onLogin }) {
 
         <div className="login-heading">
           <h2 className="login-title">Welcome back</h2>
-          <p className="login-subtitle">Sign in to your workspace</p>
+          <p className="login-subtitle">Sign in to manage your gym</p>
         </div>
 
         <label className="sr-only" htmlFor="login-email">Email</label>
