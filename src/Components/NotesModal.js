@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import "../Stylesheets/NotesModal.css";
 
 function parseNotes(raw) {
@@ -71,7 +72,7 @@ export default function NotesModal({
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd();
   };
 
-  return (
+  return createPortal(
     <div className="nm-overlay" onClick={onClose}>
       <div className="nm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="nm-header">
@@ -118,6 +119,7 @@ export default function NotesModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
