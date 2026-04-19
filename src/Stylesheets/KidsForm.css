@@ -3,22 +3,16 @@
    ═══════════════════════════════════════════ */
 
 .kids-form-container {
-  padding: 28px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--gray-200);
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-2xl);
-  max-height: 70vh;
-  max-height: 70dvh;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   animation: kidsSlideUp 0.3s var(--ease-out);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4);
 }
 
 @keyframes kidsSlideUp {
@@ -30,7 +24,7 @@
 .kids-form-container h3 {
   font-size: var(--font-xl);
   font-weight: 700;
-  color: var(--text);
+  color: rgba(255, 255, 255, 0.92);
   margin-bottom: var(--space-2);
   letter-spacing: var(--letter-tight);
 }
@@ -49,7 +43,7 @@
   align-items: center;
   width: 100%;
   gap: var(--space-3);
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   padding-bottom: var(--space-4);
   margin-bottom: var(--space-4);
 }
@@ -75,22 +69,22 @@
   padding: 10px 12px;
   font-size: var(--font-base);
   font-family: var(--font-family);
-  border: 1.5px solid var(--gray-200);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-sm);
-  background: var(--gray-25);
-  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
 .kids-form-input:focus {
-  border-color: var(--brand);
+  border-color: rgba(99, 102, 241, 0.6);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(20, 69, 225, 0.08);
-  background: #fff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .kids-form-input::placeholder {
-  color: var(--text-faint);
+  color: rgba(255, 255, 255, 0.30);
 }
 
 /* DOB Section */
