@@ -114,13 +114,22 @@ function App() {
   useEffect(() => {
     if (!user) return;
 
+    // Clear stale data immediately so the previous tenant's records never show
+    setClients([]);
+    setKids([]);
+    setLeads([]);
+    setSummerCampRegistrations([]);
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
     async function fetchClients() {
       setLoadingClients(true);
       try {
         const headers = await buildHeaders();
         const response = await fetch(
           "https://worker-consolidated.maxli5004.workers.dev/get-clients",
-          { headers }
+          { headers, signal }
         );
         if (response.ok) {
           const data = await response.json();
@@ -130,7 +139,7 @@ function App() {
           console.error("Failed to fetch clients");
         }
       } catch (error) {
-        console.error("Error fetching clients:", error);
+        if (error.name !== "AbortError") console.error("Error fetching clients:", error);
       } finally {
         setLoadingClients(false);
       }
@@ -142,7 +151,7 @@ function App() {
         const headers = await buildHeaders();
         const response = await fetch(
           "https://worker-consolidated.maxli5004.workers.dev/get-leads",
-          { headers }
+          { headers, signal }
         );
         if (response.ok) {
           const data = await response.json();
@@ -151,7 +160,7 @@ function App() {
           console.error("Failed to fetch leads");
         }
       } catch (error) {
-        console.error("Error fetching leads:", error);
+        if (error.name !== "AbortError") console.error("Error fetching leads:", error);
       } finally {
         setLoadingLeads(false);
       }
@@ -189,21 +198,22 @@ function App() {
     fetchMembershipInfo();
     fetchClients();
     fetchLeads();
+
+    return () => controller.abort();
   }, [user, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser]);
 
   useEffect(() => {
-    if (!user || isLeadsReadOnlyUser || isArturUser || activeTab !== "summerCamp" || summerCampRegistrations.length > 0) {
+    if (!user || isLeadsReadOnlyUser || isArturUser || activeTab !== "summerCamp") {
       return;
     }
 
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function fetchSummerCampRegistrations() {
       setLoadingSummerCamp(true);
       try {
         const headers = await buildHeaders();
-        const res = await fetch(`${WORKER}/summer-camp-registrations`, { headers });
-        if (!isMounted) return;
+        const res = await fetch(`${WORKER}/summer-camp-registrations`, { headers, signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           setSummerCampRegistrations(data || []);
@@ -211,22 +221,16 @@ function App() {
           console.error("Failed to fetch summer camp registrations");
         }
       } catch (err) {
-        if (isMounted) {
-          console.error("Error fetching summer camp registrations:", err);
-        }
+        if (err.name !== "AbortError") console.error("Error fetching summer camp registrations:", err);
       } finally {
-        if (isMounted) {
-          setLoadingSummerCamp(false);
-        }
+        setLoadingSummerCamp(false);
       }
     }
 
     fetchSummerCampRegistrations();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [activeTab, buildHeaders, isLeadsReadOnlyUser, isArturUser, summerCampRegistrations.length, user]);
+    return () => controller.abort();
+  }, [activeTab, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser, user]);
 
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
