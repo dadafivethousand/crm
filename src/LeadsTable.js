@@ -445,6 +445,7 @@ function LeadsTable({
           rawNotes={notesRaw}
           onNotesUpdated={handleNotesUpdated}
           buildHeaders={buildHeaders}
+          readOnly={readOnly}
         />
       )}
 

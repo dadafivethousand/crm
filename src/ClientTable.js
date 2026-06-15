@@ -528,6 +528,7 @@ function ClientTable({
           rawNotes={notesRaw}
           onNotesUpdated={handleNotesUpdated}
           buildHeaders={buildHeaders}
+          readOnly={readOnly}
         />
       )}
 

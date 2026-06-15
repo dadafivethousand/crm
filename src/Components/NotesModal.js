@@ -31,9 +31,11 @@ export default function NotesModal({
   rawNotes,
   onNotesUpdated,
   buildHeaders,
+  readOnly = false,
 }) {
   const [newNote, setNewNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
   const [error, setError] = useState("");
 
   if (!open) return null;
@@ -68,6 +70,32 @@ export default function NotesModal({
     }
   };
 
+  const handleDelete = async (index) => {
+    setDeleting(index);
+    setError("");
+    try {
+      const headers = await buildHeaders();
+      const res = await fetch(
+        "https://worker-consolidated.maxli5004.workers.dev/delete-note",
+        {
+          method: "DELETE",
+          headers,
+          body: JSON.stringify({ key: recordKey, type: recordType, index }),
+        }
+      );
+      if (!res.ok) {
+        setError("Failed to delete note.");
+        return;
+      }
+      const { notes: updatedNotes } = await res.json();
+      onNotesUpdated(recordKey, updatedNotes);
+    } catch {
+      setError("Network error.");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd();
   };
@@ -92,6 +120,16 @@ export default function NotesModal({
                       {n.author === "legacy" ? "Note" : n.author}
                     </span>
                     <span className="nm-note-ts">{formatTimestamp(n.timestamp)}</span>
+                    {!readOnly && (
+                      <button
+                        className="nm-delete-btn"
+                        onClick={() => handleDelete(i)}
+                        disabled={deleting === i}
+                        title="Delete note"
+                      >
+                        {deleting === i ? "…" : "✕"}
+                      </button>
+                    )}
                   </div>
                   <p className="nm-note-text">{n.text}</p>
                 </div>
