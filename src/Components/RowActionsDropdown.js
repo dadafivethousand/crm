@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import DropdownMenu from "./DropdownMenu";
 
 export default function RowActionsDropdown({ open, onToggle, onClose, loading, items }) {
+  const btnRef = useRef(null);
+
   return (
     <div style={{ position: "relative" }}>
       <button
+        ref={btnRef}
         className="ct-kebab-btn"
         onClick={onToggle}
         aria-haspopup="menu"
@@ -22,6 +25,8 @@ export default function RowActionsDropdown({ open, onToggle, onClose, loading, i
         open={open}
         className="individual-actions-dropdown"
         onRequestClose={onClose}
+        anchorEl={btnRef}
+        align="right"
         items={items.map((it) => ({ ...it, disabled: loading || !!it.disabled }))}
       />
     </div>

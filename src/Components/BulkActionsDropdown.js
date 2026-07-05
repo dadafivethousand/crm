@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import DropdownMenu from "./DropdownMenu";
 
 export default function BulkActionsDropdown({ actionsRef, open, setOpen, loading, selectedCount, items }) {
+  const btnRef = useRef(null);
+
   return (
     <div ref={actionsRef} style={{ position: "relative" }}>
       <button
+        ref={btnRef}
         className="mass-actions-btn"
         onClick={() => setOpen((s) => !s)}
         disabled={loading}
@@ -21,6 +24,8 @@ export default function BulkActionsDropdown({ actionsRef, open, setOpen, loading
         open={open}
         className="actions-dropdown"
         onRequestClose={() => setOpen(false)}
+        anchorEl={btnRef}
+        align="left"
         items={items}
         footer={
           selectedCount > 0 ? (
