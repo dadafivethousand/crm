@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect } from "react";
+import React, { useRef, useLayoutEffect, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export default function DropdownMenu({
@@ -11,6 +11,20 @@ export default function DropdownMenu({
   align = "right",
 }) {
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || !anchorEl) return;
+    const handler = (e) => {
+      if (
+        menuRef.current && !menuRef.current.contains(e.target) &&
+        anchorEl.current && !anchorEl.current.contains(e.target)
+      ) {
+        onRequestClose?.();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open, anchorEl, onRequestClose]);
 
   useLayoutEffect(() => {
     if (!open || !menuRef.current || !anchorEl?.current) return;

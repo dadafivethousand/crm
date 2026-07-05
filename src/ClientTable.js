@@ -206,12 +206,15 @@ function ClientTable({
           prev.map((c) => (c.key === key ? { ...c, data: editedData } : c))
         );
         handleCancelEdit();
+        toast.success("Changes saved.");
       } else {
         const err = await res.json().catch(() => ({}));
         console.error("Error saving changes:", err);
+        toast.error("Failed to save changes.");
       }
     } catch (err) {
       console.error("Error saving changes:", err);
+      toast.error("Network error saving changes.");
     }
   };
 
@@ -515,7 +518,10 @@ function ClientTable({
   const expiredCount = adultClients.filter(
     (c) => getMembershipStatus(c.data?.endDate) === "expired"
   ).length;
-  const activeCount = adultClients.length - expiredCount;
+  const expiringCount = adultClients.filter(
+    (c) => getMembershipStatus(c.data?.endDate) === "expiring"
+  ).length;
+  const activeCount = adultClients.length - expiredCount - expiringCount;
 
   return (
     <div className="ct-client-table-container">
@@ -579,6 +585,12 @@ function ClientTable({
         <span className="ct-stat">{adultClients.length} <span className="ct-stat-label">total</span></span>
         <span className="ct-stat-divider" />
         <span className="ct-stat ct-stat--active">{activeCount} <span className="ct-stat-label">active</span></span>
+        {expiringCount > 0 && (
+          <>
+            <span className="ct-stat-divider" />
+            <span className="ct-stat ct-stat--expiring">{expiringCount} <span className="ct-stat-label">expiring soon</span></span>
+          </>
+        )}
         {expiredCount > 0 && (
           <>
             <span className="ct-stat-divider" />
@@ -608,6 +620,13 @@ function ClientTable({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button className="ct-search-clear" onClick={() => setSearch("")} title="Clear search" type="button">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          )}
         </div>
         {!readOnly && (
           <BulkActionsDropdown
@@ -668,11 +687,13 @@ function ClientTable({
               </tr>
             )}
             {filteredClients.map((client, index) => {
-              const isExpired = getMembershipStatus(client.data?.endDate) === "expired";
+              const memberStatus = getMembershipStatus(client.data?.endDate);
+              const isExpired = memberStatus === "expired";
+              const isExpiring = memberStatus === "expiring";
               const notes = parseNotes(client.data?.paymentStatus);
               const hasNotes = notes.length > 0;
               return (
-                <tr key={client.key ?? index} className={isExpired ? "ct-red" : "ct-regular"}>
+                <tr key={client.key ?? index} className={isExpired ? "ct-red" : isExpiring ? "ct-expiring" : "ct-regular"}>
                   {!readOnly && (
                     <td className="ct-small">
                       <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
@@ -682,7 +703,7 @@ function ClientTable({
                     <td className="ct-small">
                       {editingRow === index ? (
                         <div className="ct-button-flex">
-                          <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>✅</button>
+                          <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
                           <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
                         </div>
                       ) : (
@@ -743,6 +764,7 @@ function ClientTable({
                             <div className="ct-date-cell">
                               <span className={isExpired ? "ct-name-expired" : ""}>{formatDate(client.data?.[header.key])}</span>
                               {isExpired && <span className="status-badge status-expired">Expired</span>}
+                              {isExpiring && <span className="status-badge status-expiring">Expiring Soon</span>}
                             </div>
                           ) : header.key === "startDate" ? (
                             formatDate(client.data?.[header.key])
@@ -792,12 +814,14 @@ function ClientTable({
           </div>
         )}
         {filteredClients.map((client, index) => {
-          const isExpired = getMembershipStatus(client.data?.endDate) === "expired";
+          const memberStatus = getMembershipStatus(client.data?.endDate);
+          const isExpired = memberStatus === "expired";
+          const isExpiring = memberStatus === "expiring";
           const notes = parseNotes(client.data?.paymentStatus);
           const hasNotes = notes.length > 0;
           const isEditing = editingRow === index;
           return (
-            <div key={client.key ?? index} className={`ct-card${isExpired ? " ct-card--expired" : ""}${selected.has(client.key) ? " ct-card--selected" : ""}`}>
+            <div key={client.key ?? index} className={`ct-card${isExpired ? " ct-card--expired" : isExpiring ? " ct-card--expiring" : ""}${selected.has(client.key) ? " ct-card--selected" : ""}`}>
               <div className="ct-card-header">
                 {!readOnly && (
                   <input type="checkbox" checked={selected.has(client.key)} onChange={() => toggleSelect(client.key)} />
@@ -811,10 +835,11 @@ function ClientTable({
                     {client.data?.firstName} {client.data?.lastName}
                   </span>
                   {isExpired && <span className="status-badge status-expired">Expired</span>}
+                  {isExpiring && <span className="status-badge status-expiring">Expiring Soon</span>}
                 </div>
                 {!readOnly && (isEditing ? (
                   <div className="ct-card-edit-actions">
-                    <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>✅</button>
+                    <button className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
                     <button className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
                   </div>
                 ) : (
