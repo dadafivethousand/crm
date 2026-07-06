@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import "../Stylesheets/TextComposer.css";
 
 export default function TextComposer({
@@ -45,7 +46,7 @@ export default function TextComposer({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="text-modal-overlay"
       onClick={() => { if (!sending) onClose(); }}
@@ -98,6 +99,7 @@ export default function TextComposer({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

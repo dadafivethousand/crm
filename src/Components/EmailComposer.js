@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import "../Stylesheets/EmailComposer.css"
 
 export default function EmailComposer({
@@ -47,10 +48,10 @@ export default function EmailComposer({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="email-modal-overlay"
- 
+      onClick={() => { if (!sending) onClose(); }}
     >
       <div
         ref={emailRef}
@@ -113,6 +114,7 @@ export default function EmailComposer({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
