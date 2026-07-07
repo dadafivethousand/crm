@@ -3,11 +3,15 @@
    ═══════════════════════════════════════════ */
 .add-client-container { text-align:center; }
 
+/* Add Lead button pinned at the top of the leads page */
+.ct-add-lead-top { display:flex; justify-content:flex-start; margin:0 0 var(--space-4); }
+
 .overlay {
   position:fixed; inset:0;
   background:rgba(0,0,0,0.60);
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  display:flex; justify-content:center; overflow:auto;
+  display:flex; flex-direction:column; align-items:center; overflow:auto;
+  overscroll-behavior:contain;
   z-index:9999; padding:var(--space-6);
   animation:overlayFadeIn 0.18s var(--ease-in-out);
 }

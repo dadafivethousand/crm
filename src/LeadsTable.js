@@ -484,6 +484,12 @@ function LeadsTable({
         showConvert={false}
       />
 
+      {!readOnly && (
+        <div className="ct-add-lead-top">
+          <AddLead setLeads={setLeads} buildHeaders={buildHeaders} />
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="ct-toolbar">
         <div className="ct-search-wrap">
@@ -742,8 +748,6 @@ function LeadsTable({
           })
         )}
       </div>
-
-      {!readOnly && <AddLead setLeads={setLeads} buildHeaders={buildHeaders} />}
     </div>
   );
 }
