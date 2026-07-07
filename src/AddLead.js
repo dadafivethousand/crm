@@ -1,5 +1,6 @@
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useToast } from './Components/Toast';
 
 export default function AddLead({ setLeads, buildHeaders }) {
@@ -90,7 +91,7 @@ export default function AddLead({ setLeads, buildHeaders }) {
         Add Lead
       </button>
 
-      {showLeadForm && (
+      {showLeadForm && createPortal(
         <div className="overlay">
           <form className="user-form" onSubmit={handleSubmit}>
             <h2>Add New Lead</h2>
@@ -129,7 +130,8 @@ export default function AddLead({ setLeads, buildHeaders }) {
               <button type="button" onClick={closeForm}>Cancel</button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
