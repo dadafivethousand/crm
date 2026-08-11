@@ -1,0 +1,168 @@
+/* ═══════════════════════════════════════════
+   AI EMAIL BLASTER — Dark
+   ═══════════════════════════════════════════ */
+
+.blaster-overlay {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.60);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  z-index:9999; padding:var(--space-5);
+  animation:blasterOverlayIn 0.18s var(--ease-in-out);
+}
+@keyframes blasterOverlayIn { from{opacity:0} to{opacity:1} }
+
+.blaster-modal {
+  width:min(1180px,97%); max-height:92vh;
+  display:flex; flex-direction:column;
+  background:#0f1a2e;
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.40);
+  box-sizing:border-box;
+  animation:blasterIn 0.24s var(--ease-out);
+}
+@keyframes blasterIn {
+  from{opacity:0;transform:translateY(14px) scale(0.97)}
+  to  {opacity:1;transform:translateY(0)    scale(1)   }
+}
+
+.blaster-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--space-6) var(--space-6) var(--space-4);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.blaster-header h2 {
+  margin:0; font-size:var(--font-lg); font-weight:700;
+  color:rgba(255,255,255,0.92); letter-spacing:var(--letter-tight);
+}
+.blaster-close {
+  background:none; border:none; cursor:pointer;
+  font-size:26px; line-height:1; padding:0 4px;
+  color:rgba(255,255,255,0.45);
+  transition:color var(--transition-fast);
+}
+.blaster-close:hover:not(:disabled) { color:rgba(255,255,255,0.85); }
+.blaster-close:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* Two columns: compose on the left, preview on the right. Collapses to one
+   column on narrow screens so the 600px preview is never squeezed. */
+.blaster-body {
+  display:grid; grid-template-columns:minmax(320px,1fr) minmax(0,640px);
+  gap:var(--space-6);
+  padding:var(--space-6);
+  overflow:auto; flex:1 1 auto;
+}
+@media (max-width: 1000px) {
+  .blaster-body { grid-template-columns:1fr; }
+}
+
+.blaster-col { min-width:0; display:flex; flex-direction:column; }
+
+.blaster-label {
+  display:block; font-size:var(--font-sm); font-weight:600;
+  margin-bottom:var(--space-1); color:rgba(255,255,255,0.65);
+  letter-spacing:var(--letter-wide);
+}
+
+.blaster-input, .blaster-textarea {
+  width:100%; font-size:var(--font-base); font-family:var(--font-family);
+  padding:10px 14px; border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--radius-md); box-sizing:border-box; outline:none;
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.90);
+  transition:border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+.blaster-textarea {
+  min-height:150px; resize:vertical;
+  line-height:var(--line-height-relaxed);
+  margin-bottom:var(--space-4);
+}
+.blaster-input:focus, .blaster-textarea:focus {
+  border-color:rgba(99,102,241,0.55);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.14);
+  background:rgba(255,255,255,0.09);
+}
+.blaster-input:disabled, .blaster-textarea:disabled { opacity:0.45; cursor:not-allowed; }
+.blaster-input::placeholder, .blaster-textarea::placeholder { color:rgba(255,255,255,0.30); }
+
+.blaster-row-2 {
+  display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3);
+  margin-bottom:var(--space-4);
+}
+@media (max-width: 560px) { .blaster-row-2 { grid-template-columns:1fr; } }
+
+.blaster-hint {
+  margin:var(--space-3) 0 0; font-size:var(--font-xs);
+  color:rgba(255,255,255,0.38); line-height:1.6;
+}
+.blaster-hint code {
+  background:rgba(255,255,255,0.08); padding:1px 5px;
+  border-radius:4px; color:rgba(255,255,255,0.65);
+  font-size:0.95em;
+}
+
+/* Preview is pinned to 600px — the width these emails actually render at —
+   and scrolls inside its own box rather than stretching the modal. */
+.blaster-preview-wrap {
+  margin-top:var(--space-2); flex:1 1 auto;
+  min-height:380px; overflow:auto;
+  background:#e9e9e9;
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:var(--radius-md);
+  padding:var(--space-3);
+  display:flex; justify-content:center; align-items:flex-start;
+}
+.blaster-preview {
+  width:600px; min-width:600px; height:560px;
+  border:none; background:#ffffff;
+  border-radius:4px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.18);
+}
+.blaster-preview-empty {
+  margin:auto; max-width:340px; text-align:center;
+  font-size:var(--font-sm); color:#6b7280; line-height:1.7;
+}
+
+.blaster-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:var(--space-4); flex-wrap:wrap;
+  padding:var(--space-4) var(--space-6) var(--space-6);
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.blaster-test { display:flex; gap:var(--space-2); align-items:center; }
+.blaster-input--test { width:230px; }
+
+.blaster-actions { display:flex; gap:var(--space-3); align-items:center; }
+.blaster-gate {
+  font-size:var(--font-xs); color:rgba(245,158,11,0.85);
+  letter-spacing:var(--letter-wide);
+}
+
+.blaster-btn {
+  padding:10px 18px; border-radius:var(--radius-md);
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.88);
+  font-size:var(--font-sm); font-weight:600; font-family:var(--font-family);
+  cursor:pointer; white-space:nowrap;
+  transition:background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+.blaster-btn:hover:not(:disabled) {
+  background:rgba(255,255,255,0.11); border-color:rgba(255,255,255,0.22);
+}
+.blaster-btn:disabled { opacity:0.38; cursor:not-allowed; }
+
+.blaster-btn--primary {
+  background:rgba(99,102,241,0.85); border-color:rgba(99,102,241,0.95);
+  color:#ffffff; align-self:flex-start;
+}
+.blaster-btn--primary:hover:not(:disabled) {
+  background:rgba(99,102,241,1); border-color:rgba(129,132,255,1);
+}
+
+.blaster-btn--send {
+  background:rgba(16,185,129,0.85); border-color:rgba(16,185,129,0.95);
+  color:#ffffff;
+}
+.blaster-btn--send:hover:not(:disabled) {
+  background:rgba(16,185,129,1); border-color:rgba(52,211,153,1);
+}

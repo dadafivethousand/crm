@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./Stylesheets/ClientTable.css";
 import AddLead from "./AddLead";
+import EmailBlaster from "./EmailBlaster";
 import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
 import NotesModal from "./Components/NotesModal";
@@ -98,6 +99,7 @@ function LeadsTable({
   const [textOpen, setTextOpen] = useState(false);
   const [textBody, setTextBody] = useState("");
   const [emailOpen, setEmailOpen] = useState(false);
+  const [blasterOpen, setBlasterOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [emailSending, setEmailSending] = useState(false);
@@ -175,6 +177,16 @@ function LeadsTable({
     setActionsOpen(false);
     setRowActionsOpen(null);
     setEmailOpen(true);
+  };
+
+  const handleEmailSelected = () => {
+    if (!selected.size) {
+      toast.error("Select at least one lead first.");
+      return;
+    }
+    setActionsOpen(false);
+    setRowActionsOpen(null);
+    setBlasterOpen(true);
   };
 
   // --- individual (row) send actions ---
@@ -449,6 +461,14 @@ function LeadsTable({
         />
       )}
 
+      <EmailBlaster
+        open={blasterOpen}
+        onClose={() => setBlasterOpen(false)}
+        leadKeys={Array.from(selected)}
+        leads={leads}
+        buildHeaders={buildHeaders}
+      />
+
       {emailOpen && (
         <EmailComposer
           open={emailOpen}
@@ -520,6 +540,7 @@ function LeadsTable({
             {actionsOpen && (
               <div className="actions-dropdown" role="menu">
                 <button className="dropdown-item" onClick={handleSendEmail} disabled={loading || selected.size === 0}>Send Email</button>
+                <button className="dropdown-item" onClick={handleEmailSelected} disabled={loading || selected.size === 0}>Email selected (AI)</button>
                 <button className="dropdown-item" onClick={handleSendText} disabled={loading || selected.size === 0}>Send Text</button>
                 <button className="dropdown-item" onClick={() => requestDelete(Array.from(selected))} disabled={loading || selected.size === 0}>Delete</button>
                 <button className="dropdown-item" onClick={handleMarkContacted} disabled={loading || selected.size === 0}>Mark as Contacted</button>
