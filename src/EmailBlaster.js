@@ -27,6 +27,9 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
   // was checked in an inbox is always the thing that goes out.
   const [testSent, setTestSent] = useState(false);
 
+  // { done, total } while a batched send is in flight.
+  const [progress, setProgress] = useState(null);
+
   const busy = generating || testing || sending;
 
   useEffect(() => {
@@ -145,35 +148,67 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
     lines.push("", "This cannot be undone.");
     if (!window.confirm(lines.join("\n"))) return;
 
-    setSending(true);
-    try {
-      const { ok, payload } = await postJson("/api/email/send", {
-        subject,
-        html,
-        text,
-        leadKeys,
-        confirm: true,
-      });
+    // Batched rather than one long request: a few hundred sends at ~120ms each
+    // outlives a single fetch, and a batch that fails is a batch worth of
+    // recipients rather than the whole list.
+    const BATCH_SIZE = 25;
+    const batches = [];
+    for (let i = 0; i < leadKeys.length; i += BATCH_SIZE) {
+      batches.push(leadKeys.slice(i, i + BATCH_SIZE));
+    }
 
-      if (!ok) {
-        console.error("[blaster] send failed:", payload);
-        toast.error(payload?.error || "Send failed.");
-        return;
+    setSending(true);
+    setProgress({ done: 0, total: leadKeys.length });
+
+    const totals = { attempted: 0, succeeded: 0, failed: 0 };
+    const failures = [];
+    const skipped = [];
+
+    try {
+      for (const batch of batches) {
+        const { ok, payload } = await postJson("/api/email/send", {
+          subject,
+          html,
+          text,
+          leadKeys: batch,
+          confirm: true,
+        });
+
+        if (!ok) {
+          console.error("[blaster] send batch failed:", payload);
+          toast.error(
+            `${payload?.error || "Send failed."} Stopped after ${totals.succeeded} sent.`
+          );
+          return;
+        }
+
+        totals.attempted += payload.attempted || 0;
+        totals.succeeded += payload.succeeded || 0;
+        totals.failed += payload.failed || 0;
+        failures.push(...(payload.failures || []));
+        skipped.push(...(payload.skipped || []));
+
+        setProgress((p) => ({ ...p, done: Math.min(p.done + batch.length, p.total) }));
       }
 
-      const { attempted = 0, succeeded = 0, failed = 0 } = payload;
-      if (failed > 0) {
-        toast.error(`${succeeded} of ${attempted} sent — ${failed} failed. See console.`);
-        console.warn("[blaster] failures:", payload.failures);
+      if (failures.length) console.warn("[blaster] failures:", failures);
+      if (skipped.length) console.warn("[blaster] skipped:", skipped);
+
+      const skipNote = skipped.length ? `, ${skipped.length} skipped` : "";
+      if (totals.failed > 0) {
+        toast.error(
+          `${totals.succeeded} sent, ${totals.failed} failed${skipNote}. See console for details.`
+        );
       } else {
-        toast.success(`Sent to ${succeeded} lead${succeeded === 1 ? "" : "s"}.`);
+        toast.success(`Sent to ${totals.succeeded} lead${totals.succeeded === 1 ? "" : "s"}${skipNote}.`);
         onClose();
       }
     } catch (err) {
       console.error("[blaster] send error:", err);
-      toast.error("Network error while sending.");
+      toast.error(`Network error after ${totals.succeeded} sent.`);
     } finally {
       setSending(false);
+      setProgress(null);
     }
   };
 
@@ -294,7 +329,11 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
               disabled={busy || !testSent || withEmail.length === 0}
               title={!testSent ? "Send a test to yourself before mailing leads" : undefined}
             >
-              {sending ? "Sending…" : `Send to ${withEmail.length} lead${withEmail.length === 1 ? "" : "s"}`}
+              {sending
+                ? progress
+                  ? `Sending… ${progress.done}/${progress.total}`
+                  : "Sending…"
+                : `Send to ${withEmail.length} lead${withEmail.length === 1 ? "" : "s"}`}
             </button>
           </div>
         </footer>
