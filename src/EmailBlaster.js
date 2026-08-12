@@ -6,7 +6,7 @@ import "./Stylesheets/EmailBlaster.css";
 const WORKER = "https://worker-consolidated.maxli5004.workers.dev";
 const DEFAULT_TEST_ADDRESS = "maxli5004@gmail.com";
 
-export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [], buildHeaders }) {
+export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [], buildHeaders, isMaple = true }) {
   const toast = useToast();
 
   const [prompt, setPrompt] = useState("");
@@ -31,6 +31,10 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
   const [progress, setProgress] = useState(null);
 
   const busy = generating || testing || sending;
+
+  const brand = isMaple
+    ? { name: "Maple Jiu-Jitsu", email: "admin@maplebjj.com", initial: "M" }
+    : { name: "Richmond Hill BJJ", email: "info@rh-bjj.com", initial: "R" };
 
   useEffect(() => {
     const onEsc = (e) => {
@@ -220,29 +224,50 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
         className="blaster-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="AI email blaster"
+        aria-label="AI email"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="blaster-header">
-          <h2>Email {selectedLeads.length} selected lead{selectedLeads.length === 1 ? "" : "s"}</h2>
-          <button className="blaster-close" onClick={onClose} disabled={busy} aria-label="Close">×</button>
+          <div>
+            <h2 className="blaster-title">AI email</h2>
+            <div className="blaster-meta">
+              <span className="blaster-pill blaster-pill--brand">
+                {selectedLeads.length} selected
+              </span>
+              {missingEmail > 0 && (
+                <span className="blaster-pill blaster-pill--warn">
+                  {missingEmail} without an email
+                </span>
+              )}
+              <span className="blaster-pill">{brand.name}</span>
+            </div>
+          </div>
+          <button className="blaster-close" onClick={onClose} disabled={busy} aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
         </header>
 
         <div className="blaster-body">
-          <section className="blaster-col">
-            <label className="blaster-label" htmlFor="blaster-prompt">What should the email say?</label>
+          {/* ── Compose ─────────────────────────────────────────── */}
+          <section className="blaster-pane">
+            <div className="blaster-step">
+              <span className="blaster-step-n">1</span>
+              <span className="blaster-step-label">Describe the email</span>
+            </div>
+
             <textarea
-              id="blaster-prompt"
               className="blaster-textarea"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g. Invite past leads back for a free week of training in August. Mention the new beginner class times."
+              placeholder="Invite past leads back for a free week of training in August. Mention the new beginner class times and that the first class is no-pressure."
               disabled={busy}
             />
 
             <div className="blaster-row-2">
-              <div>
-                <label className="blaster-label" htmlFor="blaster-tone">Tone (optional)</label>
+              <div className="blaster-field">
+                <label className="blaster-label" htmlFor="blaster-tone">Tone</label>
                 <input
                   id="blaster-tone"
                   className="blaster-input"
@@ -252,8 +277,8 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
                   disabled={busy}
                 />
               </div>
-              <div>
-                <label className="blaster-label" htmlFor="blaster-cta">Call to action (optional)</label>
+              <div className="blaster-field">
+                <label className="blaster-label" htmlFor="blaster-cta">Call to action</label>
                 <input
                   id="blaster-cta"
                   className="blaster-input"
@@ -266,45 +291,69 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
             </div>
 
             <button className="blaster-btn blaster-btn--primary" onClick={handleGenerate} disabled={busy}>
-              {generating ? "Generating…" : html ? "Regenerate" : "Generate"}
+              {generating ? (
+                <><span className="blaster-spinner" />Writing…</>
+              ) : html ? "Regenerate" : "Generate email"}
             </button>
 
-            <p className="blaster-hint">
-              Use <code>{"{{first_name}}"}</code> and <code>{"{{last_name}}"}</code> in the copy — they
-              fill in per lead. <code>{"{{first_name}}"}</code> becomes “there” when a lead has no name.
-            </p>
+            <div className="blaster-tokens">
+              <span className="blaster-tokens-label">Fills in per lead</span>
+              <span className="blaster-token">{"{{first_name}}"}</span>
+              <span className="blaster-token">{"{{last_name}}"}</span>
+              <p className="blaster-tokens-note">
+                A lead with no first name gets “there”, so the sentence has to read
+                correctly either way.
+              </p>
+            </div>
           </section>
 
-          <section className="blaster-col">
-            <label className="blaster-label" htmlFor="blaster-subject">Subject</label>
+          {/* ── Preview ─────────────────────────────────────────── */}
+          <section className="blaster-pane">
+            <div className="blaster-step">
+              <span className="blaster-step-n">2</span>
+              <span className="blaster-step-label">Review what they’ll get</span>
+            </div>
+
+            <label className="blaster-label" htmlFor="blaster-subject">Subject line</label>
             <input
               id="blaster-subject"
-              className="blaster-input"
+              className="blaster-input blaster-input--subject"
               value={subject}
               onChange={(e) => { setSubject(e.target.value); setTestSent(false); }}
-              placeholder="Generated subject appears here"
+              placeholder="Appears once you generate"
               disabled={busy || !html}
             />
 
-            <div className="blaster-preview-wrap">
-              {html ? (
-                <iframe
-                  className="blaster-preview"
-                  title="Email preview"
-                  srcDoc={html}
-                  sandbox=""
-                />
-              ) : (
-                <div className="blaster-preview-empty">
-                  The generated email will preview here at 600px — the width it renders at in an inbox.
+            <div className="blaster-inbox">
+              <div className="blaster-inbox-bar">
+                <div className="blaster-avatar">{brand.initial}</div>
+                <div className="blaster-inbox-who">
+                  <div className="blaster-from">{brand.name}</div>
+                  <div className="blaster-addr">{brand.email}</div>
                 </div>
-              )}
+                <div className="blaster-inbox-width">600px</div>
+              </div>
+
+              <div className="blaster-stage">
+                {html ? (
+                  <iframe className="blaster-preview" title="Email preview" srcDoc={html} sandbox="" />
+                ) : (
+                  <div className="blaster-empty">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <path d="M2 7l10 6 10-6" />
+                    </svg>
+                    <p>Your email previews here at the width it renders in an inbox.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         </div>
 
         <footer className="blaster-footer">
-          <div className="blaster-test">
+          <div className="blaster-foot-left">
+            <span className="blaster-step-n blaster-step-n--sm">3</span>
             <input
               className="blaster-input blaster-input--test"
               value={testTo}
@@ -316,12 +365,18 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
             <button className="blaster-btn" onClick={handleTest} disabled={busy || !html}>
               {testing ? "Sending…" : "Send test"}
             </button>
+            {testSent && (
+              <span className="blaster-ok">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                Test sent
+              </span>
+            )}
           </div>
 
           <div className="blaster-actions">
-            {!testSent && html && (
-              <span className="blaster-gate">Send a test first</span>
-            )}
+            {html && !testSent && <span className="blaster-gate">Send yourself a test first</span>}
             <button className="blaster-btn" onClick={onClose} disabled={busy}>Cancel</button>
             <button
               className="blaster-btn blaster-btn--send"

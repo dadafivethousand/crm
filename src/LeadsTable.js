@@ -28,6 +28,7 @@ function LeadsTable({
   user,
   buildHeaders,
   readOnly,
+  isMaple,
 }) {
   const toast = useToast();
 
@@ -467,6 +468,7 @@ function LeadsTable({
         leadKeys={Array.from(selected)}
         leads={leads}
         buildHeaders={buildHeaders}
+        isMaple={isMaple}
       />
 
       {emailOpen && (
