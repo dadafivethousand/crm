@@ -58,6 +58,18 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
   );
   const missingEmail = selectedLeads.length - withEmail.length;
 
+  // A disabled button with no explanation is indistinguishable from a broken
+  // one, so every gate says which one it is.
+  const sendBlockedReason = !html
+    ? "Generate an email first"
+    : selectedLeads.length === 0
+    ? "No leads selected — close this and tick some rows"
+    : withEmail.length === 0
+    ? `None of the ${selectedLeads.length} selected leads have an email address`
+    : !testSent
+    ? "Send yourself a test first"
+    : null;
+
   async function postJson(path, body) {
     const base = await buildHeaders();
     const headers = base instanceof Headers ? base : new Headers(base || {});
@@ -218,6 +230,17 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
 
   if (!open) return null;
 
+  // eslint-disable-next-line no-console
+  console.debug("[blaster] gate", {
+    leadKeys: leadKeys.length,
+    leadsLoaded: leads.length,
+    matched: selectedLeads.length,
+    withEmail: withEmail.length,
+    hasHtml: !!html,
+    testSent,
+    blocked: sendBlockedReason,
+  });
+
   return createPortal(
     <div className="blaster-overlay" onClick={() => { if (!busy) onClose(); }}>
       <div
@@ -319,7 +342,7 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
               id="blaster-subject"
               className="blaster-input blaster-input--subject"
               value={subject}
-              onChange={(e) => { setSubject(e.target.value); setTestSent(false); }}
+              onChange={(e) => setSubject(e.target.value)}
               placeholder="Appears once you generate"
               disabled={busy || !html}
             />
@@ -376,13 +399,13 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
           </div>
 
           <div className="blaster-actions">
-            {html && !testSent && <span className="blaster-gate">Send yourself a test first</span>}
+            {sendBlockedReason && <span className="blaster-gate">{sendBlockedReason}</span>}
             <button className="blaster-btn" onClick={onClose} disabled={busy}>Cancel</button>
             <button
               className="blaster-btn blaster-btn--send"
               onClick={handleSend}
-              disabled={busy || !testSent || withEmail.length === 0}
-              title={!testSent ? "Send a test to yourself before mailing leads" : undefined}
+              disabled={busy || !!sendBlockedReason}
+              title={sendBlockedReason || undefined}
             >
               {sending
                 ? progress
