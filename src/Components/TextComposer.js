@@ -47,13 +47,9 @@ export default function TextComposer({
   if (!open) return null;
 
   return createPortal(
-    <div
-      className="text-modal-overlay"
-      onClick={() => { if (!sending) onClose(); }}
-    >
+    <div className="text-modal-overlay">
       <div
         ref={textRef}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         className="text-modal"
