@@ -30,7 +30,11 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
   // { done, total } while a batched send is in flight.
   const [progress, setProgress] = useState(null);
 
-  const busy = generating || testing || sending;
+  // Uploaded photos: { id, url, width, height, name, thumb }
+  const [photos, setPhotos] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  const busy = generating || testing || sending || uploading;
 
   const brand = isMaple
     ? { name: "Maple Jiu-Jitsu", email: "admin@maplebjj.com", initial: "M" }
@@ -70,6 +74,104 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
     ? "Send yourself a test first"
     : null;
 
+  // Downscale in the browser before uploading. A phone photo is several MB and
+  // 4000px wide; an email body is 600px, so shipping the original would cost
+  // upload time, KV space and load time in every inbox for no visible gain.
+  // 1200px keeps it sharp on retina at 600 CSS pixels.
+  function downscale(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1200;
+        const scale = Math.min(1, MAX / img.naturalWidth);
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => (blob ? resolve({ blob, width: w, height: h }) : reject(new Error("Could not encode image"))),
+          "image/jpeg",
+          0.82
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not read that image"));
+      };
+      img.src = url;
+    });
+  }
+
+  const handleAddPhotos = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+
+    const room = 6 - photos.length;
+    if (room <= 0) {
+      toast.error("Six photos is the maximum for one email.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const base = await buildHeaders();
+      const src = base instanceof Headers ? base : new Headers(base || {});
+      // Let the browser set the multipart boundary itself.
+      const headers = new Headers();
+      if (src.get("Authorization")) headers.set("Authorization", src.get("Authorization"));
+      if (src.get("X-Maple")) headers.set("X-Maple", src.get("X-Maple"));
+
+      for (const file of files.slice(0, room)) {
+        try {
+          const { blob, width, height } = await downscale(file);
+          const form = new FormData();
+          form.append("file", blob, (file.name || "photo").replace(/\.[^.]+$/, "") + ".jpg");
+          form.append("width", String(width));
+          form.append("height", String(height));
+
+          const res = await fetch(`${WORKER}/api/email/upload`, { method: "POST", headers, body: form });
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            console.error("[blaster] upload failed:", payload);
+            toast.error(payload?.error || `Could not upload ${file.name}.`);
+            continue;
+          }
+
+          setPhotos((prev) => [
+            ...prev,
+            {
+              id: payload.id,
+              url: payload.url,
+              width: payload.width,
+              height: payload.height,
+              name: file.name,
+              thumb: URL.createObjectURL(blob),
+            },
+          ]);
+          // A new photo is only in the email once it is regenerated.
+          setHtml("");
+          setTestSent(false);
+        } catch (err) {
+          console.error("[blaster] resize/upload error:", err);
+          toast.error(err?.message || `Could not process ${file.name}.`);
+        }
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (id) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    setHtml("");
+    setTestSent(false);
+  };
+
   async function postJson(path, body) {
     const base = await buildHeaders();
     const headers = base instanceof Headers ? base : new Headers(base || {});
@@ -94,6 +196,9 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
         prompt: prompt.trim(),
         ...(tone.trim() ? { tone: tone.trim() } : {}),
         ...(cta.trim() ? { cta: cta.trim() } : {}),
+        ...(photos.length
+          ? { images: photos.map(({ url, width, height }) => ({ url, width, height })) }
+          : {}),
       });
 
       if (!ok) {
@@ -311,6 +416,54 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
                   disabled={busy}
                 />
               </div>
+            </div>
+
+            <div className="blaster-photos">
+              <div className="blaster-photos-head">
+                <span className="blaster-label" style={{ margin: 0 }}>
+                  Photos {photos.length > 0 && `(${photos.length}/6)`}
+                </span>
+                <label className={`blaster-addphoto${busy || photos.length >= 6 ? " is-disabled" : ""}`}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  {uploading ? "Uploading…" : "Add"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    onChange={handleAddPhotos}
+                    disabled={busy || photos.length >= 6}
+                  />
+                </label>
+              </div>
+
+              {photos.length > 0 ? (
+                <div className="blaster-thumbs">
+                  {photos.map((p) => (
+                    <div className="blaster-thumb" key={p.id} title={p.name}>
+                      <img src={p.thumb} alt={p.name} />
+                      <button
+                        type="button"
+                        className="blaster-thumb-x"
+                        onClick={() => removePhoto(p.id)}
+                        disabled={busy}
+                        aria-label={`Remove ${p.name}`}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="blaster-photos-note">
+                  Optional. Photos are resized for email and placed through the body
+                  when you generate.
+                </p>
+              )}
             </div>
 
             <button className="blaster-btn blaster-btn--primary" onClick={handleGenerate} disabled={busy}>
