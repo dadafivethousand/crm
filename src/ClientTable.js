@@ -444,7 +444,9 @@ function ClientTable({
       return;
     }
 
-    const BATCH_SIZE = 25;
+    // The server queues the sends and replies straight away, so the phone can
+    // lock once this loop is done. 100 is the server's per-request maximum.
+    const BATCH_SIZE = 100;
     const batches = [];
     for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
       batches.push(allRecipients.slice(i, i + BATCH_SIZE));
@@ -457,6 +459,8 @@ function ClientTable({
         baseHeaders instanceof Headers ? baseHeaders : new Headers(baseHeaders || {});
       headersObj.set("Content-Type", "application/json");
 
+      let failed = false;
+      let queued = 0;
       for (const recipients of batches) {
         const payload = {
           subject: emailSubject,
@@ -478,16 +482,27 @@ function ClientTable({
         const responseText = await res.text().catch(() => "");
         if (!res.ok) {
           console.error("Email API error status:", res.status, "body:", responseText);
-          toast.error("Some emails failed to send.");
+          failed = true;
           break;
         }
+        try {
+          queued += JSON.parse(responseText).queued || 0;
+        } catch {}
       }
 
-      toast.success("Emails sent successfully.");
-      setEmailSubject("");
-      setEmailBody("");
-      setIndividualSelection(null);
-      setEmailOpen(false);
+      if (failed) {
+        toast.error(
+          queued > 0
+            ? `Only ${queued} of ${allRecipients.length} emails were queued. The rest were not sent.`
+            : "Emails failed to send. Nothing was sent."
+        );
+      } else {
+        toast.success(`Sending ${queued} email${queued === 1 ? "" : "s"}. This finishes in the background.`);
+        setEmailSubject("");
+        setEmailBody("");
+        setIndividualSelection(null);
+        setEmailOpen(false);
+      }
     } catch (err) {
       console.error("Network error sending email:", err);
       toast.error("Network error sending emails.");

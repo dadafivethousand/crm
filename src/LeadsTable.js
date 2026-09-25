@@ -283,7 +283,9 @@ function LeadsTable({
       return;
     }
 
-    const BATCH_SIZE = 25;
+    // The server queues the sends and replies straight away, so the phone can
+    // lock once this loop is done. 100 is the server's per-request maximum.
+    const BATCH_SIZE = 100;
     const batches = [];
     for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
       batches.push(allRecipients.slice(i, i + BATCH_SIZE));
@@ -297,6 +299,7 @@ function LeadsTable({
       hdrs.set("Content-Type", "application/json");
 
       let failed = false;
+      let queued = 0;
       for (const recipients of batches) {
         const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/email", {
           method: "POST",
@@ -309,16 +312,25 @@ function LeadsTable({
             listType: "leads",
           }),
         });
+        const responseText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error("Email API error (leads):", res.status, await res.text().catch(() => ""));
-          toast.error("Some emails failed to send.");
+          console.error("Email API error (leads):", res.status, responseText);
           failed = true;
           break;
         }
+        try {
+          queued += JSON.parse(responseText).queued || 0;
+        } catch {}
       }
 
-      if (!failed) {
-        toast.success("Emails sent successfully.");
+      if (failed) {
+        toast.error(
+          queued > 0
+            ? `Only ${queued} of ${allRecipients.length} emails were queued. The rest were not sent.`
+            : "Emails failed to send. Nothing was sent."
+        );
+      } else {
+        toast.success(`Sending ${queued} email${queued === 1 ? "" : "s"}. This finishes in the background.`);
         setEmailSubject("");
         setEmailBody("");
         setIndividualSelection(null);
