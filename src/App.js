@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { onAuthStateChanged, getIdToken } from "firebase/auth";
+import { todayISO } from "./dateUtils";
 import { auth } from "./firebaseConfig";
 
 import ClientTable from "./ClientTable";
@@ -43,7 +44,10 @@ function App() {
     lastName: "",
     email: "",
     phone: "",
-    startDate: "",
+    // Today, not "". A blank start date reached the confirmation email as the
+    // literal text "Invalid Date", because new Date("") is an invalid Date and
+    // toLocaleDateString stringifies it rather than throwing.
+    startDate: todayISO(),
     membershipDuration: "1-month",
     endDate: "",
     expiringSoon: false,

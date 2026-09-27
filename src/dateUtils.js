@@ -1,3 +1,15 @@
+// Today as "YYYY-MM-DD", in the LOCAL timezone.
+//
+// Deliberately NOT new Date().toISOString().slice(0, 10). That is the UTC date,
+// and Toronto runs four or five hours behind it — so a client added at 8pm on
+// the 27th would be recorded as starting on the 28th. Built from the local
+// parts instead, which is the date the person entering it is looking at.
+export function todayISO() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 // Formats "2025-01-15" → "Jan 15, 2025" (timezone-safe, no Date constructor needed)
 export function formatDate(str) {
   if (!str) return "—";

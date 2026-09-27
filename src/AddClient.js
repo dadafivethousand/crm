@@ -2,6 +2,7 @@ import KidsForm from './KidsForm';
 import './Stylesheets/AddClient.css';
 import { useState, useEffect } from 'react';
 import { useToast } from './Components/Toast';
+import { todayISO } from './dateUtils';
 
 export default function AddClient({
    setForChild,
@@ -32,7 +33,7 @@ export default function AddClient({
       lastName: "",
       email: "",
       phone: "",
-      startDate: "",
+      startDate: todayISO(),
       membershipDuration: "1-month",
       endDate: "",
       expiringSoon: false,
@@ -76,9 +77,11 @@ export default function AddClient({
 
   // Recompute endDate when startDate changes
   useEffect(() => {
-    updateEndDate('1 Month', membershipInfo, clientFormData.startDate);
+    updateEndDate(clientFormData.membershipDuration, membershipInfo, clientFormData.startDate);
+    // membershipInfo is fetched async and is null on first paint, so the
+    // seeded start date has nothing to compute against until it lands.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientFormData.startDate]);
+  }, [clientFormData.startDate, membershipInfo]);
 
   // Handle input updates
   const handleInputChange = (e) => {
@@ -98,20 +101,34 @@ export default function AddClient({
     });
   };
 
-  // Compute end date based on selected duration in membershipInfo
-  const updateEndDate = (duration, membershipInfo, startDate) => {
-    if (!startDate || !membershipInfo?.info?.length) return;
+  // Pure: the end date for a start date and a duration, or "" if it genuinely
+  // cannot be worked out. updateEndDate below is this wired to state.
+  //
+  // The duration fallback is not defensive padding. The <select> takes its
+  // values from membershipInfo.description ("1 Month", "6 Months", "1 Year"),
+  // but the form's initial membershipDuration is the string "1-month", which
+  // matches none of them. Until the user touches the dropdown, state and the
+  // visible selection disagree — the select displays its first option. So an
+  // unmatched duration resolves to that same first option, which is the one
+  // the person filling the form is actually looking at.
+  const computeEndDate = (duration, info, startDate) => {
+    const options = info?.info?.filter((m) => !m.free && m.description && m.duration);
+    if (!startDate || !options?.length) return "";
 
     const date = new Date(startDate);
-    const matching = membershipInfo.info.find(
-      (m) => m.description === duration
-    );
+    if (isNaN(date.getTime())) return "";
 
-    if (matching?.duration) {
-      date.setMonth(date.getMonth() + matching.duration);
-    }
+    const matching =
+      options.find((m) => m.description === duration) || options[0];
+    if (!matching?.duration) return "";
 
-    const endDate = date.toISOString().split("T")[0];
+    date.setMonth(date.getMonth() + matching.duration);
+    return date.toISOString().split("T")[0];
+  };
+
+  const updateEndDate = (duration, membershipInfo, startDate) => {
+    const endDate = computeEndDate(duration, membershipInfo, startDate);
+    if (!endDate) return;
     setClientFormData((prev) => ({
       ...prev,
       endDate,
@@ -123,8 +140,21 @@ export default function AddClient({
     e.preventDefault();
 
     const timestamp = new Date().toISOString();
+
+    // The field is seeded with today and the picker cannot be cleared to an
+    // invalid value, but the form state is also set from prefilledData when a
+    // lead is converted, and that lead may carry no date at all. Nothing that
+    // reaches the worker should ever be blank: a blank start date comes back
+    // out of the confirmation email as the words "Invalid Date".
+    const startDate = clientFormData.startDate || todayISO();
+    const endDate =
+      clientFormData.endDate ||
+      computeEndDate(clientFormData.membershipDuration, membershipInfo, startDate);
+
     const formDataToSend = {
       ...clientFormData,
+      startDate,
+      endDate,
       timestamp,
     };
 
