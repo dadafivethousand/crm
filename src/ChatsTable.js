@@ -14,6 +14,10 @@ const STATUS_LABELS = {
   turnstile_failed: "Bot check failed",
 };
 
+const UTM_FIELDS = ["source", "medium", "campaign", "term", "content", "gclid", "fbclid"];
+
+const COLUMN_COUNT = 10;
+
 // answered stays quiet; "the bot didn't know" is amber; anything that blocked
 // or broke the reply is red
 function statusClass(status) {
@@ -38,19 +42,158 @@ function formatCost(usd) {
   return `$${usd.toFixed(usd >= 1 ? 2 : 3)}`;
 }
 
-// Full URLs are noisy in a narrow column; show just the path
-function formatPage(page) {
-  if (!page) return "";
+function hostnameOf(url) {
+  if (!url) return "";
   try {
-    return new URL(page).pathname || page;
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return page;
+    return url;
   }
+}
+
+function hasValue(v) {
+  return v !== undefined && v !== null && v !== "";
+}
+
+function capitalize(s) {
+  return s ? s[0].toUpperCase() + s.slice(1) : "";
+}
+
+// "Richmond Hill, ON" — falls back to the country alone
+function formatLocation(loc) {
+  if (!loc) return "";
+  const place = [loc.city, loc.region].filter(Boolean).join(", ");
+  return place || loc.country || "";
+}
+
+// "iPhone · iOS 18 · Safari"; type stands in when there's no model
+function formatDevice(device) {
+  if (!device) return "";
+  return [device.model || capitalize(device.type), device.os, device.browser].filter(Boolean).join(" · ");
+}
+
+// UTM tags win, then the referring site. Rows from before visitor tracking
+// have no client block at all, so those stay blank rather than "Direct".
+function formatSource(client) {
+  if (!client) return "";
+  const utm = client.utm || {};
+  const tagged = [utm.source, utm.medium, utm.campaign].filter(Boolean).join(" / ");
+  if (tagged) return tagged;
+  if (client.referrer) return hostnameOf(client.referrer);
+  return "Direct";
+}
+
+function DetailField({ label, children }) {
+  if (!hasValue(children)) return null;
+  return (
+    <div className="chat-detail-field">
+      <span className="ct-card-row-label">{label}</span>
+      <span className="chat-detail-value">{children}</span>
+    </div>
+  );
+}
+
+// Every captured field, grouped. Empty groups disappear so old rows stay tidy.
+function ChatDetail({ chat, onFilter }) {
+  const loc = chat.location || {};
+  const device = chat.device || {};
+  const client = chat.client || {};
+  const utm = client.utm || {};
+  const hasCoords = hasValue(loc.latitude) && hasValue(loc.longitude);
+  const stop = (e) => e.stopPropagation();
+
+  const groups = [
+    {
+      title: "Visitor",
+      fields: [
+        ["Visitor", client.visitorId && (
+          <button className="chat-session-link" onClick={(e) => { stop(e); onFilter("visitor", client.visitorId); }} title="Show every chat from this visitor">
+            {client.visitorId}
+          </button>
+        )],
+        ["Visits", client.visits],
+        ["First seen", client.firstSeen && formatChatTime(client.firstSeen)],
+        ["Session", chat.sessionId && (
+          <button className="chat-session-link" onClick={(e) => { stop(e); onFilter("session", chat.sessionId); }} title="Show this conversation">
+            {chat.sessionId}
+          </button>
+        )],
+        ["IP", chat.ip],
+        ["IP hash", chat.ipHash],
+      ],
+    },
+    {
+      title: "Location",
+      fields: [
+        ["City", loc.city],
+        ["Region", loc.region],
+        ["Postal", loc.postalCode],
+        ["Country", loc.country],
+        ["Coords", hasCoords && (
+          <a className="ct-card-link" href={`https://www.google.com/maps?q=${loc.latitude},${loc.longitude}`} target="_blank" rel="noopener noreferrer" onClick={stop}>
+            {loc.latitude}, {loc.longitude}
+          </a>
+        )],
+        ["Timezone", loc.timezone],
+        ["ISP", loc.isp],
+        ["ASN", loc.asn],
+      ],
+    },
+    {
+      title: "Device",
+      fields: [
+        ["Type", device.type],
+        ["Model", device.model],
+        ["OS", device.os],
+        ["Browser", device.browser],
+        ["Screen", client.screen],
+        ["Viewport", client.viewport],
+        ["Language", client.language],
+        ["Accept", device.acceptLanguage],
+        ["Timezone", client.timezone],
+        ["Agent", device.userAgent],
+      ],
+    },
+    {
+      title: "Traffic",
+      fields: [
+        ["Page", chat.page],
+        ["Landing", client.landingPage],
+        ["Referrer", client.referrer],
+        ...UTM_FIELDS.map((f) => [f.endsWith("clid") ? f : `utm_${f}`, utm[f]]),
+      ],
+    },
+    {
+      title: "Model",
+      fields: [
+        ["Model", chat.model],
+        ["Stop", chat.stopReason],
+        ["Cost", formatCost(chat.costUsd)],
+        ...Object.entries(chat.usage || {}).map(([k, v]) => [k, typeof v === "object" ? JSON.stringify(v) : v]),
+      ],
+    },
+  ]
+    .map((g) => ({ ...g, fields: g.fields.filter(([, v]) => hasValue(v) && v !== false) }))
+    .filter((g) => g.fields.length > 0);
+
+  return (
+    <div className="chat-detail" onClick={stop}>
+      {groups.map((g) => (
+        <div key={g.title} className="chat-detail-group">
+          <div className="chat-detail-title">{g.title}</div>
+          {g.fields.map(([label, value]) => (
+            <DetailField key={label} label={label}>{value}</DetailField>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function ChatsTable({ chats, cursor, loadingMore, error, onLoadMore }) {
   const [expanded, setExpanded] = useState(() => new Set());
-  const [sessionFilter, setSessionFilter] = useState(null);
+  // { kind: "session" | "visitor", value }
+  const [filter, setFilter] = useState(null);
 
   const toggleExpanded = (key) => {
     setExpanded((prev) => {
@@ -60,12 +203,17 @@ function ChatsTable({ chats, cursor, loadingMore, error, onLoadMore }) {
     });
   };
 
-  // A single conversation reads top-to-bottom, so flip it to oldest first
+  const applyFilter = (kind, value) => setFilter({ kind, value });
+
+  // A filtered conversation reads top-to-bottom, so flip it to oldest first
   const visibleChats = useMemo(() => {
     const arr = chats || [];
-    if (!sessionFilter) return arr;
-    return arr.filter((c) => c.sessionId === sessionFilter).reverse();
-  }, [chats, sessionFilter]);
+    if (!filter) return arr;
+    const match = filter.kind === "visitor"
+      ? (c) => c.client?.visitorId === filter.value
+      : (c) => c.sessionId === filter.value;
+    return arr.filter(match).reverse();
+  }, [chats, filter]);
 
   const summary = useMemo(() => {
     let cost = 0;
@@ -89,9 +237,9 @@ function ChatsTable({ chats, cursor, loadingMore, error, onLoadMore }) {
 
       <div className="ct-toolbar">
         <span className="ct-selected-count">Website chatbot</span>
-        {sessionFilter && (
-          <button className="chat-session-chip" onClick={() => setSessionFilter(null)} title="Show all sessions">
-            Session {sessionFilter.slice(0, 8)} <span aria-hidden="true">×</span>
+        {filter && (
+          <button className="chat-session-chip" onClick={() => setFilter(null)} title="Show all chats">
+            {filter.kind === "visitor" ? "Visitor" : "Session"} {filter.value.slice(0, 8)} <span aria-hidden="true">×</span>
           </button>
         )}
       </div>
@@ -100,19 +248,22 @@ function ChatsTable({ chats, cursor, loadingMore, error, onLoadMore }) {
         <table className="ct-client-table chat-table">
           <thead>
             <tr>
+              <th className="ct-small"></th>
               <th className="chat-col-time">Time</th>
               <th>Question</th>
               <th>Answer</th>
               <th className="chat-col-status">Status</th>
-              <th className="chat-col-page">Page</th>
-              <th className="chat-col-session">Session</th>
+              <th className="chat-col-meta">Location</th>
+              <th className="chat-col-meta">Device</th>
+              <th className="chat-col-meta">Source</th>
+              <th className="chat-col-ip">IP</th>
               <th className="chat-col-cost">Cost</th>
             </tr>
           </thead>
           <tbody>
             {visibleChats.length === 0 ? (
               <tr>
-                <td colSpan={7} className="ct-empty-state">
+                <td colSpan={COLUMN_COUNT} className="ct-empty-state">
                   {error ? "Couldn't load chats" : "No chats yet"}
                 </td>
               </tr>
@@ -120,36 +271,43 @@ function ChatsTable({ chats, cursor, loadingMore, error, onLoadMore }) {
               visibleChats.map((chat, index) => {
                 const key = chat.key ?? index;
                 const isOpen = expanded.has(key);
+                const location = formatLocation(chat.location);
+                const device = formatDevice(chat.device);
+                const source = formatSource(chat.client);
                 return (
-                  <tr key={key}>
-                    <td className="chat-col-time">{formatChatTime(chat.createdAt)}</td>
-                    <td className="chat-text">{chat.question}</td>
-                    <td
-                      className={`chat-text chat-answer${isOpen ? " chat-answer--open" : ""}`}
+                  <React.Fragment key={key}>
+                    <tr
+                      className={`chat-row${isOpen ? " chat-row--open" : ""}`}
                       onClick={() => toggleExpanded(key)}
-                      title={isOpen ? "Click to collapse" : "Click to expand"}
+                      title={isOpen ? "Click to collapse" : "Click for details"}
                     >
-                      {chat.answer || <span className="chat-muted">—</span>}
-                    </td>
-                    <td className="chat-col-status">
-                      <span className={`status-badge ${statusClass(chat.status)}`}>
-                        {STATUS_LABELS[chat.status] || chat.status || "Unknown"}
-                      </span>
-                    </td>
-                    <td className="chat-col-page" title={chat.page || ""}>{formatPage(chat.page)}</td>
-                    <td className="chat-col-session">
-                      {chat.sessionId && (
-                        <button
-                          className="chat-session-link"
-                          onClick={() => setSessionFilter(chat.sessionId)}
-                          title="Show this conversation"
-                        >
-                          {chat.sessionId.slice(0, 8)}
-                        </button>
-                      )}
-                    </td>
-                    <td className="chat-col-cost">{formatCost(chat.costUsd)}</td>
-                  </tr>
+                      <td className="ct-small">
+                        <span className="chat-chevron" aria-hidden="true">{isOpen ? "▾" : "▸"}</span>
+                      </td>
+                      <td className="chat-col-time">{formatChatTime(chat.createdAt)}</td>
+                      <td className="chat-text">{chat.question}</td>
+                      <td className={`chat-text chat-answer${isOpen ? " chat-answer--open" : ""}`}>
+                        {chat.answer || <span className="chat-muted">—</span>}
+                      </td>
+                      <td className="chat-col-status">
+                        <span className={`status-badge ${statusClass(chat.status)}`}>
+                          {STATUS_LABELS[chat.status] || chat.status || "Unknown"}
+                        </span>
+                      </td>
+                      <td className="chat-col-meta" title={chat.location?.postalCode ? `Postal code ${chat.location.postalCode}` : ""}><span className="chat-clip">{location}</span></td>
+                      <td className="chat-col-meta" title={chat.device?.userAgent || ""}><span className="chat-clip">{device}</span></td>
+                      <td className="chat-col-meta" title={chat.client?.referrer || ""}><span className="chat-clip">{source}</span></td>
+                      <td className="chat-col-ip" title={chat.ip || ""}><span className="chat-clip">{chat.ip}</span></td>
+                      <td className="chat-col-cost">{formatCost(chat.costUsd)}</td>
+                    </tr>
+                    {isOpen && (
+                      <tr className="chat-detail-row">
+                        <td colSpan={COLUMN_COUNT}>
+                          <ChatDetail chat={chat} onFilter={applyFilter} />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })
             )}
