@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { onAuthStateChanged, getIdToken } from "firebase/auth";
 import { todayISO } from "./dateUtils";
 import { auth } from "./firebaseConfig";
@@ -8,6 +8,7 @@ import AddClient from "./AddClient";
 import LeadsTable from "./LeadsTable";
 import KidsTable from "./KidsTable";
 import SummerCampTable from "./SummerCampTable";
+import ChatsTable from "./ChatsTable";
 import LoginForm from "./LoginForm";
 import { ToastProvider } from "./Components/Toast";
 
@@ -38,6 +39,14 @@ function App() {
   const [activeTab, setActiveTab] = useState("adults");
   const [summerCampRegistrations, setSummerCampRegistrations] = useState([]);
   const [loadingSummerCamp, setLoadingSummerCamp] = useState(false);
+  const [chats, setChats] = useState([]);
+  const [chatsCursor, setChatsCursor] = useState(null);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [loadingMoreChats, setLoadingMoreChats] = useState(false);
+  const [chatsError, setChatsError] = useState(null);
+  // Bumped on every first-page fetch so a "Load more" still in flight from the
+  // other tenant can't append its rows to this one
+  const chatsRequestId = useRef(0);
   const [membershipInfo, setMembershipInfo] = useState(null);
   const [clientFormData, setClientFormData] = useState({
     firstName: "",
@@ -123,6 +132,8 @@ function App() {
     setKids([]);
     setLeads([]);
     setSummerCampRegistrations([]);
+    setChats([]);
+    setChatsCursor(null);
 
     const controller = new AbortController();
     const { signal } = controller;
@@ -236,6 +247,72 @@ function App() {
     return () => controller.abort();
   }, [activeTab, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser, user]);
 
+  useEffect(() => {
+    if (!user || isLeadsReadOnlyUser || isArturUser || activeTab !== "chats") {
+      return;
+    }
+
+    const controller = new AbortController();
+    const requestId = ++chatsRequestId.current;
+
+    async function fetchChats() {
+      setLoadingChats(true);
+      setChatsError(null);
+      try {
+        const headers = await buildHeaders();
+        const res = await fetch(`${WORKER}/get-chats`, { headers, signal: controller.signal });
+        if (res.ok) {
+          const data = await res.json();
+          setChats(data?.chats || []);
+          setChatsCursor(data?.cursor || null);
+        } else {
+          console.error("Failed to fetch chats");
+          setChatsError("Failed to load chats");
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Error fetching chats:", err);
+          setChatsError("Network error loading chats");
+        }
+      } finally {
+        if (requestId === chatsRequestId.current) setLoadingChats(false);
+      }
+    }
+
+    fetchChats();
+
+    return () => controller.abort();
+  }, [activeTab, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser, user]);
+
+  const loadMoreChats = async () => {
+    if (!chatsCursor || loadingMoreChats) return;
+    const requestId = chatsRequestId.current;
+    setLoadingMoreChats(true);
+    setChatsError(null);
+    try {
+      const headers = await buildHeaders();
+      const res = await fetch(
+        `${WORKER}/get-chats?cursor=${encodeURIComponent(chatsCursor)}`,
+        { headers }
+      );
+      if (requestId !== chatsRequestId.current) return;
+      if (res.ok) {
+        const data = await res.json();
+        if (requestId !== chatsRequestId.current) return;
+        setChats((prev) => [...prev, ...(data?.chats || [])]);
+        setChatsCursor(data?.cursor || null);
+      } else {
+        console.error("Failed to fetch more chats");
+        setChatsError("Failed to load more chats");
+      }
+    } catch (err) {
+      console.error("Error fetching more chats:", err);
+      setChatsError("Network error loading chats");
+    } finally {
+      setLoadingMoreChats(false);
+    }
+  };
+
   if (!token) {
     return <LoginForm onLogin={handleLogin} />;
   }
@@ -344,6 +421,7 @@ function App() {
     { id: "kids",   label: "Kids",           count: kids.length },
     { id: "leads",  label: "Leads",          count: leads.length },
     { id: "summerCamp", label: "Summer Camp", count: summerCampRegistrations.length },
+    { id: "chats",  label: "Chats",          count: chats.length },
   ];
 
   const isLoading =
@@ -351,7 +429,9 @@ function App() {
       ? loadingLeads
       : activeTab === "summerCamp"
         ? loadingSummerCamp
-        : loadingClients;
+        : activeTab === "chats"
+          ? loadingChats
+          : loadingClients;
 
   return (
     <div className="crm-container">
@@ -386,7 +466,7 @@ function App() {
           ))}
         </div>
 
-        {activeTab !== "leads" && activeTab !== "summerCamp" && !showClientForm && (
+        {activeTab !== "leads" && activeTab !== "summerCamp" && activeTab !== "chats" && !showClientForm && (
           <div className="crm-nav-actions">
             <button className="plus" onClick={showAdultForm}>
               + Adult
@@ -477,6 +557,15 @@ function App() {
                 registrations={summerCampRegistrations}
                 setRegistrations={setSummerCampRegistrations}
                 buildHeaders={buildHeaders}
+              />
+            )}
+            {activeTab === "chats" && (
+              <ChatsTable
+                chats={chats}
+                cursor={chatsCursor}
+                loadingMore={loadingMoreChats}
+                error={chatsError}
+                onLoadMore={loadMoreChats}
               />
             )}
           </>
