@@ -347,13 +347,12 @@ export default function EmailBlaster({ open, onClose, leadKeys = [], leads = [],
   });
 
   return createPortal(
-    <div className="blaster-overlay" onClick={() => { if (!busy) onClose(); }}>
+    <div className="blaster-overlay">
       <div
         className="blaster-modal"
         role="dialog"
         aria-modal="true"
         aria-label="AI email"
-        onClick={(e) => e.stopPropagation()}
       >
         <header className="blaster-header">
           <div>

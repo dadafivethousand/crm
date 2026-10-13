@@ -49,13 +49,9 @@ export default function EmailComposer({
   if (!open) return null;
 
   return createPortal(
-    <div
-      className="email-modal-overlay"
-      onClick={() => { if (!sending) onClose(); }}
-    >
+    <div className="email-modal-overlay">
       <div
         ref={emailRef}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         className="email-modal"
