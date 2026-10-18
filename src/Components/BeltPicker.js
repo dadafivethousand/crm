@@ -43,8 +43,8 @@ export function beltRank(data) {
   return KIDS_BELTS.indexOf(belt) * (MAX_STRIPES + 1) + stripes;
 }
 
-// The belt colour IS the dropdown: a native select laid invisibly over the
-// coloured block, the same size as the stripe bar under it, so the two line
+// The belt colour IS the dropdown: click the colour and the list opens. A
+// native select is laid invisibly over the coloured block, the same size as the stripe bar under it, so the two line
 // up. The name still shows in the list and on hover.
 function BeltSelect({ belt, onChange, disabled }) {
   const [main, bar] = belt.split("/");
@@ -55,9 +55,6 @@ function BeltSelect({ belt, onChange, disabled }) {
       title={belt}
     >
       {bar && <span className="bp-belt-band" style={{ background: SWATCH[bar] }} />}
-      <svg className="bp-belt-caret" viewBox="0 0 10 6" aria-hidden="true">
-        <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
       <select
         className="bp-belt-select"
         value={belt}
