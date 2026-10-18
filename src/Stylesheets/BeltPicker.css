@@ -1,9 +1,12 @@
-/* ── Kids belt + stripes picker ── */
-.bp-picker { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-.bp-group  { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+/* ── Kids belt + stripes picker ──
+   One row that never wraps, every piece a fixed width, so the belt and the
+   stripes line up in a column from one kid to the next. */
+.bp-picker { display:inline-flex; flex-wrap:nowrap; align-items:center; gap:12px; white-space:nowrap; }
+.bp-group  { display:inline-flex; align-items:center; gap:5px; }
 
 .bp-step {
   width:24px; height:24px; padding:0; flex-shrink:0;
+  display:inline-flex; align-items:center; justify-content:center;
   border:1px solid rgba(255,255,255,0.16); border-radius:var(--radius-sm);
   background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.85);
   font-size:15px; font-weight:600; line-height:1; font-family:var(--font-family);
@@ -13,15 +16,38 @@
 .bp-step:disabled { opacity:0.3; cursor:default; }
 
 .bp-select {
-  padding:3px 6px; border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-sm);
+  height:24px; box-sizing:border-box; padding:0 6px;
+  border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-sm);
   background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.92);
   font-size:var(--font-sm); font-family:var(--font-family); cursor:pointer;
 }
 .bp-select option { background:#0a1124; color:#fff; }
-.bp-select--belt { min-width:112px; }
+/* fixed, not min-width: "Grey/White" and "Green" must take the same room or
+   the stripes start at a different x on every row */
+.bp-select--belt { width:116px; }
 
+/* the belt colour: a square, with the kids-belt band through the middle */
 .bp-swatch {
-  position:relative; width:22px; height:12px; flex-shrink:0; overflow:hidden;
-  border-radius:3px; border:1px solid rgba(255,255,255,0.25);
+  position:relative; width:20px; height:20px; flex-shrink:0; box-sizing:border-box;
+  overflow:hidden; border-radius:4px; border:1px solid rgba(255,255,255,0.3);
 }
-.bp-swatch-bar { position:absolute; left:0; right:0; top:4px; height:4px; }
+.bp-swatch-bar { position:absolute; left:0; right:0; top:50%; height:6px; transform:translateY(-50%); }
+
+/* the black rank bar, one thin white tape mark per stripe, like on a real
+   belt. Each slot is a 9px click target with the 3px tape drawn inside it. */
+.bp-bar {
+  display:inline-flex; align-items:stretch; justify-content:center; gap:1px;
+  flex-shrink:0; box-sizing:border-box; width:46px; height:24px; padding:3px 2px;
+  background:#0b0b0d; border:1px solid rgba(255,255,255,0.28); border-radius:3px;
+}
+.bp-tape {
+  position:relative; width:9px; padding:0; border:0; background:none; cursor:pointer;
+}
+.bp-tape::after {
+  content:""; position:absolute; top:0; bottom:0; left:3px; width:3px; border-radius:1px;
+  background:rgba(255,255,255,0.08);
+  transition:background var(--transition-fast), box-shadow var(--transition-fast);
+}
+.bp-tape.is-on::after { background:#f5f5f5; box-shadow:0 0 3px rgba(255,255,255,0.4); }
+.bp-tape:hover:not(:disabled):not(.is-on)::after { background:rgba(255,255,255,0.3); }
+.bp-tape:disabled { cursor:default; }

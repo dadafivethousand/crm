@@ -52,6 +52,34 @@ function Swatch({ belt }) {
   );
 }
 
+// The black rank bar at the end of a belt, with one white tape mark per
+// stripe. Clicking a slot sets the count to it; clicking the last filled
+// slot takes that stripe off again.
+function StripeBar({ stripes, onChange, disabled }) {
+  return (
+    <span
+      className="bp-bar"
+      role="group"
+      aria-label={`${stripes} ${stripes === 1 ? "stripe" : "stripes"}`}
+      title={`${stripes} ${stripes === 1 ? "stripe" : "stripes"}`}
+    >
+      {Array.from({ length: MAX_STRIPES }, (_, i) => {
+        const n = i + 1;
+        return (
+          <button
+            key={n}
+            type="button"
+            className={`bp-tape${n <= stripes ? " is-on" : ""}`}
+            onClick={() => onChange(n === stripes ? n - 1 : n)}
+            disabled={disabled}
+            aria-label={`Set ${n} ${n === 1 ? "stripe" : "stripes"}`}
+          />
+        );
+      })}
+    </span>
+  );
+}
+
 export default function BeltPicker({ data, onChange, disabled }) {
   const { belt, stripes } = readBelt(data);
   const beltIndex = KIDS_BELTS.indexOf(belt);
@@ -104,17 +132,7 @@ export default function BeltPicker({ data, onChange, disabled }) {
         >
           −
         </button>
-        <select
-          className="bp-select"
-          value={stripes}
-          onChange={(e) => setStripes(Number(e.target.value))}
-          disabled={disabled}
-          aria-label="Stripes"
-        >
-          {Array.from({ length: MAX_STRIPES + 1 }, (_, i) => (
-            <option key={i} value={i}>{i} {i === 1 ? "stripe" : "stripes"}</option>
-          ))}
-        </select>
+        <StripeBar stripes={stripes} onChange={setStripes} disabled={disabled} />
         <button
           type="button"
           className="bp-step"
