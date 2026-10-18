@@ -1,0 +1,27 @@
+/* ── Kids belt + stripes picker ── */
+.bp-picker { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.bp-group  { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+
+.bp-step {
+  width:24px; height:24px; padding:0; flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.16); border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.85);
+  font-size:15px; font-weight:600; line-height:1; font-family:var(--font-family);
+  cursor:pointer; transition:background var(--transition-fast), border-color var(--transition-fast);
+}
+.bp-step:hover:not(:disabled) { background:rgba(99,102,241,0.22); border-color:rgba(99,102,241,0.55); }
+.bp-step:disabled { opacity:0.3; cursor:default; }
+
+.bp-select {
+  padding:3px 6px; border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.92);
+  font-size:var(--font-sm); font-family:var(--font-family); cursor:pointer;
+}
+.bp-select option { background:#0a1124; color:#fff; }
+.bp-select--belt { min-width:112px; }
+
+.bp-swatch {
+  position:relative; width:22px; height:12px; flex-shrink:0; overflow:hidden;
+  border-radius:3px; border:1px solid rgba(255,255,255,0.25);
+}
+.bp-swatch-bar { position:absolute; left:0; right:0; top:4px; height:4px; }

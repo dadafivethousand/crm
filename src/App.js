@@ -7,7 +7,6 @@ import ClientTable from "./ClientTable";
 import AddClient from "./AddClient";
 import LeadsTable from "./LeadsTable";
 import KidsTable from "./KidsTable";
-import SummerCampTable from "./SummerCampTable";
 import ChatsTable from "./ChatsTable";
 import LoginForm from "./LoginForm";
 import { ToastProvider } from "./Components/Toast";
@@ -37,8 +36,6 @@ function App() {
   const [showClientForm, setShowClientForm] = useState(false);
   const [convertToClientData, setConvertToClientData] = useState(null);
   const [activeTab, setActiveTab] = useState("adults");
-  const [summerCampRegistrations, setSummerCampRegistrations] = useState([]);
-  const [loadingSummerCamp, setLoadingSummerCamp] = useState(false);
   const [chats, setChats] = useState([]);
   const [chatsCursor, setChatsCursor] = useState(null);
   const [loadingChats, setLoadingChats] = useState(false);
@@ -131,7 +128,6 @@ function App() {
     setClients([]);
     setKids([]);
     setLeads([]);
-    setSummerCampRegistrations([]);
     setChats([]);
     setChatsCursor(null);
 
@@ -216,36 +212,6 @@ function App() {
 
     return () => controller.abort();
   }, [user, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser]);
-
-  useEffect(() => {
-    if (!user || isLeadsReadOnlyUser || isArturUser || activeTab !== "summerCamp") {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    async function fetchSummerCampRegistrations() {
-      setLoadingSummerCamp(true);
-      try {
-        const headers = await buildHeaders();
-        const res = await fetch(`${WORKER}/summer-camp-registrations`, { headers, signal: controller.signal });
-        if (res.ok) {
-          const data = await res.json();
-          setSummerCampRegistrations(data || []);
-        } else {
-          console.error("Failed to fetch summer camp registrations");
-        }
-      } catch (err) {
-        if (err.name !== "AbortError") console.error("Error fetching summer camp registrations:", err);
-      } finally {
-        setLoadingSummerCamp(false);
-      }
-    }
-
-    fetchSummerCampRegistrations();
-
-    return () => controller.abort();
-  }, [activeTab, isMaple, buildHeaders, isLeadsReadOnlyUser, isArturUser, user]);
 
   useEffect(() => {
     if (!user || isLeadsReadOnlyUser || isArturUser || activeTab !== "chats") {
@@ -420,18 +386,15 @@ function App() {
     { id: "adults", label: "Teens & Adults", count: clients.length },
     { id: "kids",   label: "Kids",           count: kids.length },
     { id: "leads",  label: "Leads",          count: leads.length },
-    { id: "summerCamp", label: "Summer Camp", count: summerCampRegistrations.length },
     { id: "chats",  label: "Chats",          count: chats.length },
   ];
 
   const isLoading =
     activeTab === "leads"
       ? loadingLeads
-      : activeTab === "summerCamp"
-        ? loadingSummerCamp
-        : activeTab === "chats"
-          ? loadingChats
-          : loadingClients;
+      : activeTab === "chats"
+        ? loadingChats
+        : loadingClients;
 
   return (
     <div className="crm-container">
@@ -466,7 +429,7 @@ function App() {
           ))}
         </div>
 
-        {activeTab !== "leads" && activeTab !== "summerCamp" && activeTab !== "chats" && !showClientForm && (
+        {activeTab !== "leads" && activeTab !== "chats" && !showClientForm && (
           <div className="crm-nav-actions">
             <button className="plus" onClick={showAdultForm}>
               + Adult
@@ -549,13 +512,6 @@ function App() {
                 token={token}
                 user={user}
                 isMaple={isMaple}
-                buildHeaders={buildHeaders}
-              />
-            )}
-            {activeTab === "summerCamp" && (
-              <SummerCampTable
-                registrations={summerCampRegistrations}
-                setRegistrations={setSummerCampRegistrations}
                 buildHeaders={buildHeaders}
               />
             )}

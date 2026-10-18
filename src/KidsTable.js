@@ -9,6 +9,7 @@ import NotesModal from "./Components/NotesModal";
 import BulkActionsDropdown from "./Components/BulkActionsDropdown";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
 import SortableTh from "./Components/SortableTh";
+import BeltPicker, { beltRank } from "./Components/BeltPicker";
 
 import { useToast } from "./Components/Toast";
 import { formatDate } from "./dateUtils";
@@ -87,6 +88,7 @@ function KidsTable({
   const headers = [
     { key: "firstName", label: "First Name" },
     { key: "lastName", label: "Last Name" },
+    { key: "belt", label: "Belt" },
     { key: "parentEmail", label: "Email" },
     { key: "phone", label: "Phone" },
     { key: "startDate", label: "Start Date" },
@@ -148,6 +150,10 @@ function KidsTable({
       );
     }
     return [...arr].sort((a, b) => {
+      if (sortColumn === "belt") {
+        const d = beltRank(a?.data) - beltRank(b?.data);
+        return sortDirection === "asc" ? d : -d;
+      }
       const av = (a?.data?.[sortColumn] ?? "").toString().toLowerCase();
       const bv = (b?.data?.[sortColumn] ?? "").toString().toLowerCase();
       if (av < bv) return sortDirection === "asc" ? -1 : 1;
@@ -165,8 +171,9 @@ function KidsTable({
     }
   };
 
-  const handleEditClick = (index, clientData) => {
-    setEditingRow(index);
+  // Keyed, not by row index: a belt change can re-sort the rows mid-edit
+  const handleEditClick = (key, clientData) => {
+    setEditingRow(key);
     setEditedData(clientData);
   };
 
@@ -236,6 +243,54 @@ function KidsTable({
       toast.error("Network error saving changes.");
     }
   };
+
+  // --- belt / stripes ---
+  // Changes apply on screen at once and save after a short pause, so a run of
+  // +/- clicks is one request. Saves for the same kid go out one at a time so
+  // an older one can never land after a newer one.
+  const kidsRef = useRef(kids);
+  kidsRef.current = kids;
+  const beltTimers = useRef({});
+  const beltChains = useRef({});
+
+  const saveBelt = (key) => {
+    delete beltTimers.current[key];
+    const kid = (kidsRef.current || []).find((k) => k.key === key);
+    if (!kid) return;
+    const data = kid.data;
+    const name = `${data?.firstName || ""} ${data?.lastName || ""}`.trim();
+    beltChains.current[key] = (beltChains.current[key] || Promise.resolve()).then(async () => {
+      try {
+        const res = await fetch("https://worker-consolidated.maxli5004.workers.dev/edit-kid", {
+          method: "POST",
+          headers: await buildHeaders(),
+          body: JSON.stringify({ key, data }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        console.error("Error saving belt:", err);
+        toast.error(`Belt for ${name || "kid"} was not saved.`);
+      }
+    });
+  };
+
+  const handleBeltChange = (key, next) => {
+    const kid = (kidsRef.current || []).find((k) => k.key === key);
+    if (kid) kidsRef.current = kidsRef.current.map((k) => (k === kid ? { ...k, data: { ...k.data, ...next } } : k));
+    setKids((prev) =>
+      prev.map((k) => (k.key === key ? { ...k, data: { ...k.data, ...next } } : k))
+    );
+    clearTimeout(beltTimers.current[key]);
+    beltTimers.current[key] = setTimeout(() => saveBelt(key), 700);
+  };
+
+  // Leaving the tab must not drop a save that is still waiting
+  useEffect(() => () => {
+    Object.keys(beltTimers.current).forEach((key) => {
+      clearTimeout(beltTimers.current[key]);
+      saveBelt(key);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- delete modal flow ---
   const requestDelete = (keyOrKeys) => {
@@ -651,14 +706,14 @@ function KidsTable({
                     </td>
 
                     <td className="ct-small">
-                      {editingRow === index ? (
+                      {editingRow === client.key ? (
                         <div className="ct-button-flex">
                           <button type="button" className="ct-save-btn" onClick={() => handleSaveChanges(client.key)}>Save</button>
                           <button type="button" className="ct-cancel-btn" onClick={handleCancelEdit}>Cancel</button>
                         </div>
                       ) : (
                         <div className="ct-button-flex">
-                          <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(index, client.data)} title="Edit">
+                          <button type="button" className="ct-edit-btn" onClick={() => handleEditClick(client.key, client.data)} title="Edit">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -668,10 +723,16 @@ function KidsTable({
                       )}
                     </td>
 
-                    {editingRow === index ? (
+                    {editingRow === client.key ? (
                       <>
                         <td><input type="text" value={editedData.firstName || ""} onChange={(e) => handleInputChange(e, "firstName")} /></td>
                         <td><input type="text" value={editedData.lastName || ""} onChange={(e) => handleInputChange(e, "lastName")} /></td>
+                        <td>
+                          <BeltPicker
+                            data={editedData}
+                            onChange={(next) => setEditedData((prev) => ({ ...prev, ...next }))}
+                          />
+                        </td>
                         <td><input type="email" value={editedData.parentEmail || ""} onChange={(e) => handleInputChange(e, "parentEmail")} /></td>
                         <td><input type="tel" value={editedData.phone || ""} onChange={(e) => handleInputChange(e, "phone")} /></td>
                         <td><input type="date" value={editedData.startDate || ""} onChange={(e) => handleInputChange(e, "startDate")} /></td>
@@ -711,6 +772,12 @@ function KidsTable({
                           </div>
                         </td>
                         <td className={isExpired ? "ct-name-expired" : ""}>{client.data?.lastName}</td>
+                        <td>
+                          <BeltPicker
+                            data={client.data}
+                            onChange={(next) => handleBeltChange(client.key, next)}
+                          />
+                        </td>
                         <td>{client.data?.parentEmail}</td>
                         <td>{client.data?.phone}</td>
                         <td>{formatDate(client.data?.startDate)}</td>
@@ -741,7 +808,7 @@ function KidsTable({
                         onClose={() => setIndividualActionsOpen(null)}
                         loading={loading}
                         items={[
-                          { label: "Edit", onClick: () => handleEditClick(index, client.data) },
+                          { label: "Edit", onClick: () => handleEditClick(client.key, client.data) },
                           { label: "Send Email", onClick: () => handleSendEmail(client.key) },
                           { label: "Send Text", onClick: () => handleSendText(client.key) },
                           { label: "Delete", onClick: () => requestDelete(client.key) },
@@ -793,7 +860,7 @@ function KidsTable({
                     onClose={() => setIndividualActionsOpen(null)}
                     loading={loading}
                     items={[
-                      { label: "Edit", onClick: () => handleEditClick(index, client.data) },
+                      { label: "Edit", onClick: () => handleEditClick(client.key, client.data) },
                       { label: "Send Email", onClick: () => handleSendEmail(client.key) },
                       { label: "Send Text", onClick: () => handleSendText(client.key) },
                       { label: "Delete", onClick: () => requestDelete(client.key) },
@@ -801,6 +868,13 @@ function KidsTable({
                   />
                 </div>
                 <div className="ct-card-body">
+                  <div className="ct-card-row">
+                    <span className="ct-card-row-label">Belt</span>
+                    <BeltPicker
+                      data={client.data}
+                      onChange={(next) => handleBeltChange(client.key, next)}
+                    />
+                  </div>
                   <div className="ct-card-row">
                     <span className="ct-card-row-label">Email</span>
                     <span className="ct-card-row-value">{client.data?.parentEmail || "—"}</span>
