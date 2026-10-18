@@ -43,11 +43,32 @@ export function beltRank(data) {
   return KIDS_BELTS.indexOf(belt) * (MAX_STRIPES + 1) + stripes;
 }
 
-function Swatch({ belt }) {
+// The belt colour IS the dropdown: a native select laid invisibly over the
+// coloured block, the same size as the stripe bar under it, so the two line
+// up. The name still shows in the list and on hover.
+function BeltSelect({ belt, onChange, disabled }) {
   const [main, bar] = belt.split("/");
   return (
-    <span className="bp-swatch" style={{ background: SWATCH[main] }}>
-      {bar && <span className="bp-swatch-bar" style={{ background: SWATCH[bar] }} />}
+    <span
+      className="bp-belt"
+      style={{ background: SWATCH[main] }}
+      title={belt}
+    >
+      {bar && <span className="bp-belt-band" style={{ background: SWATCH[bar] }} />}
+      <svg className="bp-belt-caret" viewBox="0 0 10 6" aria-hidden="true">
+        <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <select
+        className="bp-belt-select"
+        value={belt}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        aria-label="Belt"
+      >
+        {KIDS_BELTS.map((b) => (
+          <option key={b} value={b}>{b}</option>
+        ))}
+      </select>
     </span>
   );
 }
@@ -99,18 +120,7 @@ export default function BeltPicker({ data, onChange, disabled }) {
         >
           −
         </button>
-        <Swatch belt={belt} />
-        <select
-          className="bp-select bp-select--belt"
-          value={belt}
-          onChange={(e) => setBelt(e.target.value)}
-          disabled={disabled}
-          aria-label="Belt"
-        >
-          {KIDS_BELTS.map((b) => (
-            <option key={b} value={b}>{b}</option>
-          ))}
-        </select>
+        <BeltSelect belt={belt} onChange={setBelt} disabled={disabled} />
         <button
           type="button"
           className="bp-step"

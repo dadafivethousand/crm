@@ -16,23 +16,26 @@
 .bp-step:hover:not(:disabled) { background:rgba(99,102,241,0.22); border-color:rgba(99,102,241,0.55); }
 .bp-step:disabled { opacity:0.3; cursor:default; }
 
-.bp-select {
-  height:24px; box-sizing:border-box; padding:0 6px;
-  border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-sm);
-  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.92);
-  font-size:var(--font-sm); font-family:var(--font-family); cursor:pointer;
+/* the belt colour, which is also the dropdown — the same 46x24 as the stripe
+   bar, with the kids-belt band through the middle */
+.bp-belt {
+  position:relative; display:inline-flex; align-items:center; justify-content:flex-end;
+  width:46px; height:24px; padding-right:5px; flex-shrink:0; box-sizing:border-box; overflow:hidden;
+  border:1px solid rgba(255,255,255,0.28); border-radius:3px; color:#fff; cursor:pointer;
 }
-.bp-select option { background:#0a1124; color:#fff; }
-/* fixed, not min-width: "Grey/White" and "Green" must take the same room or
-   the stripes start at a different x on every row */
-.bp-select--belt { width:116px; }
-
-/* the belt colour: a square, with the kids-belt band through the middle */
-.bp-swatch {
-  position:relative; width:20px; height:20px; flex-shrink:0; box-sizing:border-box;
-  overflow:hidden; border-radius:4px; border:1px solid rgba(255,255,255,0.3);
+.bp-belt:focus-within { outline:2px solid rgba(99,102,241,0.8); outline-offset:1px; }
+.bp-belt-band { position:absolute; left:0; right:0; top:50%; height:7px; transform:translateY(-50%); }
+/* on a small dark dot so it shows on every colour, band or no band */
+.bp-belt-caret {
+  position:relative; width:14px; height:14px; padding:4px 3px 3px; box-sizing:border-box;
+  border-radius:50%; background:rgba(0,0,0,0.45); color:#fff;
 }
-.bp-swatch-bar { position:absolute; left:0; right:0; top:50%; height:6px; transform:translateY(-50%); }
+.bp-belt-select {
+  position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;
+  font-size:var(--font-sm); font-family:var(--font-family);
+}
+.bp-belt-select option { background:#0a1124; color:#fff; }
+.bp-belt-select:disabled { cursor:default; }
 
 /* the black rank bar, one thin white tape mark per stripe, like on a real
    belt. Each slot is a 9px click target with the 3px tape drawn inside it. */
