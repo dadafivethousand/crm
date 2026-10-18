@@ -1,7 +1,8 @@
 /* ── Kids belt + stripes picker ──
-   One row that never wraps, every piece a fixed width, so the belt and the
-   stripes line up in a column from one kid to the next. */
-.bp-picker { display:inline-flex; flex-wrap:nowrap; align-items:center; gap:12px; white-space:nowrap; }
+   The stripes sit under the belt to keep the column narrow. Every piece is a
+   fixed width and both rows start at the same x, so the belt and the stripes
+   line up from one kid to the next. */
+.bp-picker { display:inline-flex; flex-direction:column; align-items:flex-start; gap:5px; white-space:nowrap; }
 .bp-group  { display:inline-flex; align-items:center; gap:5px; }
 
 .bp-step {
