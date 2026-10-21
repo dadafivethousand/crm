@@ -509,6 +509,7 @@ function App() {
                 setShowClientForm={setShowClientForm}
                 setClientFormData={setClientFormData}
                 setConvertToClientData={setConvertToClientData}
+                setForChild={setForChild}
                 token={token}
                 user={user}
                 isMaple={isMaple}

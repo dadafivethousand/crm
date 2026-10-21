@@ -22,7 +22,12 @@ export default function AddClient({
 }) {
   const toast = useToast();
 
-  const [kidsFormData, setKidsFormData] = useState([{ firstName: '', lastName: '' }]);
+  // A lead converted as a kid arrives with its child already filled in
+  const [kidsFormData, setKidsFormData] = useState(
+    Array.isArray(prefilledData?.kids) && prefilledData.kids.length
+      ? prefilledData.kids
+      : [{ firstName: '', lastName: '' }]
+  );
 
   const closeForm = () => {
     setShowClientForm(false);

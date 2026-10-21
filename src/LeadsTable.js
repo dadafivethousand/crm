@@ -6,6 +6,7 @@ import EmailComposer from "./Components/EmailComposer";
 import TextComposer from "./Components/TextComposer";
 import NotesModal from "./Components/NotesModal";
 import DeleteOptionsModal from "./Components/DeleteOptionsModal";
+import ConvertLeadModal from "./Components/ConvertLeadModal";
 import RowActionsDropdown from "./Components/RowActionsDropdown";
 import SortableTh from "./Components/SortableTh";
 import { useToast } from "./Components/Toast";
@@ -20,6 +21,7 @@ function parseNotes(raw) {
 
 function LeadsTable({
   setConvertToClientData,
+  setForChild,
   leads,
   setLeads,
   setShowClientForm,
@@ -441,8 +443,29 @@ function LeadsTable({
     }
   };
 
-  const handleConvertToClient = (lead) => {
-    setConvertToClientData(lead.data);
+  // Convert to Client asks Adult or Kid first (ConvertLeadModal), then opens
+  // the client form. For a kid the lead is the parent; if the lead carries
+  // separate parent fields, those become the client and its own name the child.
+  const [convertLead, setConvertLead] = useState(null);
+
+  const handleConvertToClient = (lead) => setConvertLead(lead);
+
+  const confirmConvert = (type) => {
+    const d = { ...(convertLead?.data || {}) };
+    if (type === "kid") {
+      const parentFirst = d.parentFirstName || d.parentFirst || "";
+      const parentLast = d.parentLastName || d.parentLast || "";
+      const childFirst = d.childFirstName || d.kidFirstName || (parentFirst ? d.firstName : "") || "";
+      const childLast = d.childLastName || d.kidLastName || (parentFirst ? d.lastName : "") || "";
+      if (parentFirst) {
+        d.firstName = parentFirst;
+        d.lastName = parentLast || d.lastName || "";
+      }
+      d.kids = [{ firstName: childFirst, lastName: childLast || d.lastName || "" }];
+    }
+    setForChild(type === "kid");
+    setConvertToClientData(d);
+    setConvertLead(null);
     setShowClientForm(true);
   };
 
@@ -461,6 +484,11 @@ function LeadsTable({
 
   return (
     <div className="ct-client-table-container">
+      <ConvertLeadModal
+        lead={convertLead}
+        onCancel={() => setConvertLead(null)}
+        onConfirm={confirmConvert}
+      />
       {notesOpen && (
         <NotesModal
           open={notesOpen}
